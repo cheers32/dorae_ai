@@ -39,9 +39,9 @@ class AIService:
         """
         
         try:
-            # Using Gemini 3.0 Pro
+            # Using Gemini 3.0 Flash Preview (Pro has quota limits)
             response = self.client.models.generate_content(
-                model='gemini-2.0-flash', # Note: Using 2.0 Flash as 3.0 access is rolling out, but SDK structure is ready
+                model='gemini-3-flash-preview', 
                 contents=prompt,
                 config={
                     'response_mime_type': 'application/json'
@@ -83,9 +83,9 @@ class AIService:
         """
 
         try:
-            # Using Gemini 3.0 Pro (or 2.0 Flash as placeholder)
+            # Using Gemini 3.0 Flash Preview
             response = self.client.models.generate_content(
-                model='gemini-2.0-flash', 
+                model='gemini-3-flash-preview', 
                 contents=f"{system_instruction}\n\nUser: {user_message}",
             )
             return response.text
