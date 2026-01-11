@@ -12,12 +12,12 @@ try:
     collection = db['user_inputs']
     
     # Check for the test input
-    doc = collection.find_one({"word": "Mongo Test 456"})
+    doc = collection.find_one({"word": "Refactor Test"})
     
     if doc:
-        print("Success: Found 'Mongo Test 456' in MongoDB!")
+        print("Success: Found 'Refactor Test' in MongoDB!")
     else:
-        print("Failure: 'Mongo Test 456' not found in MongoDB.")
+        print("Failure: 'Refactor Test' not found in MongoDB.")
         
 except Exception as e:
     print(f"Error: {e}")
