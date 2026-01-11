@@ -14,6 +14,12 @@ export const TaskManager = () => {
     const [loading, setLoading] = useState(true);
     const navigate = useNavigate();
 
+    const handleLogout = () => {
+        localStorage.removeItem('isAuthenticated');
+        localStorage.removeItem('userProfile');
+        navigate('/login');
+    };
+
     const fetchTasks = async () => {
         if (activeTab === 'assistant') {
             setLoading(false);
@@ -62,16 +68,25 @@ export const TaskManager = () => {
             <Sidebar activeTab={activeTab} setActiveTab={setActiveTab} />
 
             {/* Extra floating home button for navigation */}
-            <button
-                onClick={() => navigate('/')}
-                className="fixed bottom-4 left-4 z-50 p-2 bg-gray-800 rounded-full hover:bg-gray-700 transition"
-                title="Back to Landing Page"
-            >
-                <HomeIcon size={20} className="text-gray-400" />
-            </button>
+            <div className="fixed bottom-4 left-4 z-50 flex gap-2">
+                <button
+                    onClick={() => navigate('/')}
+                    className="p-2 bg-gray-800 rounded-full hover:bg-gray-700 transition border border-gray-700"
+                    title="Back to Landing Page"
+                >
+                    <HomeIcon size={20} className="text-gray-400" />
+                </button>
+                <button
+                    onClick={handleLogout}
+                    className="px-4 py-2 bg-red-900/30 border border-red-900/50 rounded-full hover:bg-red-900/50 transition text-red-400 text-sm font-medium"
+                    title="Logout"
+                >
+                    Logout
+                </button>
+            </div>
 
             <main className="flex-1 flex flex-col min-w-0 bg-[#0f1014] h-full relative">
-                <header className="px-8 py-8">
+                <header className="px-8 py-8 flex justify-between items-start">
                     <div>
                         <h1 className="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-purple-500 mb-2">
                             {getHeaderTitle()}
@@ -82,6 +97,18 @@ export const TaskManager = () => {
                                 : 'Manage your daily goals and track progress.'}
                         </p>
                     </div>
+                    {localStorage.getItem('userProfile') && (
+                        <div className="flex items-center gap-3 bg-gray-900/50 px-4 py-2 rounded-full border border-gray-800">
+                            <img
+                                src={JSON.parse(localStorage.getItem('userProfile')).picture}
+                                alt="Profile"
+                                className="w-8 h-8 rounded-full border border-gray-700"
+                            />
+                            <span className="text-sm font-medium text-gray-300">
+                                {JSON.parse(localStorage.getItem('userProfile')).name}
+                            </span>
+                        </div>
+                    )}
                 </header>
 
                 {activeTab === 'assistant' ? (
