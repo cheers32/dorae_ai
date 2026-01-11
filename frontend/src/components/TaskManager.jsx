@@ -68,22 +68,7 @@ export const TaskManager = () => {
             <Sidebar activeTab={activeTab} setActiveTab={setActiveTab} />
 
             {/* Extra floating home button for navigation */}
-            <div className="fixed bottom-4 left-4 z-50 flex gap-2">
-                <button
-                    onClick={() => navigate('/')}
-                    className="p-2 bg-gray-800 rounded-full hover:bg-gray-700 transition border border-gray-700"
-                    title="Back to Landing Page"
-                >
-                    <HomeIcon size={20} className="text-gray-400" />
-                </button>
-                <button
-                    onClick={handleLogout}
-                    className="px-4 py-2 bg-red-900/30 border border-red-900/50 rounded-full hover:bg-red-900/50 transition text-red-400 text-sm font-medium"
-                    title="Logout"
-                >
-                    Logout
-                </button>
-            </div>
+
 
             <main className="flex-1 flex flex-col min-w-0 bg-[#0f1014] h-full relative">
                 <header className="px-8 py-8 flex justify-between items-start">

@@ -86,5 +86,11 @@ export const api = {
         });
         if (!res.ok) throw new Error('Failed to send message');
         return res.json();
+    },
+
+    logout: () => {
+        localStorage.removeItem('userProfile');
+        localStorage.removeItem('isAuthenticated');
+        window.location.href = '/';
     }
 };

@@ -172,12 +172,7 @@ const LandingPage = () => {
                             </div>
                             <div className="h-8 w-[1px] bg-white/10 mx-1"></div>
                             <button
-                                onClick={() => {
-                                    localStorage.removeItem('userProfile');
-                                    localStorage.removeItem('isAuthenticated');
-                                    setUser(null);
-                                    window.location.href = '/';
-                                }}
+                                onClick={() => api.logout()}
                                 className="text-slate-400 hover:text-white transition-colors p-1"
                                 title="Log Out"
                             >

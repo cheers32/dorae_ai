@@ -1,5 +1,6 @@
 import { motion } from 'framer-motion';
-import { Layout, CheckSquare, Settings, Activity, MessageSquare, LogOut } from 'lucide-react';
+import { Layout, CheckSquare, Settings, Activity, MessageSquare, LogOut, Home, Sparkles } from 'lucide-react';
+import { api } from '../api';
 
 export function Sidebar({ activeTab, setActiveTab }) {
     const menuItems = [
@@ -15,9 +16,18 @@ export function Sidebar({ activeTab, setActiveTab }) {
             animate={{ x: 0, opacity: 1 }}
             transition={{ duration: 0.5 }}
         >
-            <div className="sidebar-header">
-                <div className="logo-icon">D</div>
-                <h2>Dorae AI</h2>
+            <div className="sidebar-header flex items-center gap-3">
+                <div className="logo-icon relative group">
+                    <Sparkles size={24} />
+                </div>
+                <button
+                    onClick={() => window.location.href = '/'}
+                    className="p-2 rounded-full bg-gray-800/50 hover:bg-gray-700 border border-gray-700 text-gray-400 hover:text-white transition-all flex items-center justify-center"
+                    title="Back to Home"
+                >
+                    <Home size={16} />
+                </button>
+                <h2>Task AI</h2>
             </div>
 
             <nav className="sidebar-nav">
@@ -47,11 +57,7 @@ export function Sidebar({ activeTab, setActiveTab }) {
             <div className="sidebar-footer">
                 <button
                     className="nav-item"
-                    onClick={() => {
-                        localStorage.removeItem('userProfile');
-                        localStorage.removeItem('isAuthenticated');
-                        window.location.href = '/';
-                    }}
+                    onClick={() => api.logout()}
                 >
                     <LogOut size={20} />
                     <span>Log Out</span>
