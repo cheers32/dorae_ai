@@ -47,6 +47,30 @@ def hello():
 
 # --- Tasks Endpoints ---
 
+@app.route('/api/login', methods=['POST'])
+def login_user():
+    try:
+        user_data = request.json
+        if not user_data or 'email' not in user_data:
+             return jsonify({'error': 'Invalid user data'}), 400
+        
+        # Upsert user: Update if exists, Insert if new
+        users_collection = db['users']
+        result = users_collection.update_one(
+            {'email': user_data['email']},
+            {'$set': {
+                'name': user_data.get('name'),
+                'picture': user_data.get('picture'),
+                'last_login': datetime.utcnow()
+            }},
+            upsert=True
+        )
+        
+        return jsonify({'status': 'success', 'message': 'User saved'}), 200
+    except Exception as e:
+        print(f"Error saving user: {e}")
+        return jsonify({'error': str(e)}), 500
+
 @app.route('/api/tasks', methods=['GET'])
 def get_tasks():
     try:

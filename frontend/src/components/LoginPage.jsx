@@ -4,20 +4,26 @@ import { Lock } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { GoogleLogin } from '@react-oauth/google';
 import { jwtDecode } from "jwt-decode";
+import { api } from '../api';
 
 const LoginPage = () => {
     const [error, setError] = useState('');
     const navigate = useNavigate();
 
-    const handleSuccess = (credentialResponse) => {
+    const handleSuccess = async (credentialResponse) => {
         try {
             const decoded = jwtDecode(credentialResponse.credential);
-            localStorage.setItem('isAuthenticated', 'true');
-            localStorage.setItem('userProfile', JSON.stringify({
+            const userProfile = {
                 name: decoded.name,
                 picture: decoded.picture,
                 email: decoded.email
-            }));
+            };
+
+            // Persist to backend
+            await api.login(userProfile);
+
+            localStorage.setItem('isAuthenticated', 'true');
+            localStorage.setItem('userProfile', JSON.stringify(userProfile));
             navigate('/tasks');
         } catch (err) {
             console.error("Login Failed", err);

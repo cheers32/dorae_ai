@@ -16,6 +16,22 @@ export const api = {
         return res.json();
     },
 
+    deleteTask: (taskId) =>
+        fetch(`${API_BASE}/tasks/${taskId}`, { method: 'DELETE' }),
+
+    login: async (userProfile) => {
+        try {
+            const response = await fetch(`${API_BASE}/login`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(userProfile)
+            });
+            return await response.json();
+        } catch (error) {
+            console.error("Failed to persist user", error);
+        }
+    },
+
     addUpdate: async (taskId, content, type = 'detail') => {
         const res = await fetch(`${API_BASE}/tasks/${taskId}/update`, {
             method: 'POST',
