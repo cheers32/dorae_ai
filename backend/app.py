@@ -65,6 +65,15 @@ def login_user():
             }},
             upsert=True
         )
+
+        # Log history (Audit Log)
+        history_collection = db['login_logs']
+        history_collection.insert_one({
+            'email': user_data['email'],
+            'timestamp': datetime.utcnow(),
+            'ip': request.remote_addr,
+            'user_agent': request.headers.get('User-Agent')
+        })
         
         return jsonify({'status': 'success', 'message': 'User saved'}), 200
     except Exception as e:
