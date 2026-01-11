@@ -83,6 +83,10 @@ def login_user():
 @app.route('/api/traffic', methods=['POST'])
 def log_traffic():
     try:
+        # Skip localhost
+        if request.remote_addr in ['127.0.0.1', '::1']:
+           return jsonify({'status': 'skipped', 'message': 'Localhost traffic ignored'}), 200
+
         data = request.json
         
         traffic_collection = db['traffic_logs']
