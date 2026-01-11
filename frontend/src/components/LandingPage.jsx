@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Sparkles, TrendingUp } from 'lucide-react';
+import { Sparkles, TrendingUp, CircleDollarSign, Lock } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { GoogleLogin } from '@react-oauth/google';
 import { jwtDecode } from "jwt-decode";
@@ -58,7 +58,7 @@ const LandingPage = () => {
                 </p>
             </motion.div>
 
-            <div className="z-10 grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl w-full">
+            <div className="z-10 grid grid-cols-1 md:grid-cols-3 gap-6 max-w-6xl w-full px-4">
 
                 {/* Futbin AI Card - Coming Soon */}
                 <motion.div
@@ -67,15 +67,53 @@ const LandingPage = () => {
                 >
                     <div className="absolute inset-0 bg-gradient-to-r from-gray-700 to-gray-600 rounded-2xl blur opacity-20"></div>
                     <div className="relative bg-gray-900 border border-gray-800 p-8 rounded-2xl h-80 flex flex-col items-center justify-center text-center">
-                        <div className="absolute top-4 right-4 bg-gray-800 border border-gray-700 text-gray-400 text-xs font-bold px-3 py-1 rounded-full">
-                            COMING SOON
+                        <div className="absolute top-4 right-4 bg-gray-800 border border-gray-700 text-gray-400 p-2 rounded-full">
+                            <Lock size={16} />
                         </div>
                         <div className="bg-gray-800 p-4 rounded-full mb-6 text-gray-500">
-                            <TrendingUp size={48} />
+                            {/* Custom Soccer Ball SVG */}
+                            <svg
+                                xmlns="http://www.w3.org/2000/svg"
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="currentColor"
+                                strokeWidth="2"
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                className="w-12 h-12"
+                            >
+                                <circle cx="12" cy="12" r="10" />
+                                <path d="M12 7 L16 10 L14.5 15 L9.5 15 L8 10 Z" />
+                                <path d="M12 7 L12 2" />
+                                <path d="M16 10 L20.5 8.5" />
+                                <path d="M14.5 15 L18 19" />
+                                <path d="M9.5 15 L6 19" />
+                                <path d="M8 10 L3.5 8.5" />
+                            </svg>
                         </div>
                         <h2 className="text-3xl font-bold mb-2 text-gray-500">FUT AI</h2>
                         <p className="text-gray-500 text-sm max-w-xs mx-auto">
                             Maximize your hard-earned coins. Master Evolutions on elite players, and build the best possible Ultimate Team with AI precision.
+                        </p>
+                    </div>
+                </motion.div>
+
+                {/* Finance AI Card - Coming Soon */}
+                <motion.div
+                    whileHover={{ scale: 1.05 }}
+                    className="group relative cursor-not-allowed opacity-70"
+                >
+                    <div className="absolute inset-0 bg-gradient-to-r from-emerald-700 to-green-600 rounded-2xl blur opacity-20"></div>
+                    <div className="relative bg-gray-900 border border-gray-800 p-8 rounded-2xl h-80 flex flex-col items-center justify-center text-center">
+                        <div className="absolute top-4 right-4 bg-gray-800 border border-gray-700 text-gray-400 p-2 rounded-full">
+                            <Lock size={16} />
+                        </div>
+                        <div className="bg-gray-800 p-4 rounded-full mb-6 text-gray-500">
+                            <TrendingUp size={48} />
+                        </div>
+                        <h2 className="text-3xl font-bold mb-2 text-gray-500">Finance AI</h2>
+                        <p className="text-gray-500 text-sm max-w-xs mx-auto">
+                            Smart portfolio tracking, market trend analysis, and personalized investment insights.
                         </p>
                     </div>
                 </motion.div>
@@ -87,12 +125,12 @@ const LandingPage = () => {
                     onClick={() => navigate('/tasks')}
                     className="group relative cursor-pointer"
                 >
-                    <div className="absolute inset-0 bg-gradient-to-r from-purple-600 to-pink-600 rounded-2xl blur opacity-25 group-hover:opacity-75 transition duration-500"></div>
-                    <div className="relative bg-gray-900 border border-gray-700 p-8 rounded-2xl h-80 flex flex-col items-center justify-center text-center hover:border-purple-500/50 transition duration-300">
-                        <div className="bg-gray-800 p-4 rounded-full mb-6 group-hover:text-purple-400 transition-colors">
+                    <div className="absolute inset-0 bg-gradient-to-r from-blue-700 to-blue-500 rounded-2xl blur opacity-25 group-hover:opacity-75 transition duration-500"></div>
+                    <div className="relative bg-gray-900 border border-gray-700 p-8 rounded-2xl h-80 flex flex-col items-center justify-center text-center hover:border-blue-500/50 transition duration-300">
+                        <div className="bg-gray-800 p-4 rounded-full mb-6 group-hover:text-blue-400 transition-colors">
                             <Sparkles size={48} />
                         </div>
-                        <h2 className="text-3xl font-bold mb-2 group-hover:text-purple-400">Task AI</h2>
+                        <h2 className="text-3xl font-bold mb-2 group-hover:text-blue-400">Task AI</h2>
                         <p className="text-gray-400 text-sm">
                             Smart task management, context-aware scheduling, and productivity assistant.
                         </p>
@@ -100,9 +138,9 @@ const LandingPage = () => {
                 </motion.div>
 
                 {/* Auth Section - Spanning Full Width */}
-                <div className="md:col-span-2 flex flex-col items-center justify-center min-h-[80px]">
+                <div className="md:col-span-3 flex flex-col items-center justify-center min-h-[80px]">
                     {!user ? (
-                        <div className="animate-fade-in">
+                        <div className="flex flex-col gap-3 items-center animate-fade-in w-full max-w-[250px]">
                             <GoogleLogin
                                 onSuccess={handleSuccess}
                                 onError={() => console.log('Login Failed')}

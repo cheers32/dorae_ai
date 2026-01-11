@@ -13,11 +13,18 @@ if ! command -v gcloud &> /dev/null; then
 fi
 
 # 2. Collect Configuration
-echo ""
-echo "Please provide your configuration:"
-read -p "🔹 Enter your GCP Project ID: " PROJECT_ID
-read -p "🔹 Enter your MongoDB URI: " MONGO_URI
-read -p "🔹 Enter your Gemini API Key: " GEMINI_API_KEY
+# Allow environment variables to override prompts
+if [ -z "$PROJECT_ID" ]; then
+    read -p "🔹 Enter your GCP Project ID: " PROJECT_ID
+fi
+
+if [ -z "$MONGO_URI" ]; then
+    read -p "🔹 Enter your MongoDB URI: " MONGO_URI
+fi
+
+if [ -z "$GEMINI_API_KEY" ]; then
+    read -p "🔹 Enter your Gemini API Key: " GEMINI_API_KEY
+fi
 
 if [ -z "$PROJECT_ID" ] || [ -z "$MONGO_URI" ] || [ -z "$GEMINI_API_KEY" ]; then
     echo "❌ Error: All fields are required to deploy."
