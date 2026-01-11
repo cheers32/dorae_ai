@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Sparkles, TrendingUp, CircleDollarSign, Lock } from 'lucide-react';
+import { Sparkles, TrendingUp, CircleDollarSign, Lock, LogOut } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { GoogleLogin } from '@react-oauth/google';
 import { jwtDecode } from "jwt-decode";
@@ -118,20 +118,27 @@ const LandingPage = () => {
                     </div>
                 </motion.div>
 
-                {/* Task AI Card - Active */}
+                {/* Task AI Card - Active only if logged in */}
                 <motion.div
                     whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
-                    onClick={() => navigate('/tasks')}
-                    className="group relative cursor-pointer"
+                    whileTap={user ? { scale: 0.95 } : undefined}
+                    onClick={() => user && navigate('/tasks')}
+                    className={`group relative ${user ? 'cursor-pointer' : 'cursor-not-allowed opacity-70'}`}
                 >
-                    <div className="absolute inset-0 bg-gradient-to-br from-blue-600/20 to-blue-900/20 rounded-2xl blur-xl opacity-50 group-hover:opacity-100 transition duration-700"></div>
-                    <div className="relative bg-white/5 border border-white/10 backdrop-blur-md p-8 rounded-2xl h-80 flex flex-col items-center justify-center text-center hover:border-blue-500/30 transition duration-300 shadow-2xl">
-                        <div className="bg-white/10 p-4 rounded-full mb-6 text-blue-400 group-hover:text-blue-300 transition-colors">
+                    <div className={`absolute inset-0 bg-gradient-to-br ${user ? 'from-blue-600/20 to-blue-900/20 blur-xl opacity-50 group-hover:opacity-100' : 'from-white/5 to-transparent'} rounded-2xl transition duration-700`}></div>
+                    <div className={`relative bg-white/5 border border-white/10 backdrop-blur-md p-8 rounded-2xl h-80 flex flex-col items-center justify-center text-center shadow-2xl ${user ? 'hover:border-blue-500/30' : ''} transition duration-300`}>
+
+                        {!user && (
+                            <div className="absolute top-4 right-4 bg-white/10 border border-white/10 text-slate-400 p-2 rounded-full">
+                                <Lock size={16} />
+                            </div>
+                        )}
+
+                        <div className={`bg-white/10 p-4 rounded-full mb-6 ${user ? 'text-blue-400 group-hover:text-blue-300' : 'text-slate-500'} transition-colors`}>
                             <Sparkles size={48} />
                         </div>
-                        <h2 className="text-3xl font-bold mb-2 text-white group-hover:text-blue-200">Task AI</h2>
-                        <p className="text-slate-400 text-sm group-hover:text-slate-300 transition-colors">
+                        <h2 className={`text-3xl font-bold mb-2 ${user ? 'text-white group-hover:text-blue-200' : 'text-slate-600'}`}>Task AI</h2>
+                        <p className={`text-sm ${user ? 'text-slate-400 group-hover:text-slate-300' : 'text-slate-500'} transition-colors`}>
                             Smart task management, context-aware scheduling, and productivity assistant.
                         </p>
                     </div>
@@ -154,13 +161,28 @@ const LandingPage = () => {
                         <motion.div
                             initial={{ opacity: 0 }}
                             animate={{ opacity: 1 }}
-                            className="flex items-center gap-3 bg-white/5 px-6 py-3 rounded-full border border-white/10 backdrop-blur-md"
+                            className="flex items-center gap-4 bg-white/5 pl-6 pr-4 py-3 rounded-full border border-white/10 backdrop-blur-md"
                         >
-                            <img src={user.picture} alt="" className="w-8 h-8 rounded-full border border-gray-600" />
-                            <div className="flex flex-col items-start">
-                                <span className="text-xs text-slate-400">Welcome back,</span>
-                                <span className="text-sm font-medium text-white">{user.name}</span>
+                            <div className="flex items-center gap-3">
+                                <img src={user.picture} alt="" className="w-8 h-8 rounded-full border border-gray-600" />
+                                <div className="flex flex-col items-start">
+                                    <span className="text-xs text-slate-400">Welcome back,</span>
+                                    <span className="text-sm font-medium text-white">{user.name}</span>
+                                </div>
                             </div>
+                            <div className="h-8 w-[1px] bg-white/10 mx-1"></div>
+                            <button
+                                onClick={() => {
+                                    localStorage.removeItem('userProfile');
+                                    localStorage.removeItem('isAuthenticated');
+                                    setUser(null);
+                                    window.location.href = '/';
+                                }}
+                                className="text-slate-400 hover:text-white transition-colors p-1"
+                                title="Log Out"
+                            >
+                                <LogOut size={18} />
+                            </button>
                         </motion.div>
                     )}
                 </div>

@@ -1,5 +1,5 @@
 import { motion } from 'framer-motion';
-import { Layout, CheckSquare, Settings, Activity, MessageSquare } from 'lucide-react';
+import { Layout, CheckSquare, Settings, Activity, MessageSquare, LogOut } from 'lucide-react';
 
 export function Sidebar({ activeTab, setActiveTab }) {
     const menuItems = [
@@ -45,9 +45,16 @@ export function Sidebar({ activeTab, setActiveTab }) {
             </nav>
 
             <div className="sidebar-footer">
-                <button className="nav-item">
-                    <Settings size={20} />
-                    <span>Settings</span>
+                <button
+                    className="nav-item"
+                    onClick={() => {
+                        localStorage.removeItem('userProfile');
+                        localStorage.removeItem('isAuthenticated');
+                        window.location.href = '/';
+                    }}
+                >
+                    <LogOut size={20} />
+                    <span>Log Out</span>
                 </button>
             </div>
         </motion.div>
