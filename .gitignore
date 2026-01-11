@@ -1,7 +1,16 @@
+# Python
 __pycache__/
 *.py[cod]
 *$py.class
-.DS_Store
-.venv
-env/
 venv/
+.venv/
+
+# Environment Variables
+.env
+
+# MacOS
+.DS_Store
+
+# Cursor/Editor
+.idea/
+.vscode/

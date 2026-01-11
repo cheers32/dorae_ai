@@ -1,12 +1,28 @@
 from flask import Flask, request, jsonify
 import json
 import os
+from pymongo import MongoClient
+from dotenv import load_dotenv
+
+load_dotenv()
 
 app = Flask(__name__)
 from flask_cors import CORS
 CORS(app)
 
 DATA_FILE = 'data.json'
+MONGO_URI = os.getenv('MONGO_URI')
+
+# Initialize MongoDB
+try:
+    client = MongoClient(MONGO_URI)
+    db = client['dorae_db']
+    collection = db['user_inputs']
+    print("Connected to MongoDB")
+except Exception as e:
+    print(f"Error connecting to MongoDB: {e}")
+    client = None
+    collection = None
 
 @app.route('/')
 def hello():
@@ -21,21 +37,28 @@ def save_data():
         
         word = content['word']
         
-        # Read existing data
+        # 1. Save to local file
         data = []
         if os.path.exists(DATA_FILE):
             with open(DATA_FILE, 'r') as f:
                 try:
                     data = json.load(f)
                 except json.JSONDecodeError:
-                    data = [] # Handle empty or corrupt file
+                    data = []
         
-        # Append new word
         data.append(word)
         
-        # Write back to file
         with open(DATA_FILE, 'w') as f:
             json.dump(data, f, indent=4)
+            
+        # 2. Save to MongoDB
+        if collection is not None:
+            try:
+                collection.insert_one({"word": word})
+            except Exception as e:
+                print(f"Failed to save to MongoDB: {e}")
+                # We typically don't fail the request if just the DB save fails, 
+                # but it depends on requirements. For now, we log it.
             
         return jsonify({"message": "Word saved successfully", "word": word}), 200
     except Exception as e:
