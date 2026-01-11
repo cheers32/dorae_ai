@@ -1,11 +1,11 @@
 import { motion } from 'framer-motion';
-import { Layout, CheckSquare, Settings, Activity } from 'lucide-react';
+import { Layout, CheckSquare, Settings, Activity, MessageSquare } from 'lucide-react';
 
 export function Sidebar({ activeTab, setActiveTab }) {
     const menuItems = [
         { id: 'active', label: 'Active Tasks', icon: Layout },
         { id: 'closed', label: 'Closed Tasks', icon: CheckSquare },
-        { id: 'analysis', label: 'AI Insights', icon: Activity },
+        { id: 'assistant', label: 'Assistant', icon: MessageSquare },
     ];
 
     return (

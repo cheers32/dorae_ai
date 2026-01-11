@@ -193,5 +193,34 @@ def analyze_task(task_id):
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
+@app.route('/api/chat', methods=['POST'])
+def chat():
+    try:
+        data = request.json
+        message = data.get('message')
+        if not message:
+            return jsonify({"error": "Message is required"}), 400
+            
+        # Fetch all tasks for context (RAG-lite)
+        # In a real app, you might only fetch active ones or limit the number
+        cursor = tasks_collection.find({}).sort('created_at', -1)
+        tasks = list(cursor)
+        
+        # Serialize simply for AI context
+        tasks_context = []
+        for t in tasks:
+            tasks_context.append({
+                "title": t.get('title'),
+                "status": t.get('status'),
+                "priority": t.get('priority'),
+                "category": t.get('category')
+            })
+            
+        response_text = ai_service.chat_with_task_context(message, tasks_context)
+        
+        return jsonify({"reply": response_text}), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
 if __name__ == '__main__':
     app.run(debug=True)

@@ -48,5 +48,15 @@ export const api = {
             headers: { 'Content-Type': 'application/json' }
         });
         return res.json();
+    },
+
+    chatWithAI: async (message) => {
+        const res = await fetch(`${API_BASE}/chat`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ message })
+        });
+        if (!res.ok) throw new Error('Failed to send message');
+        return res.json();
     }
 };
