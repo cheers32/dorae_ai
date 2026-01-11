@@ -2,7 +2,6 @@ import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import LandingPage from './components/LandingPage';
 import { TaskManager } from './components/TaskManager';
 import FutbinAI from './components/FutbinAI';
-import LoginPage from './components/LoginPage';
 import ProtectedRoute from './components/ProtectedRoute';
 import TrafficTracker from './components/TrafficTracker';
 import './App.css';
@@ -13,7 +12,6 @@ function App() {
       <TrafficTracker />
       <Routes>
         <Route path="/" element={<LandingPage />} />
-        <Route path="/login" element={<LoginPage />} />
         <Route
           path="/tasks"
           element={
