@@ -38,14 +38,14 @@ const LandingPage = () => {
     };
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-black text-white flex flex-col items-center justify-center p-6 relative overflow-hidden">
+        <div className="min-h-screen bg-slate-950 text-white flex flex-col items-center justify-center p-6 relative overflow-hidden">
 
-            {/* Background Decor */}
-            <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none">
-                <div className="absolute top-[-10%] left-[-10%] w-96 h-96 bg-purple-600 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob"></div>
-                <div className="absolute top-[-10%] right-[-10%] w-96 h-96 bg-blue-600 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob animation-delay-2000"></div>
-                <div className="absolute bottom-[-10%] left-[20%] w-96 h-96 bg-pink-600 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob animation-delay-4000"></div>
-            </div>
+            {/* Professional Radial Gradient Background */}
+            <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-slate-900 via-slate-950 to-black pointer-events-none"></div>
+
+            {/* Subtle Ambient Glows - De-emphasized for professionalism */}
+            <div className="absolute top-0 left-1/4 w-96 h-96 bg-blue-500/10 rounded-full blur-3xl pointer-events-none"></div>
+            <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-purple-500/10 rounded-full blur-3xl pointer-events-none"></div>
 
             <motion.div
                 initial={{ opacity: 0, y: -20 }}
@@ -53,7 +53,7 @@ const LandingPage = () => {
                 className="z-10 text-center mb-16"
             >
                 {/* Title Removed */}
-                <p className="text-xl text-gray-400 max-w-lg mx-auto">
+                <p className="text-xl text-slate-400 max-w-lg mx-auto font-light tracking-wide">
                     Choose your intelligence mode.
                 </p>
             </motion.div>
@@ -65,12 +65,12 @@ const LandingPage = () => {
                     whileHover={{ scale: 1.05 }}
                     className="group relative cursor-not-allowed opacity-70"
                 >
-                    <div className="absolute inset-0 bg-gradient-to-r from-gray-700 to-gray-600 rounded-2xl blur opacity-20"></div>
-                    <div className="relative bg-gray-900 border border-gray-800 p-8 rounded-2xl h-80 flex flex-col items-center justify-center text-center">
-                        <div className="absolute top-4 right-4 bg-gray-800 border border-gray-700 text-gray-400 p-2 rounded-full">
+                    <div className="absolute inset-0 bg-gradient-to-br from-white/5 to-transparent rounded-2xl"></div>
+                    <div className="relative bg-white/5 border border-white/10 backdrop-blur-md p-8 rounded-2xl h-80 flex flex-col items-center justify-center text-center shadow-2xl">
+                        <div className="absolute top-4 right-4 bg-white/10 border border-white/10 text-slate-400 p-2 rounded-full">
                             <Lock size={16} />
                         </div>
-                        <div className="bg-gray-800 p-4 rounded-full mb-6 text-gray-500">
+                        <div className="bg-white/5 p-4 rounded-full mb-6 text-slate-500">
                             {/* Custom Soccer Ball SVG */}
                             <svg
                                 xmlns="http://www.w3.org/2000/svg"
@@ -91,8 +91,8 @@ const LandingPage = () => {
                                 <path d="M8 10 L3.5 8.5" />
                             </svg>
                         </div>
-                        <h2 className="text-3xl font-bold mb-2 text-gray-500">FUT AI</h2>
-                        <p className="text-gray-500 text-sm max-w-xs mx-auto">
+                        <h2 className="text-3xl font-bold mb-2 text-slate-600">FUT AI</h2>
+                        <p className="text-slate-500 text-sm max-w-xs mx-auto">
                             Maximize your hard-earned coins. Master Evolutions on elite players, and build the best possible Ultimate Team with AI precision.
                         </p>
                     </div>
@@ -103,16 +103,16 @@ const LandingPage = () => {
                     whileHover={{ scale: 1.05 }}
                     className="group relative cursor-not-allowed opacity-70"
                 >
-                    <div className="absolute inset-0 bg-gradient-to-r from-emerald-700 to-green-600 rounded-2xl blur opacity-20"></div>
-                    <div className="relative bg-gray-900 border border-gray-800 p-8 rounded-2xl h-80 flex flex-col items-center justify-center text-center">
-                        <div className="absolute top-4 right-4 bg-gray-800 border border-gray-700 text-gray-400 p-2 rounded-full">
+                    <div className="absolute inset-0 bg-gradient-to-br from-white/5 to-transparent rounded-2xl"></div>
+                    <div className="relative bg-white/5 border border-white/10 backdrop-blur-md p-8 rounded-2xl h-80 flex flex-col items-center justify-center text-center shadow-2xl">
+                        <div className="absolute top-4 right-4 bg-white/10 border border-white/10 text-slate-400 p-2 rounded-full">
                             <Lock size={16} />
                         </div>
-                        <div className="bg-gray-800 p-4 rounded-full mb-6 text-gray-500">
+                        <div className="bg-white/5 p-4 rounded-full mb-6 text-slate-500">
                             <TrendingUp size={48} />
                         </div>
-                        <h2 className="text-3xl font-bold mb-2 text-gray-500">Finance AI</h2>
-                        <p className="text-gray-500 text-sm max-w-xs mx-auto">
+                        <h2 className="text-3xl font-bold mb-2 text-slate-600">Finance AI</h2>
+                        <p className="text-slate-500 text-sm max-w-xs mx-auto">
                             Smart portfolio tracking, market trend analysis, and personalized investment insights.
                         </p>
                     </div>
@@ -125,13 +125,13 @@ const LandingPage = () => {
                     onClick={() => navigate('/tasks')}
                     className="group relative cursor-pointer"
                 >
-                    <div className="absolute inset-0 bg-gradient-to-r from-blue-700 to-blue-500 rounded-2xl blur opacity-25 group-hover:opacity-75 transition duration-500"></div>
-                    <div className="relative bg-gray-900 border border-gray-700 p-8 rounded-2xl h-80 flex flex-col items-center justify-center text-center hover:border-blue-500/50 transition duration-300">
-                        <div className="bg-gray-800 p-4 rounded-full mb-6 group-hover:text-blue-400 transition-colors">
+                    <div className="absolute inset-0 bg-gradient-to-br from-blue-600/20 to-blue-900/20 rounded-2xl blur-xl opacity-50 group-hover:opacity-100 transition duration-700"></div>
+                    <div className="relative bg-white/5 border border-white/10 backdrop-blur-md p-8 rounded-2xl h-80 flex flex-col items-center justify-center text-center hover:border-blue-500/30 transition duration-300 shadow-2xl">
+                        <div className="bg-white/10 p-4 rounded-full mb-6 text-blue-400 group-hover:text-blue-300 transition-colors">
                             <Sparkles size={48} />
                         </div>
-                        <h2 className="text-3xl font-bold mb-2 group-hover:text-blue-400">Task AI</h2>
-                        <p className="text-gray-400 text-sm">
+                        <h2 className="text-3xl font-bold mb-2 text-white group-hover:text-blue-200">Task AI</h2>
+                        <p className="text-slate-400 text-sm group-hover:text-slate-300 transition-colors">
                             Smart task management, context-aware scheduling, and productivity assistant.
                         </p>
                     </div>
@@ -154,11 +154,11 @@ const LandingPage = () => {
                         <motion.div
                             initial={{ opacity: 0 }}
                             animate={{ opacity: 1 }}
-                            className="flex items-center gap-3 bg-gray-900/80 px-6 py-3 rounded-full border border-gray-800 backdrop-blur-sm"
+                            className="flex items-center gap-3 bg-white/5 px-6 py-3 rounded-full border border-white/10 backdrop-blur-md"
                         >
                             <img src={user.picture} alt="" className="w-8 h-8 rounded-full border border-gray-600" />
                             <div className="flex flex-col items-start">
-                                <span className="text-xs text-gray-400">Welcome back,</span>
+                                <span className="text-xs text-slate-400">Welcome back,</span>
                                 <span className="text-sm font-medium text-white">{user.name}</span>
                             </div>
                         </motion.div>
