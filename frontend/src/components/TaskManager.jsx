@@ -73,7 +73,7 @@ export const TaskManager = () => {
             <main className="flex-1 flex flex-col min-w-0 bg-[#0f1014] h-full relative">
                 <header className="px-8 py-8 flex justify-between items-start">
                     <div>
-                        <h1 className="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-purple-500 mb-2">
+                        <h1 className="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-blue-200 mb-2">
                             {getHeaderTitle()}
                         </h1>
                         <p className="text-gray-500 text-lg">
@@ -114,7 +114,7 @@ export const TaskManager = () => {
                                 <button
                                     type="submit"
                                     disabled={!newTaskTitle.trim()}
-                                    className="bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-400 hover:to-purple-500 text-white px-8 rounded-xl font-medium transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                                    className="bg-gradient-to-r from-blue-600 to-blue-400 hover:from-blue-500 hover:to-blue-300 text-white px-8 rounded-xl font-medium transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
                                 >
                                     <Plus size={20} /> Create
                                 </button>

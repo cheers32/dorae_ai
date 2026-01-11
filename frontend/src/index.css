@@ -2,8 +2,8 @@
 @import "tailwindcss";
 
 :root {
-  --primary: #6366f1;
-  --primary-hover: #4f46e5;
+  --primary: #3b82f6;
+  --primary-hover: #2563eb;
   --bg-dark: #020617;
   --bg-sidebar: #0f172a;
   --bg-card: rgba(30, 41, 59, 0.4);
@@ -46,7 +46,8 @@ body {
   padding-left: 0.5rem;
 }
 
-.logo-icon {
+/* Removed old .logo-icon styles as they are overridden in component */
+.logo-icon-legacy {
   width: 36px;
   height: 36px;
   background: linear-gradient(135deg, #6366f1, #a855f7);
@@ -98,7 +99,7 @@ body {
 
 .nav-item.active {
   color: var(--primary);
-  background: rgba(99, 102, 241, 0.1);
+  background: rgba(59, 130, 246, 0.1);
 }
 
 .sidebar-footer {
@@ -214,7 +215,7 @@ body {
   height: 8px;
   border-radius: 50%;
   background: var(--primary);
-  box-shadow: 0 0 10px rgba(99, 102, 241, 0.5);
+  box-shadow: 0 0 10px rgba(59, 130, 246, 0.5);
 }
 
 .status-indicator.completed {
@@ -314,7 +315,7 @@ body {
 }
 
 .analyze-btn {
-  background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+  background: linear-gradient(135deg, #3b82f6, #60a5fa);
   color: white;
 }
 
