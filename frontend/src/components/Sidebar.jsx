@@ -16,18 +16,20 @@ export function Sidebar({ activeTab, setActiveTab }) {
             animate={{ x: 0, opacity: 1 }}
             transition={{ duration: 0.5 }}
         >
-            <div className="sidebar-header flex items-center gap-3">
-                <div className="logo-icon relative group">
-                    <Sparkles size={24} />
+            <div className="sidebar-header flex items-center justify-between pr-2">
+                <div className="flex items-center gap-3">
+                    <div className="logo-icon relative group !bg-gradient-to-br !from-blue-600 !to-blue-500 !shadow-blue-500/20">
+                        <Sparkles size={24} className="text-white" />
+                    </div>
+                    <h2 className="bg-gradient-to-r from-blue-400 to-blue-200 bg-clip-text text-transparent font-bold">Task AI</h2>
                 </div>
                 <button
                     onClick={() => window.location.href = '/'}
-                    className="p-2 rounded-full bg-gray-800/50 hover:bg-gray-700 border border-gray-700 text-gray-400 hover:text-white transition-all flex items-center justify-center"
+                    className="p-2 rounded-xl hover:bg-white/5 border border-transparent hover:border-white/10 text-gray-500 hover:text-white transition-all flex items-center justify-center group"
                     title="Back to Home"
                 >
-                    <Home size={16} />
+                    <Home size={20} className="group-hover:scale-110 transition-transform" />
                 </button>
-                <h2>Task AI</h2>
             </div>
 
             <nav className="sidebar-nav">
