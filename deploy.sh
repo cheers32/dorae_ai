@@ -29,12 +29,16 @@ echo ""
 echo "📦 Building and Deploying to Cloud Run (Region: us-central1)..."
 echo "   (This may take a few minutes)"
 
-gcloud run deploy dorae-task-manager \
+if gcloud run deploy dorae-task-manager \
   --source . \
   --project "$PROJECT_ID" \
   --region us-central1 \
   --allow-unauthenticated \
-  --set-env-vars MONGO_URI="$MONGO_URI",GEMINI_API_KEY="$GEMINI_API_KEY"
-
-echo ""
-echo "✅ Deployment Process Finished!"
+  --set-env-vars MONGO_URI="$MONGO_URI",GEMINI_API_KEY="$GEMINI_API_KEY"; then
+    echo ""
+    echo "✅ Deployment Process Finished Successfully!"
+else
+    echo ""
+    echo "❌ Deployment Failed. Please check the error message above."
+    exit 1
+fi
