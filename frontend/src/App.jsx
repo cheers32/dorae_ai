@@ -4,11 +4,13 @@ import { TaskManager } from './components/TaskManager';
 import FutbinAI from './components/FutbinAI';
 import LoginPage from './components/LoginPage';
 import ProtectedRoute from './components/ProtectedRoute';
+import TrafficTracker from './components/TrafficTracker';
 import './App.css';
 
 function App() {
   return (
     <BrowserRouter>
+      <TrafficTracker />
       <Routes>
         <Route path="/" element={<LandingPage />} />
         <Route path="/login" element={<LoginPage />} />

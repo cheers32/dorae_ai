@@ -32,6 +32,18 @@ export const api = {
         }
     },
 
+    logTraffic: async (path, userEmail) => {
+        try {
+            await fetch(`${API_BASE}/traffic`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ path, user_email: userEmail })
+            });
+        } catch (error) {
+            console.error("Traffic log failed", error);
+        }
+    },
+
     addUpdate: async (taskId, content, type = 'detail') => {
         const res = await fetch(`${API_BASE}/tasks/${taskId}/update`, {
             method: 'POST',

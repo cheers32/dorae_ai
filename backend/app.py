@@ -80,6 +80,24 @@ def login_user():
         print(f"Error saving user: {e}")
         return jsonify({'error': str(e)}), 500
 
+@app.route('/api/traffic', methods=['POST'])
+def log_traffic():
+    try:
+        data = request.json
+        
+        traffic_collection = db['traffic_logs']
+        traffic_collection.insert_one({
+            'path': data.get('path'),
+            'user_email': data.get('user_email'), # Optional, if logged in
+            'timestamp': datetime.utcnow(),
+            'ip': request.remote_addr,
+            'user_agent': request.headers.get('User-Agent')
+        })
+        return jsonify({'status': 'logged'}), 200
+    except Exception as e:
+        print(f"Traffic log error: {e}")
+        return jsonify({'error': str(e)}), 500
+
 @app.route('/api/tasks', methods=['GET'])
 def get_tasks():
     try:
