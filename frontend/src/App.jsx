@@ -1,7 +1,9 @@
 import { useState, useEffect } from 'react';
 import { api } from './api';
 import { TaskItem } from './components/TaskItem';
-import { Plus, Layout, CheckSquare } from 'lucide-react';
+import { Sidebar } from './components/Sidebar';
+import { Plus } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
 import './App.css';
 
 function App() {
@@ -39,27 +41,16 @@ function App() {
   };
 
   return (
-    <div className="app-container">
-      <div className="glass-panel main-layout">
-        <header className="app-header">
-          <h1>Dorae AI</h1>
-          <p>Task Manager</p>
-        </header>
+    <div className="app-shell">
+      <Sidebar activeTab={activeTab} setActiveTab={setActiveTab} />
 
-        <div className="tabs">
-          <button
-            className={`tab ${activeTab === 'active' ? 'active' : ''}`}
-            onClick={() => setActiveTab('active')}
-          >
-            <Layout size={18} /> Active Tasks
-          </button>
-          <button
-            className={`tab ${activeTab === 'closed' ? 'active' : ''}`}
-            onClick={() => setActiveTab('closed')}
-          >
-            <CheckSquare size={18} /> Closed Tasks
-          </button>
-        </div>
+      <main className="main-content">
+        <header className="content-header">
+          <div>
+            <h1>{activeTab === 'active' ? 'Active Tasks' : 'Closed Tasks'}</h1>
+            <p className="subtitle">Manage your daily goals and track progress.</p>
+          </div>
+        </header>
 
         {activeTab === 'active' && (
           <form className="create-task-bar" onSubmit={handleCreateTask}>
@@ -70,7 +61,7 @@ function App() {
               onChange={(e) => setNewTaskTitle(e.target.value)}
             />
             <button type="submit" disabled={!newTaskTitle.trim()}>
-              <Plus size={20} /> Create Task
+              <Plus size={20} /> Create
             </button>
           </form>
         )}
@@ -83,12 +74,14 @@ function App() {
               <p>No {activeTab} tasks found.</p>
             </div>
           ) : (
-            tasks.map(task => (
-              <TaskItem key={task._id} task={task} onUpdate={fetchTasks} />
-            ))
+            <AnimatePresence mode='popLayout'>
+              {tasks.map(task => (
+                <TaskItem key={task._id} task={task} onUpdate={fetchTasks} />
+              ))}
+            </AnimatePresence>
           )}
         </div>
-      </div>
+      </main>
     </div>
   );
 }
