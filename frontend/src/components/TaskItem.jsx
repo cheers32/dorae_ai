@@ -56,6 +56,8 @@ export const TaskItem = forwardRef(({ task, onUpdate, showTags, style, dragHandl
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [editingId, setEditingId] = useState(null);
     const [editContent, setEditContent] = useState('');
+    const [isEditingTitle, setIsEditingTitle] = useState(false);
+    const [editedTitle, setEditedTitle] = useState(task.title);
 
     const baseStyle = {
         ...style,
@@ -66,6 +68,20 @@ export const TaskItem = forwardRef(({ task, onUpdate, showTags, style, dragHandl
         boxShadow: isOverlay ? '0 0 0 1px rgba(59, 130, 246, 0.5), 0 10px 20px -5px rgba(0, 0, 0, 0.5)' : 'none',
         backgroundColor: isOverlay ? '#13161c' : undefined,
         cursor: isOverlay ? 'grabbing' : undefined,
+    };
+
+    const handleSaveTitle = async () => {
+        if (!editedTitle.trim() || editedTitle === task.title) {
+            setIsEditingTitle(false);
+            return;
+        }
+        try {
+            await api.updateTask(task._id, { title: editedTitle });
+            setIsEditingTitle(false);
+            onUpdate();
+        } catch (err) {
+            console.error(err);
+        }
     };
 
     const handleAddDetail = async (e) => {
@@ -189,7 +205,7 @@ export const TaskItem = forwardRef(({ task, onUpdate, showTags, style, dragHandl
             className={`group hover:bg-white/[0.02] transition-colors rounded-xl border border-white/5 bg-[#1a1f2e]/50 mb-3 ${expanded ? 'ring-1 ring-blue-500/20' : ''}`}
         >
             <div
-                className="p-4 flex items-center gap-4 cursor-pointer select-none"
+                className="p-4 flex items-center gap-4 cursor-pointer"
                 onClick={() => setExpanded(!expanded)}
             >
                 <div
@@ -206,9 +222,35 @@ export const TaskItem = forwardRef(({ task, onUpdate, showTags, style, dragHandl
                         }`}
                 />
 
-                <h3 className={`flex-1 font-medium text-gray-200 text-left ${task.status === 'completed' ? 'line-through opacity-50' : ''}`}>
-                    {task.title}
-                </h3>
+                {isEditingTitle ? (
+                    <input
+                        autoFocus
+                        value={editedTitle}
+                        onChange={(e) => setEditedTitle(e.target.value)}
+                        onBlur={handleSaveTitle}
+                        onKeyDown={(e) => {
+                            if (e.key === 'Enter') handleSaveTitle();
+                            if (e.key === 'Escape') setIsEditingTitle(false);
+                        }}
+                        className="flex-1 bg-black/40 border border-blue-500/50 rounded px-2 py-0.5 text-gray-200 focus:outline-none"
+                        onClick={(e) => e.stopPropagation()}
+                    />
+                ) : (
+                    <h3
+                        className={`flex-1 font-medium text-gray-200 text-left ${task.status === 'completed' ? 'line-through opacity-50' : ''}`}
+                        onDoubleClick={(e) => {
+                            e.stopPropagation();
+                            setIsEditingTitle(true);
+                            setEditedTitle(task.title);
+                        }}
+                        onClick={(e) => {
+                            // Stop propagation to allow text selection without expanding
+                            e.stopPropagation();
+                        }}
+                    >
+                        {task.title}
+                    </h3>
+                )}
 
                 <div className={`flex items-center gap-2 transition-opacity ${showTags ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`} onClick={e => e.stopPropagation()}>
 

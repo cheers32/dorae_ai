@@ -1,6 +1,37 @@
 import { motion } from 'framer-motion';
 import { Layout, CheckSquare, Settings, Activity, MessageSquare, LogOut, Home, Sparkles, Trash2 } from 'lucide-react';
 import { api } from '../api';
+import { useDroppable } from '@dnd-kit/core';
+
+const DroppableMenuItem = ({ item, activeTab, setActiveTab }) => {
+    const { isOver, setNodeRef } = useDroppable({
+        id: `sidebar-${item.id}`,
+        data: {
+            type: 'sidebar',
+            target: item.id
+        }
+    });
+
+    const Icon = item.icon;
+    const isActive = activeTab === item.id;
+
+    return (
+        <button
+            ref={setNodeRef}
+            className={`nav-item ${isActive ? 'active' : ''} ${isOver ? 'bg-blue-500/20 border-blue-400 shadow-[0_0_15px_rgba(59,130,246,0.3)]' : ''}`}
+            onClick={() => setActiveTab(item.id)}
+        >
+            <Icon size={20} className={isOver ? 'text-blue-400' : ''} />
+            <span className={isOver ? 'text-blue-400' : ''}>{item.label}</span>
+            {isActive && (
+                <motion.div
+                    className="active-indicator"
+                    layoutId="activeIndicator"
+                />
+            )}
+        </button>
+    );
+};
 
 export function Sidebar({ activeTab, setActiveTab }) {
     const menuItems = [
@@ -37,27 +68,14 @@ export function Sidebar({ activeTab, setActiveTab }) {
             </div>
 
             <nav className="sidebar-nav">
-                {menuItems.map((item) => {
-                    const Icon = item.icon;
-                    const isActive = activeTab === item.id;
-
-                    return (
-                        <button
-                            key={item.id}
-                            className={`nav-item ${isActive ? 'active' : ''}`}
-                            onClick={() => setActiveTab(item.id)}
-                        >
-                            <Icon size={20} />
-                            <span>{item.label}</span>
-                            {isActive && (
-                                <motion.div
-                                    className="active-indicator"
-                                    layoutId="activeIndicator"
-                                />
-                            )}
-                        </button>
-                    );
-                })}
+                {menuItems.map((item) => (
+                    <DroppableMenuItem
+                        key={item.id}
+                        item={item}
+                        activeTab={activeTab}
+                        setActiveTab={setActiveTab}
+                    />
+                ))}
             </nav>
 
             <div className="sidebar-footer">
