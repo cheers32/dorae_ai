@@ -106,7 +106,7 @@ export const TaskManager = () => {
                             <form className="flex gap-4 mb-8" onSubmit={handleCreateTask}>
                                 <input
                                     type="text"
-                                    className="flex-1 bg-gray-900 border border-gray-800 rounded-xl px-5 py-4 text-base focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-all placeholder:text-gray-600"
+                                    className="flex-1 bg-gray-900 border border-gray-800 rounded-xl px-5 py-4 text-base focus:outline-none focus:border-blue-500 focus:ring-0 transition-all placeholder:text-gray-600"
                                     placeholder="What needs to be done?"
                                     value={newTaskTitle}
                                     onChange={(e) => setNewTaskTitle(e.target.value)}
