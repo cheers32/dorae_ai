@@ -1,6 +1,19 @@
 import { useState, useRef, useEffect, forwardRef } from 'react';
 import { format } from 'date-fns';
-import { ChevronDown, ChevronUp, Plus, Check, X, Clock, AlertCircle, Sparkles, Trash2, Tag, Flag, Pencil, GripVertical } from 'lucide-react';
+import {
+    ChevronDown,
+    ChevronUp,
+    Trash2,
+    Clock,
+    AlertCircle,
+    MoreVertical,
+    Plus,
+    X,
+    GripVertical,
+    Pencil,
+    Check,
+    Sparkles
+} from 'lucide-react';
 import { api } from '../api';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useSortable } from '@dnd-kit/sortable';
@@ -110,16 +123,6 @@ export const TaskItem = forwardRef(({ task, onUpdate, showTags, style, dragHandl
         }
     };
 
-    const handleCloseTask = async (e) => {
-        e.stopPropagation();
-        try {
-            await api.closeTask(task._id);
-            onUpdate();
-        } catch (err) {
-            console.error(err);
-        }
-    };
-
     const handleAnalyzeTask = async () => {
         setIsSubmitting(true);
         try {
@@ -205,55 +208,63 @@ export const TaskItem = forwardRef(({ task, onUpdate, showTags, style, dragHandl
             className={`group hover:bg-white/[0.02] transition-colors rounded-xl border border-white/5 bg-[#1a1f2e]/50 mb-3 ${expanded ? 'ring-1 ring-blue-500/20' : ''}`}
         >
             <div
-                className="p-4 flex items-center gap-4 cursor-pointer"
+                className="flex items-center gap-4 cursor-pointer"
                 onClick={() => setExpanded(!expanded)}
+                {...dragHandleProps}
             >
-                <div
-                    {...dragHandleProps}
-                    className="p-1 cursor-grab active:cursor-grabbing text-gray-600 hover:text-gray-400 transition-colors"
-                    onClick={(e) => e.stopPropagation()}
-                >
-                    <GripVertical size={16} />
-                </div>
-                <div
-                    className={`w-3 h-3 rounded-full shrink-0 shadow-[0_0_10px_rgba(59,130,246,0.3)] transition-colors ${task.status === 'completed' ? 'bg-green-500 shadow-[0_0_10px_rgba(34,197,94,0.3)]' :
-                        task.status === 'in_progress' ? 'bg-yellow-500 shadow-[0_0_10px_rgba(234,179,8,0.3)]' :
-                            'bg-blue-500 shadow-[0_0_10px_rgba(59,130,246,0.3)]'
-                        }`}
-                />
-
-                {isEditingTitle ? (
-                    <input
-                        autoFocus
-                        value={editedTitle}
-                        onChange={(e) => setEditedTitle(e.target.value)}
-                        onBlur={handleSaveTitle}
-                        onKeyDown={(e) => {
-                            if (e.key === 'Enter') handleSaveTitle();
-                            if (e.key === 'Escape') setIsEditingTitle(false);
-                        }}
-                        className="flex-1 bg-black/40 border border-blue-500/50 rounded px-2 py-0.5 text-gray-200 focus:outline-none"
+                <div className="p-4 flex items-center gap-4 flex-1 min-w-0">
+                    <div
+                        className="p-1 text-gray-600 hover:text-gray-400 transition-colors"
                         onClick={(e) => e.stopPropagation()}
-                    />
-                ) : (
-                    <h3
-                        className={`flex-1 font-medium text-gray-200 text-left ${task.status === 'completed' ? 'line-through opacity-50' : ''}`}
-                        onDoubleClick={(e) => {
-                            e.stopPropagation();
-                            setIsEditingTitle(true);
-                            setEditedTitle(task.title);
-                        }}
-                        onClick={(e) => {
-                            // Stop propagation to allow text selection without expanding
-                            e.stopPropagation();
-                        }}
                     >
-                        {task.title}
-                    </h3>
-                )}
+                        <GripVertical size={16} />
+                    </div>
+                    <div
+                        className={`w-3 h-3 rounded-full shrink-0 shadow-[0_0_10px_rgba(59,130,246,0.3)] transition-colors ${task.status === 'completed' ? 'bg-green-500 shadow-[0_0_10px_rgba(34,197,94,0.3)]' :
+                                task.status === 'in_progress' ? 'bg-yellow-500 shadow-[0_0_10px_rgba(234,179,8,0.3)]' :
+                                    'bg-blue-500 shadow-[0_0_10px_rgba(59,130,246,0.3)]'
+                            }`}
+                    />
 
-                <div className={`flex items-center gap-2 transition-opacity ${showTags ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`} onClick={e => e.stopPropagation()}>
+                    {isEditingTitle ? (
+                        <input
+                            autoFocus
+                            value={editedTitle}
+                            onChange={(e) => setEditedTitle(e.target.value)}
+                            onBlur={handleSaveTitle}
+                            onKeyDown={(e) => {
+                                if (e.key === 'Enter') handleSaveTitle();
+                                if (e.key === 'Escape') setIsEditingTitle(false);
+                            }}
+                            className="flex-1 bg-black/40 border border-blue-500/50 rounded px-2 py-0.5 text-gray-200 focus:outline-none"
+                            onClick={(e) => e.stopPropagation()}
+                        />
+                    ) : (
+                        <div className="flex-1 min-w-0 flex items-center gap-2 group/title">
+                            <h3
+                                className={`font-medium text-gray-200 text-left truncate ${task.status === 'completed' ? 'line-through opacity-50' : ''}`}
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                }}
+                            >
+                                {task.title}
+                            </h3>
+                            <button
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    setIsEditingTitle(true);
+                                    setEditedTitle(task.title);
+                                }}
+                                className="opacity-0 group-hover/title:opacity-100 p-1 text-gray-500 hover:text-blue-400 transition-all hover:bg-white/5 rounded"
+                                title="Edit title"
+                            >
+                                <Pencil size={12} />
+                            </button>
+                        </div>
+                    )}
+                </div>
 
+                <div className={`flex items-center gap-2 pr-4 transition-opacity ${showTags ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`} onClick={e => e.stopPropagation()}>
                     <Dropdown
                         options={statuses}
                         value={formatStatus(task.status)}
@@ -284,10 +295,10 @@ export const TaskItem = forwardRef(({ task, onUpdate, showTags, style, dragHandl
                     <button className="p-1.5 text-gray-500 hover:text-red-400 transition-colors" onClick={handleDeleteTask}>
                         <Trash2 size={14} />
                     </button>
-                </div>
 
-                <div className={`transition-transform duration-200 ${expanded ? 'rotate-180' : ''} text-gray-500`}>
-                    <ChevronDown size={18} />
+                    <div className={`transition-transform duration-200 ${expanded ? 'rotate-180' : ''} text-gray-500`}>
+                        <ChevronDown size={18} />
+                    </div>
                 </div>
             </div>
 
@@ -300,9 +311,8 @@ export const TaskItem = forwardRef(({ task, onUpdate, showTags, style, dragHandl
                         transition={{ duration: 0.2 }}
                     >
                         <div className="px-4 pb-4 pt-0 border-t border-white/5 bg-black/20">
-                            {/* Condensed Timeline */}
                             <div className="py-4 space-y-1">
-                                {task.updates.map((update, idx) => (
+                                {task.updates.map((update) => (
                                     <div key={update.id} className="flex gap-4 group/item text-sm">
                                         <div className="w-24 text-xs text-gray-500 text-right pt-0.5 font-mono shrink-0">
                                             {format(new Date(update.timestamp), 'MMM d, HH:mm')}
@@ -366,7 +376,6 @@ export const TaskItem = forwardRef(({ task, onUpdate, showTags, style, dragHandl
                                     </div>
                                 ))}
 
-                                {/* Quick Add Line */}
                                 <div className="flex gap-4 group/add mt-2">
                                     <div className="w-24 text-xs text-gray-600 text-right pt-2 font-mono shrink-0">Now</div>
                                     <div className="relative border-l-2 border-white/5 pl-4 pb-2 flex-1">
@@ -383,9 +392,6 @@ export const TaskItem = forwardRef(({ task, onUpdate, showTags, style, dragHandl
                                     </div>
                                 </div>
                             </div>
-
-                            {/* AI Analysis Footer */}
-
 
                             <div className="flex justify-end gap-2 pt-2 border-t border-white/5 mx-[-16px] px-4 bg-black/40 pb-2 mb-[-16px]">
                                 <button
@@ -418,7 +424,7 @@ export function SortableTaskItem(props) {
     const style = {
         transform: CSS.Transform.toString(transform),
         transition,
-        opacity: isDragging ? 0.3 : 1, // Placeholder opacity
+        opacity: isDragging ? 0.3 : 1,
     };
 
     return (
