@@ -18,8 +18,8 @@ export function Sidebar({ activeTab, setActiveTab }) {
         >
             <div className="sidebar-header flex items-center justify-between pr-2">
                 <div className="flex items-center gap-3">
-                    <div className="logo-icon relative group !bg-gradient-to-br !from-blue-600 !to-blue-500 !shadow-blue-500/20">
-                        <Sparkles size={24} className="text-white" />
+                    <div className="p-3 bg-white/10 rounded-full group">
+                        <Sparkles size={32} className="text-blue-400 group-hover:text-blue-300 transition-colors" />
                     </div>
                     <h2 className="bg-gradient-to-r from-blue-400 to-blue-200 bg-clip-text text-transparent font-bold">Task AI</h2>
                 </div>

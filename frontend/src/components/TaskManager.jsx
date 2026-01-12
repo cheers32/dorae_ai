@@ -71,12 +71,12 @@ export const TaskManager = () => {
 
 
             <main className="flex-1 flex flex-col min-w-0 bg-[#0f1014] h-full relative">
-                <header className="px-8 py-8 flex justify-between items-start">
-                    <div>
-                        <h1 className="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-blue-200 mb-2">
+                <header className="px-8 py-8 flex justify-between items-center">
+                    <div className="flex items-baseline gap-4">
+                        <h1 className="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-blue-200">
                             {getHeaderTitle()}
                         </h1>
-                        <p className="text-gray-500 text-lg">
+                        <p className="text-gray-500 text-lg border-l border-gray-800 pl-4 py-0.5 leading-none">
                             {activeTab === 'assistant'
                                 ? 'Chat with your tasks powered by Gemini 3.0'
                                 : 'Manage your daily goals and track progress.'}
