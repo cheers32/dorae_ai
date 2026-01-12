@@ -120,13 +120,28 @@ def log_traffic():
 def get_tasks():
     try:
         status = request.args.get('status')
-        query = {}
+        query = {'status': {'$ne': 'deleted'}}
         if status:
             query['status'] = status
         
         # Sort by created_at desc by default
         tasks = list(tasks_collection.find(query).sort('created_at', -1))
         return jsonify([serialize_doc(task) for task in tasks]), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+@app.route('/api/tasks/<task_id>', methods=['DELETE'])
+def delete_task(task_id):
+    try:
+        result = tasks_collection.update_one(
+            {"_id": ObjectId(task_id)},
+            {"$set": {"status": "deleted", "deleted_at": datetime.utcnow()}}
+        )
+        
+        if result.matched_count == 0:
+            return jsonify({"error": "Task not found"}), 404
+            
+        return jsonify({"message": "Task soft deleted"}), 200
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
