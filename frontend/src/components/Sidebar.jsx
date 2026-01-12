@@ -1,5 +1,5 @@
 import { motion } from 'framer-motion';
-import { Layout, CheckSquare, Settings, Activity, MessageSquare, LogOut, Home, Sparkles } from 'lucide-react';
+import { Layout, CheckSquare, Settings, Activity, MessageSquare, LogOut, Home, Sparkles, Trash2 } from 'lucide-react';
 import { api } from '../api';
 
 export function Sidebar({ activeTab, setActiveTab }) {
@@ -7,6 +7,7 @@ export function Sidebar({ activeTab, setActiveTab }) {
         { id: 'active', label: 'Active Tasks', icon: Layout },
         { id: 'closed', label: 'Closed Tasks', icon: CheckSquare },
         { id: 'assistant', label: 'Assistant', icon: MessageSquare },
+        { id: 'trash', label: 'Trash', icon: Trash2 },
     ];
 
     return (

@@ -31,7 +31,11 @@ export const TaskManager = () => {
 
         try {
             setError(null);
-            const data = await api.getTasks(activeTab === 'active' ? 'pending' : 'completed');
+            let status = 'active';
+            if (activeTab === 'closed') status = 'completed';
+            if (activeTab === 'trash') status = 'deleted';
+
+            const data = await api.getTasks(status);
             if (data.error) throw new Error(data.error);
             setTasks(data);
         } catch (err) {
@@ -63,6 +67,7 @@ export const TaskManager = () => {
         switch (activeTab) {
             case 'active': return 'Active Tasks';
             case 'closed': return 'Closed Tasks';
+            case 'trash': return 'Trash Bin';
             case 'assistant': return 'AI Assistant';
             default: return 'Tasks';
         }
@@ -88,10 +93,11 @@ export const TaskManager = () => {
                     <div className="flex items-center gap-4">
                         <button
                             onClick={() => setShowTags(!showTags)}
-                            className={`p-2 rounded-lg transition-colors ${showTags ? 'text-blue-400 bg-blue-400/10' : 'text-gray-500 hover:text-gray-300'}`}
+                            className={`px-3 py-2 rounded-lg transition-colors flex items-center gap-2 ${showTags ? 'text-blue-400 bg-blue-400/10' : 'text-gray-500 hover:text-gray-300'}`}
                             title="Toggle Tags Visibility"
                         >
-                            <TagIcon size={20} />
+                            <TagIcon size={18} />
+                            <span className="text-sm font-medium">{showTags ? 'Hide Tags' : 'Show Tags'}</span>
                         </button>
 
                         {localStorage.getItem('userProfile') && (

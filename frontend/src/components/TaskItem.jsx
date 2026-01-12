@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import { format } from 'date-fns';
-import { ChevronDown, ChevronUp, Plus, Check, X, Clock, AlertCircle, Sparkles, Trash2, Tag, Flag } from 'lucide-react';
+import { ChevronDown, ChevronUp, Plus, Check, X, Clock, AlertCircle, Sparkles, Trash2, Tag, Flag, Pencil } from 'lucide-react';
 import { api } from '../api';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -105,7 +105,9 @@ export function TaskItem({ task, onUpdate, showTags }) {
 
     const handleDeleteTask = async (e) => {
         e.stopPropagation();
-        if (!confirm('Delete this task?')) return;
+        const isTrash = task.status === 'deleted';
+        if (!confirm(isTrash ? 'Permanently delete this task?' : 'Move this task to trash?')) return;
+
         setIsSubmitting(true);
         try {
             await api.deleteTask(task._id);
@@ -114,6 +116,16 @@ export function TaskItem({ task, onUpdate, showTags }) {
             console.error(err);
         } finally {
             setIsSubmitting(false);
+        }
+    };
+
+    const handleDeleteUpdate = async (updateId) => {
+        if (!confirm('Delete this update?')) return;
+        try {
+            await api.deleteUpdate(task._id, updateId);
+            onUpdate();
+        } catch (err) {
+            console.error(err);
         }
     };
 
@@ -245,25 +257,44 @@ export function TaskItem({ task, onUpdate, showTags }) {
                                                 </div>
                                             ) : (
                                                 update.type === 'ai_analysis' ? (
-                                                    <div className="mt-1 mb-2 p-3 rounded-lg bg-blue-500/5 border border-blue-500/10 w-full">
+                                                    <div className="mt-1 mb-2 p-3 rounded-lg bg-indigo-500/10 border border-indigo-500/20 w-full relative group/ai shadow-sm">
                                                         <div className="flex items-start gap-2">
                                                             <Sparkles size={14} className="text-blue-400 mt-0.5 shrink-0" />
                                                             <p className="text-sm text-blue-200/80 italic leading-relaxed">
                                                                 {update.content.replace('AI Plan: ', '')}
                                                             </p>
                                                         </div>
+                                                        <button
+                                                            className="absolute top-2 right-2 p-1 text-blue-400/50 hover:text-red-400 opacity-0 group-hover/ai:opacity-100 transition-all"
+                                                            onClick={() => handleDeleteUpdate(update.id)}
+                                                            title="Delete Analysis"
+                                                        >
+                                                            <X size={12} />
+                                                        </button>
                                                     </div>
                                                 ) : (
                                                     <div className="group/content flex items-start gap-2">
-                                                        <p className={`text-gray-400 ${update.type === 'creation' ? 'italic opacity-60' : ''}`}>
+                                                        <p className={`text-gray-400 ${['creation', 'status_change', 'property_change', 'deletion'].includes(update.type) ? 'italic opacity-60' : ''}`}>
                                                             {update.content}
                                                         </p>
-                                                        <button
-                                                            className="opacity-0 group-hover/content:opacity-100 text-gray-600 hover:text-blue-400 transition-all pt-0.5"
-                                                            onClick={() => { setEditingId(update.id); setEditContent(update.content); }}
-                                                        >
-                                                            <Sparkles size={10} />
-                                                        </button>
+                                                        {!['status_change', 'creation', 'property_change', 'deletion'].includes(update.type) && (
+                                                            <div className="opacity-0 group-hover/content:opacity-100 flex gap-1 pt-0.5">
+                                                                <button
+                                                                    className="text-gray-600 hover:text-blue-400 transition-all"
+                                                                    onClick={() => { setEditingId(update.id); setEditContent(update.content); }}
+                                                                    title="Edit"
+                                                                >
+                                                                    <Pencil size={10} />
+                                                                </button>
+                                                                <button
+                                                                    className="text-gray-600 hover:text-red-400 transition-all"
+                                                                    onClick={() => handleDeleteUpdate(update.id)}
+                                                                    title="Delete Update"
+                                                                >
+                                                                    <X size={10} />
+                                                                </button>
+                                                            </div>
+                                                        )}
                                                     </div>
                                                 )
                                             )}

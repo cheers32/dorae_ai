@@ -71,6 +71,13 @@ export const api = {
         return res.json();
     },
 
+    deleteUpdate: async (taskId, updateId) => {
+        const res = await fetch(`${API_BASE}/tasks/${taskId}/update/${updateId}`, {
+            method: 'DELETE',
+        });
+        return res.json();
+    },
+
     closeTask: async (taskId) => {
         const res = await fetch(`${API_BASE}/tasks/${taskId}/close`, {
             method: 'POST',

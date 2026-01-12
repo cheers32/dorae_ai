@@ -120,9 +120,18 @@ def log_traffic():
 def get_tasks():
     try:
         status = request.args.get('status')
-        query = {'status': {'$ne': 'deleted'}}
-        if status:
+        query = {}
+        
+        if status == 'deleted':
+            query['status'] = 'deleted'
+        elif status == 'active':
+            # Exclude completed and deleted
+            query['status'] = {'$nin': ['completed', 'deleted']}
+        elif status:
             query['status'] = status
+        else:
+            # Default: exclude deleted
+            query['status'] = {'$ne': 'deleted'}
         
         # Sort by created_at desc by default
         tasks = list(tasks_collection.find(query).sort('created_at', -1))
@@ -133,15 +142,45 @@ def get_tasks():
 @app.route('/api/tasks/<task_id>', methods=['DELETE'])
 def delete_task(task_id):
     try:
+        # Check current status first
+        task = tasks_collection.find_one({"_id": ObjectId(task_id)})
+        if not task:
+            return jsonify({"error": "Task not found"}), 404
+
+        if task.get('status') == 'deleted':
+             # Hard Delete
+            result = tasks_collection.delete_one({"_id": ObjectId(task_id)})
+            return jsonify({"message": "Task permanently deleted"}), 200
+        else:
+            # Soft Delete
+            result = tasks_collection.update_one(
+                {"_id": ObjectId(task_id)},
+                {
+                    "$set": {"status": "deleted", "deleted_at": datetime.utcnow()},
+                    "$push": {"updates": {
+                        "id": str(uuid.uuid4()),
+                        "content": "Task moved to trash",
+                        "type": "deletion",
+                        "timestamp": datetime.utcnow().isoformat()
+                    }}
+                }
+            )
+            return jsonify({"message": "Task moved to trash"}), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+@app.route('/api/tasks/<task_id>/update/<update_id>', methods=['DELETE'])
+def delete_task_update(task_id, update_id):
+    try:
         result = tasks_collection.update_one(
             {"_id": ObjectId(task_id)},
-            {"$set": {"status": "deleted", "deleted_at": datetime.utcnow()}}
+            {"$pull": {"updates": {"id": update_id}}}
         )
         
         if result.matched_count == 0:
             return jsonify({"error": "Task not found"}), 404
             
-        return jsonify({"message": "Task soft deleted"}), 200
+        return jsonify({"message": "Update item deleted"}), 200
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
@@ -157,22 +196,36 @@ def update_task(task_id):
                 update_fields[field] = data[field]
                 
         if 'status' in data:
-            if data['status'] == 'completed':
+            new_status = data['status']
+            if new_status == 'completed':
                 now = datetime.utcnow().isoformat()
                 update_fields['completed_at'] = now
-                
-                # Add completion event to timeline
-                tasks_collection.update_one(
+            else:
+                update_fields['completed_at'] = None
+            
+            # Add status change event to timeline (for ALL status changes)
+            tasks_collection.update_one(
+                {"_id": ObjectId(task_id)},
+                {"$push": {"updates": {
+                    "id": str(uuid.uuid4()),
+                    "content": f"Task status changed to {new_status}",
+                    "type": "status_change",
+                    "timestamp": datetime.utcnow().isoformat()
+                }}}
+            )
+
+        # Log other property changes
+        for prop in ['priority', 'category']:
+            if prop in data:
+                 tasks_collection.update_one(
                     {"_id": ObjectId(task_id)},
                     {"$push": {"updates": {
                         "id": str(uuid.uuid4()),
-                        "content": "Task completed",
-                        "type": "status_change",
-                        "timestamp": now
+                        "content": f"{prop.capitalize()} changed to {data[prop]}",
+                        "type": "property_change",
+                        "timestamp": datetime.utcnow().isoformat()
                     }}}
                 )
-            else:
-                update_fields['completed_at'] = None
 
         result = tasks_collection.update_one(
             {"_id": ObjectId(task_id)},
