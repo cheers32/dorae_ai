@@ -133,7 +133,8 @@ export const TaskManager = () => {
         if (!newTaskTitle.trim()) return;
 
         try {
-            await api.createTask(newTaskTitle);
+            const labelsToApply = selectedLabel ? [selectedLabel] : [];
+            await api.createTask(newTaskTitle, labelsToApply);
             setNewTaskTitle('');
             fetchTasks();
         } catch (err) {

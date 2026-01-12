@@ -283,7 +283,7 @@ def create_task():
             "priority": "medium", # Default
             "importance": 3,      # Default
             "category": "General", # Default
-            "labels": [],         # New: labels array
+            "labels": data.get('labels', []), # Use provided labels or empty array
             "updates": [{
                 "id": str(uuid.uuid4()),
                 "content": "Task created",
