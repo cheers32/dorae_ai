@@ -23,9 +23,11 @@ def not_found(e):
 
 MONGO_URI = os.getenv('MONGO_URI')
 
+import certifi
+
 # Initialize MongoDB
 try:
-    client = MongoClient(MONGO_URI)
+    client = MongoClient(MONGO_URI, tlsCAFile=certifi.where())
     db = client['dorae_db']
     tasks_collection = db['tasks']
     print("Connected to MongoDB")
