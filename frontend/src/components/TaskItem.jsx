@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { format } from 'date-fns';
-import { ChevronDown, ChevronUp, Plus, Check, X, Clock, AlertCircle, Sparkles } from 'lucide-react';
+import { ChevronDown, ChevronUp, Plus, Check, X, Clock, AlertCircle, Sparkles, Trash2 } from 'lucide-react';
 import { api } from '../api';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -53,6 +53,19 @@ export function TaskItem({ task, onUpdate }) {
         setIsSubmitting(true);
         try {
             await api.analyzeTask(task._id);
+            onUpdate();
+        } catch (err) {
+            console.error(err);
+        } finally {
+            setIsSubmitting(false);
+        }
+    };
+
+    const handleDeleteTask = async () => {
+        if (!confirm('Are you sure you want to delete this task?')) return;
+        setIsSubmitting(true);
+        try {
+            await api.deleteTask(task._id);
             onUpdate();
         } catch (err) {
             console.error(err);
@@ -151,6 +164,9 @@ export function TaskItem({ task, onUpdate }) {
                                         )}
                                         <button className="analyze-btn" onClick={handleAnalyzeTask} disabled={isSubmitting}>
                                             <Sparkles size={18} /> {isSubmitting ? 'Thinking...' : 'AI Analyze'}
+                                        </button>
+                                        <button className="delete-btn" onClick={handleDeleteTask} disabled={isSubmitting} title="Delete Task">
+                                            <Trash2 size={18} />
                                         </button>
                                         <button className="close-btn" onClick={handleCloseTask}>
                                             <Check size={18} /> Complete

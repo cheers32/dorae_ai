@@ -21,7 +21,10 @@ export function Sidebar({ activeTab, setActiveTab }) {
                     <div className="p-3 bg-white/10 rounded-full group">
                         <Sparkles size={32} className="text-blue-400 group-hover:text-blue-300 transition-colors" />
                     </div>
-                    <h2 className="bg-gradient-to-r from-blue-400 to-blue-200 bg-clip-text text-transparent font-bold">Task AI</h2>
+                    <div className="flex flex-col">
+                        <h2 className="bg-gradient-to-r from-blue-400 to-blue-200 bg-clip-text text-transparent font-bold leading-tight">Task AI</h2>
+                        <span className="text-[10px] text-gray-500 font-mono tracking-wider ml-0.5">{__APP_VERSION__}</span>
+                    </div>
                 </div>
                 <button
                     onClick={() => window.location.href = '/'}

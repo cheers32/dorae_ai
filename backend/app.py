@@ -49,6 +49,18 @@ def hello():
 
 # --- Tasks Endpoints ---
 
+@app.route('/api/health', methods=['GET'])
+def health_check():
+    try:
+        # Check MongoDB connection
+        if client:
+            client.admin.command('ping')
+            return jsonify({'status': 'healthy', 'db': 'connected'}), 200
+        else:
+            return jsonify({'status': 'unhealthy', 'db': 'disconnected'}), 503
+    except Exception as e:
+        return jsonify({'status': 'unhealthy', 'error': str(e)}), 503
+
 @app.route('/api/login', methods=['POST'])
 def login_user():
     try:
