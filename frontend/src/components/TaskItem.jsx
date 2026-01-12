@@ -244,17 +244,28 @@ export function TaskItem({ task, onUpdate, showTags }) {
                                                     <button onClick={() => handleSaveEdit(update.id)} className="text-green-400"><Check size={14} /></button>
                                                 </div>
                                             ) : (
-                                                <div className="group/content flex items-start gap-2">
-                                                    <p className={`text-gray-400 ${update.type === 'creation' ? 'italic opacity-60' : ''}`}>
-                                                        {update.content}
-                                                    </p>
-                                                    <button
-                                                        className="opacity-0 group-hover/content:opacity-100 text-gray-600 hover:text-blue-400 transition-all pt-0.5"
-                                                        onClick={() => { setEditingId(update.id); setEditContent(update.content); }}
-                                                    >
-                                                        <Sparkles size={10} />
-                                                    </button>
-                                                </div>
+                                                update.type === 'ai_analysis' ? (
+                                                    <div className="mt-1 mb-2 p-3 rounded-lg bg-blue-500/5 border border-blue-500/10 w-full">
+                                                        <div className="flex items-start gap-2">
+                                                            <Sparkles size={14} className="text-blue-400 mt-0.5 shrink-0" />
+                                                            <p className="text-sm text-blue-200/80 italic leading-relaxed">
+                                                                {update.content.replace('AI Plan: ', '')}
+                                                            </p>
+                                                        </div>
+                                                    </div>
+                                                ) : (
+                                                    <div className="group/content flex items-start gap-2">
+                                                        <p className={`text-gray-400 ${update.type === 'creation' ? 'italic opacity-60' : ''}`}>
+                                                            {update.content}
+                                                        </p>
+                                                        <button
+                                                            className="opacity-0 group-hover/content:opacity-100 text-gray-600 hover:text-blue-400 transition-all pt-0.5"
+                                                            onClick={() => { setEditingId(update.id); setEditContent(update.content); }}
+                                                        >
+                                                            <Sparkles size={10} />
+                                                        </button>
+                                                    </div>
+                                                )
                                             )}
                                         </div>
                                     </div>
@@ -279,16 +290,7 @@ export function TaskItem({ task, onUpdate, showTags }) {
                             </div>
 
                             {/* AI Analysis Footer */}
-                            {task.ai_analysis && (
-                                <div className="mt-2 ml-28 p-3 rounded-lg bg-blue-500/5 border border-blue-500/10 mb-4">
-                                    <div className="flex items-start gap-2">
-                                        <Sparkles size={14} className="text-blue-400 mt-0.5 shrink-0" />
-                                        <p className="text-sm text-blue-200/80 italic leading-relaxed">
-                                            {task.ai_analysis.suggestions}
-                                        </p>
-                                    </div>
-                                </div>
-                            )}
+
 
                             <div className="flex justify-end gap-2 pt-2 border-t border-white/5 mx-[-16px] px-4 bg-black/40 pb-2 mb-[-16px]">
                                 <button
