@@ -86,83 +86,85 @@ export function TaskItem({ task, onUpdate }) {
             <AnimatePresence>
                 {expanded && (
                     <motion.div
-                        className="task-body"
                         initial={{ height: 0, opacity: 0 }}
                         animate={{ height: 'auto', opacity: 1 }}
                         exit={{ height: 0, opacity: 0 }}
                         transition={{ duration: 0.2 }}
+                        style={{ overflow: 'hidden' }}
                     >
-                        <div className="timeline">
-                            {task.updates.map((update) => (
-                                <div key={update.id} className="timeline-item">
-                                    <div className="timeline-marker"></div>
-                                    <div className="timeline-content">
-                                        <div className="timeline-header">
-                                            <span className="timestamp">
-                                                {format(new Date(update.timestamp), 'MMM d, h:mm a')}
-                                            </span>
-                                            {editingId !== update.id && (
-                                                <button className="edit-icon" onClick={() => {
-                                                    setEditingId(update.id);
-                                                    setEditContent(update.content);
-                                                }}>Edit</button>
+                        <div className="task-body">
+                            <div className="timeline">
+                                {task.updates.map((update) => (
+                                    <div key={update.id} className="timeline-item">
+                                        <div className="timeline-marker"></div>
+                                        <div className="timeline-content">
+                                            <div className="timeline-header">
+                                                <span className="timestamp">
+                                                    {format(new Date(update.timestamp), 'MMM d, h:mm a')}
+                                                </span>
+                                                {editingId !== update.id && (
+                                                    <button className="edit-icon" onClick={() => {
+                                                        setEditingId(update.id);
+                                                        setEditContent(update.content);
+                                                    }}>Edit</button>
+                                                )}
+                                            </div>
+
+                                            {editingId === update.id ? (
+                                                <div className="edit-box">
+                                                    <input
+                                                        value={editContent}
+                                                        onChange={(e) => setEditContent(e.target.value)}
+                                                        autoFocus
+                                                    />
+                                                    <button onClick={() => handleSaveEdit(update.id)}><Check size={16} /></button>
+                                                    <button onClick={() => setEditingId(null)}><X size={16} /></button>
+                                                </div>
+                                            ) : (
+                                                <p className="update-text">{update.content}</p>
                                             )}
                                         </div>
+                                    </div>
+                                ))}
+                            </div>
 
-                                        {editingId === update.id ? (
-                                            <div className="edit-box">
-                                                <input
-                                                    value={editContent}
-                                                    onChange={(e) => setEditContent(e.target.value)}
-                                                    autoFocus
-                                                />
-                                                <button onClick={() => handleSaveEdit(update.id)}><Check size={16} /></button>
-                                                <button onClick={() => setEditingId(null)}><X size={16} /></button>
+                            {task.status !== 'completed' && (
+                                <div className="actions-area">
+                                    <form onSubmit={handleAddDetail} className="add-detail-form">
+                                        <input
+                                            type="text"
+                                            placeholder="Add a detail, execution note, or update..."
+                                            value={newDetail}
+                                            onChange={(e) => setNewDetail(e.target.value)}
+                                            disabled={isSubmitting}
+                                        />
+                                        <button type="submit" disabled={isSubmitting || !newDetail.trim()}>
+                                            <Plus size={18} /> Add
+                                        </button>
+                                    </form>
+
+                                    <div className="task-footer">
+                                        {task.ai_analysis && (
+                                            <div style={{ fontSize: '0.9rem', color: '#94a3b8', marginBottom: '1rem', fontStyle: 'italic' }}>
+                                                AI Suggestion: {task.ai_analysis.suggestions}
                                             </div>
-                                        ) : (
-                                            <p className="update-text">{update.content}</p>
                                         )}
+                                        <button className="analyze-btn" onClick={handleAnalyzeTask} disabled={isSubmitting}>
+                                            <Sparkles size={18} /> {isSubmitting ? 'Thinking...' : 'AI Analyze'}
+                                        </button>
+                                        <button className="close-btn" onClick={handleCloseTask}>
+                                            <Check size={18} /> Complete
+                                        </button>
                                     </div>
                                 </div>
-                            ))}
-                        </div>
+                            )}
 
-                        {task.status !== 'completed' && (
-                            <div className="actions-area">
-                                <form onSubmit={handleAddDetail} className="add-detail-form">
-                                    <input
-                                        type="text"
-                                        placeholder="Add a detail, execution note, or update..."
-                                        value={newDetail}
-                                        onChange={(e) => setNewDetail(e.target.value)}
-                                        disabled={isSubmitting}
-                                    />
-                                    <button type="submit" disabled={isSubmitting || !newDetail.trim()}>
-                                        <Plus size={18} /> Add
-                                    </button>
-                                </form>
-
-                                <div className="task-footer">
-                                    {task.ai_analysis && (
-                                        <div style={{ fontSize: '0.9rem', color: '#94a3b8', marginBottom: '1rem', fontStyle: 'italic' }}>
-                                            AI Suggestion: {task.ai_analysis.suggestions}
-                                        </div>
-                                    )}
-                                    <button className="analyze-btn" onClick={handleAnalyzeTask} disabled={isSubmitting}>
-                                        <Sparkles size={18} /> {isSubmitting ? 'Thinking...' : 'AI Analyze'}
-                                    </button>
-                                    <button className="close-btn" onClick={handleCloseTask}>
-                                        <Check size={18} /> Complete
-                                    </button>
+                            {task.completed_at && (
+                                <div className="completion-info">
+                                    <Check size={16} /> Completed on {format(new Date(task.completed_at), 'PPP p')}
                                 </div>
-                            </div>
-                        )}
-
-                        {task.completed_at && (
-                            <div className="completion-info">
-                                <Check size={16} /> Completed on {format(new Date(task.completed_at), 'PPP p')}
-                            </div>
-                        )}
+                            )}
+                        </div>
                     </motion.div>
                 )}
             </AnimatePresence>
