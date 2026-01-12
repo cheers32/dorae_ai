@@ -160,7 +160,12 @@ def create_task():
             "priority": "medium", # Default
             "importance": 3,      # Default
             "category": "General", # Default
-            "updates": [],
+            "updates": [{
+                "id": str(uuid.uuid4()),
+                "content": "Task created",
+                "timestamp": datetime.utcnow().isoformat(),
+                "type": "creation"
+            }],
             "ai_analysis": None
         }
         
