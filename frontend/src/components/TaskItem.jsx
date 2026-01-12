@@ -1,8 +1,10 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, forwardRef } from 'react';
 import { format } from 'date-fns';
-import { ChevronDown, ChevronUp, Plus, Check, X, Clock, AlertCircle, Sparkles, Trash2, Tag, Flag, Pencil } from 'lucide-react';
+import { ChevronDown, ChevronUp, Plus, Check, X, Clock, AlertCircle, Sparkles, Trash2, Tag, Flag, Pencil, GripVertical } from 'lucide-react';
 import { api } from '../api';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useSortable } from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
 
 // Helper Dropdown Component
 const Dropdown = ({ options, value, onChange, className, renderOption, triggerClassName }) => {
@@ -48,12 +50,23 @@ const Dropdown = ({ options, value, onChange, className, renderOption, triggerCl
     );
 };
 
-export function TaskItem({ task, onUpdate, showTags }) {
+export const TaskItem = forwardRef(({ task, onUpdate, showTags, style, dragHandleProps, isOverlay }, ref) => {
     const [expanded, setExpanded] = useState(false);
     const [newDetail, setNewDetail] = useState('');
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [editingId, setEditingId] = useState(null);
     const [editContent, setEditContent] = useState('');
+
+    const baseStyle = {
+        ...style,
+        position: 'relative',
+        zIndex: isOverlay ? 50 : undefined,
+        opacity: style?.opacity !== undefined ? style.opacity : 1,
+        scale: isOverlay ? 1.05 : 1,
+        boxShadow: isOverlay ? '0 0 0 1px rgba(59, 130, 246, 0.5), 0 10px 20px -5px rgba(0, 0, 0, 0.5)' : 'none',
+        backgroundColor: isOverlay ? '#13161c' : undefined,
+        cursor: isOverlay ? 'grabbing' : undefined,
+    };
 
     const handleAddDetail = async (e) => {
         e.preventDefault();
@@ -167,16 +180,25 @@ export function TaskItem({ task, onUpdate, showTags }) {
 
     return (
         <motion.div
-            layout
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.98 }}
+            layout={!isOverlay}
+            ref={ref}
+            style={baseStyle}
+            initial={isOverlay ? false : { opacity: 0, y: 10 }}
+            animate={isOverlay ? false : { opacity: baseStyle.opacity, y: 0 }}
+            exit={isOverlay ? false : { opacity: 0, scale: 0.98 }}
             className={`group hover:bg-white/[0.02] transition-colors rounded-xl border border-white/5 bg-[#1a1f2e]/50 mb-3 ${expanded ? 'ring-1 ring-blue-500/20' : ''}`}
         >
             <div
                 className="p-4 flex items-center gap-4 cursor-pointer select-none"
                 onClick={() => setExpanded(!expanded)}
             >
+                <div
+                    {...dragHandleProps}
+                    className="cursor-grab active:cursor-grabbing text-gray-600 hover:text-gray-400 transition-colors"
+                    onClick={(e) => e.stopPropagation()}
+                >
+                    <GripVertical size={16} />
+                </div>
                 <div
                     className={`w-3 h-3 rounded-full shrink-0 shadow-[0_0_10px_rgba(59,130,246,0.3)] transition-colors ${task.status === 'completed' ? 'bg-green-500 shadow-[0_0_10px_rgba(34,197,94,0.3)]' :
                         task.status === 'in_progress' ? 'bg-yellow-500 shadow-[0_0_10px_rgba(234,179,8,0.3)]' :
@@ -338,5 +360,32 @@ export function TaskItem({ task, onUpdate, showTags }) {
                 )}
             </AnimatePresence>
         </motion.div>
+    );
+});
+
+export function SortableTaskItem(props) {
+    const {
+        attributes,
+        listeners,
+        setNodeRef,
+        transform,
+        transition,
+        isDragging,
+    } = useSortable({ id: props.id });
+
+    const style = {
+        transform: CSS.Transform.toString(transform),
+        transition,
+        opacity: isDragging ? 0.3 : 1, // Placeholder opacity
+    };
+
+    return (
+        <TaskItem
+            ref={setNodeRef}
+            style={style}
+            dragHandleProps={{ ...attributes, ...listeners }}
+            isOverlay={false}
+            {...props}
+        />
     );
 }

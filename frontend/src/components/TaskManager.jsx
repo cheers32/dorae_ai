@@ -1,11 +1,27 @@
 import React, { useState, useEffect } from 'react';
 import { api } from '../api';
-import { TaskItem } from './TaskItem';
+import { TaskItem, SortableTaskItem } from './TaskItem';
 import { Sidebar } from './Sidebar';
 import { ChatInterface } from './ChatInterface';
 import { Plus, Home as HomeIcon, Tag as TagIcon } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
+import {
+    DndContext,
+    closestCenter,
+    KeyboardSensor,
+    PointerSensor,
+    useSensor,
+    useSensors,
+    DragOverlay,
+} from '@dnd-kit/core';
+import {
+    arrayMove,
+    SortableContext,
+    sortableKeyboardCoordinates,
+    verticalListSortingStrategy,
+} from '@dnd-kit/sortable';
+import { createPortal } from 'react-dom';
 
 export const TaskManager = () => {
     const [tasks, setTasks] = useState([]);
@@ -14,8 +30,20 @@ export const TaskManager = () => {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
     const [showTags, setShowTags] = useState(false);
+    const [activeId, setActiveId] = useState(null);
 
     const navigate = useNavigate();
+
+    const sensors = useSensors(
+        useSensor(PointerSensor, {
+            activationConstraint: {
+                distance: 8,
+            },
+        }),
+        useSensor(KeyboardSensor, {
+            coordinateGetter: sortableKeyboardCoordinates,
+        })
+    );
 
     const handleLogout = () => {
         localStorage.removeItem('isAuthenticated');
@@ -63,6 +91,29 @@ export const TaskManager = () => {
         }
     };
 
+    const handleDragStart = (event) => {
+        setActiveId(event.active.id);
+    };
+
+    const handleDragEnd = async (event) => {
+        const { active, over } = event;
+
+        if (over && active.id !== over.id) {
+            setTasks((items) => {
+                const oldIndex = items.findIndex((item) => item._id === active.id);
+                const newIndex = items.findIndex((item) => item._id === over.id);
+                const newItems = arrayMove(items, oldIndex, newIndex);
+
+                // Persist order to backend
+                const taskIds = newItems.map(t => t._id);
+                api.reorderTasks(taskIds).catch(err => console.error("Failed to save order", err));
+
+                return newItems;
+            });
+        }
+        setActiveId(null);
+    };
+
     const getHeaderTitle = () => {
         switch (activeTab) {
             case 'active': return 'Active Tasks';
@@ -72,6 +123,8 @@ export const TaskManager = () => {
             default: return 'Tasks';
         }
     }
+
+    const activeTask = activeId ? tasks.find(t => t._id === activeId) : null;
 
     return (
         <div className="flex h-screen bg-[#0f1014] text-gray-200 font-sans overflow-hidden">
@@ -86,7 +139,7 @@ export const TaskManager = () => {
                         <p className="text-gray-500 text-lg border-l border-gray-800 pl-4 py-0.5 leading-none">
                             {activeTab === 'assistant'
                                 ? 'Chat with your tasks powered by Gemini 3.0'
-                                : 'Manage your daily goals and track progress.'}
+                                : ''}
                         </p>
                     </div>
 
@@ -163,11 +216,37 @@ export const TaskManager = () => {
                                             <p className="text-gray-500 text-lg">No {activeTab} tasks found.</p>
                                         </div>
                                     ) : (
-                                        <AnimatePresence mode='popLayout'>
-                                            {tasks.map(task => (
-                                                <TaskItem key={task._id} task={task} onUpdate={fetchTasks} showTags={showTags} />
-                                            ))}
-                                        </AnimatePresence>
+                                        <DndContext
+                                            sensors={sensors}
+                                            collisionDetection={closestCenter}
+                                            onDragStart={handleDragStart}
+                                            onDragEnd={handleDragEnd}
+                                        >
+                                            <SortableContext
+                                                items={tasks.map(t => t._id)}
+                                                strategy={verticalListSortingStrategy}
+                                            >
+                                                <div className="space-y-3">
+                                                    {tasks.map(task => (
+                                                        <SortableTaskItem key={task._id} id={task._id} task={task} onUpdate={fetchTasks} showTags={showTags} />
+                                                    ))}
+                                                </div>
+                                            </SortableContext>
+
+                                            {createPortal(
+                                                <DragOverlay>
+                                                    {activeTask ? (
+                                                        <TaskItem
+                                                            task={activeTask}
+                                                            showTags={showTags}
+                                                            isOverlay={true}
+                                                            onUpdate={() => { }} // No-op for overlay interactions?
+                                                        />
+                                                    ) : null}
+                                                </DragOverlay>,
+                                                document.body
+                                            )}
+                                        </DndContext>
                                     )}
                                 </div>
                             </>

@@ -25,6 +25,15 @@ export const api = {
         return res.json();
     },
 
+    reorderTasks: async (taskIds) => {
+        const res = await fetch(`${API_BASE}/tasks/reorder`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ taskIds }),
+        });
+        return res.json();
+    },
+
     deleteTask: (taskId) =>
         fetch(`${API_BASE}/tasks/${taskId}`, { method: 'DELETE' }),
 

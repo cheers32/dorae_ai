@@ -133,9 +133,33 @@ def get_tasks():
             # Default: exclude deleted
             query['status'] = {'$ne': 'deleted'}
         
-        # Sort by created_at desc by default
-        tasks = list(tasks_collection.find(query).sort('created_at', -1))
+        # Sort by order ascending, then created_at desc
+        tasks = list(tasks_collection.find(query).sort([('order', 1), ('created_at', -1)]))
         return jsonify([serialize_doc(task) for task in tasks]), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+@app.route('/api/tasks/reorder', methods=['PUT'])
+def reorder_tasks():
+    try:
+        data = request.json
+        if not data or 'taskIds' not in data:
+            return jsonify({"error": "taskIds list is required"}), 400
+        
+        task_ids = data['taskIds']
+        
+        # Bulk write for better performance
+        from pymongo import UpdateOne
+        operations = []
+        for index, task_id in enumerate(task_ids):
+            operations.append(
+                UpdateOne({"_id": ObjectId(task_id)}, {"$set": {"order": index}})
+            )
+            
+        if operations:
+            tasks_collection.bulk_write(operations)
+            
+        return jsonify({"message": "Tasks reordered"}), 200
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
@@ -260,7 +284,8 @@ def create_task():
                 "timestamp": datetime.utcnow().isoformat(),
                 "type": "creation"
             }],
-            "ai_analysis": None
+            "ai_analysis": None,
+            "order": 0 # Default to top
         }
         
         result = tasks_collection.insert_one(new_task)
