@@ -3,7 +3,7 @@ import { api } from '../api';
 import { TaskItem, SortableTaskItem } from './TaskItem';
 import { Sidebar } from './Sidebar';
 import { ChatInterface } from './ChatInterface';
-import { Plus, Home as HomeIcon, Tag as TagIcon } from 'lucide-react';
+import { Plus, Home as HomeIcon, Tag as TagIcon, ArrowLeft } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import {
@@ -34,6 +34,7 @@ export const TaskManager = () => {
     const [error, setError] = useState(null);
     const [showTags, setShowTags] = useState(false);
     const [activeId, setActiveId] = useState(null);
+    const [history, setHistory] = useState([]);
 
     const navigate = useNavigate();
 
@@ -47,6 +48,23 @@ export const TaskManager = () => {
             coordinateGetter: sortableKeyboardCoordinates,
         })
     );
+
+    // Navigation Utils
+    const changeView = (tab, label = null, pushToHistory = true) => {
+        if (pushToHistory) {
+            setHistory(prev => [...prev, { tab: activeTab, label: selectedLabel }]);
+        }
+        setActiveTab(tab);
+        setSelectedLabel(label);
+    };
+
+    const handleBack = () => {
+        if (history.length === 0) return;
+        const lastView = history[history.length - 1];
+        setHistory(prev => prev.slice(0, -1));
+        setActiveTab(lastView.tab);
+        setSelectedLabel(lastView.label);
+    };
 
     const fetchLabels = async () => {
         try {
@@ -199,6 +217,7 @@ export const TaskManager = () => {
     };
 
     const getHeaderTitle = () => {
+        if (selectedLabel) return `Label: ${selectedLabel}`;
         switch (activeTab) {
             case 'active': return 'Active Tasks';
             case 'closed': return 'Closed Tasks';
@@ -220,24 +239,40 @@ export const TaskManager = () => {
             <div className="flex h-screen bg-[#0f1014] text-gray-200 font-sans overflow-hidden">
                 <Sidebar
                     activeTab={activeTab}
-                    setActiveTab={setActiveTab}
+                    onNavigate={changeView}
                     labels={labels}
                     onLabelsChange={fetchLabels}
                     selectedLabel={selectedLabel}
-                    setSelectedLabel={setSelectedLabel}
                 />
 
                 <main className="flex-1 flex flex-col min-w-0 bg-[#0f1014] h-full relative">
-                    <header className="px-8 py-8 flex justify-between items-center">
-                        <div className="flex items-baseline gap-4">
-                            <h1 className="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-blue-200">
-                                {getHeaderTitle()}
-                            </h1>
-                            <p className="text-gray-500 text-lg border-l border-gray-800 pl-4 py-0.5 leading-none">
-                                {activeTab === 'assistant'
-                                    ? 'Chat with your tasks powered by Gemini 3.0'
-                                    : ''}
-                            </p>
+                    <header className="px-8 py-8 flex justify-between items-center bg-[#0f1014]/80 backdrop-blur-md sticky top-0 z-10 border-b border-white/5">
+                        <div className="flex items-center gap-6">
+                            <AnimatePresence>
+                                {history.length > 0 && (
+                                    <motion.button
+                                        initial={{ opacity: 0, x: -10 }}
+                                        animate={{ opacity: 1, x: 0 }}
+                                        exit={{ opacity: 0, x: -10 }}
+                                        onClick={handleBack}
+                                        className="p-2.5 bg-white/5 border border-white/10 rounded-xl text-gray-400 hover:text-white hover:bg-white/10 transition-all flex items-center justify-center group"
+                                        title="Go Back"
+                                    >
+                                        <ArrowLeft size={20} className="group-hover:-translate-x-0.5 transition-transform" />
+                                    </motion.button>
+                                )}
+                            </AnimatePresence>
+
+                            <div className="flex items-baseline gap-4">
+                                <h1 className="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-blue-200">
+                                    {getHeaderTitle()}
+                                </h1>
+                                <p className="text-gray-500 text-lg border-l border-gray-800 pl-4 py-0.5 leading-none">
+                                    {activeTab === 'assistant'
+                                        ? 'Chat with your tasks powered by Gemini 3.0'
+                                        : ''}
+                                </p>
+                            </div>
                         </div>
 
                         <div className="flex items-center gap-4">

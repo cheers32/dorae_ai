@@ -41,7 +41,7 @@ const DroppableNavButton = ({ id, icon: Icon, label, isActive, onClick, isOverSt
     );
 };
 
-export function Sidebar({ activeTab, setActiveTab, labels = [], onLabelsChange, selectedLabel, setSelectedLabel }) {
+export function Sidebar({ activeTab, onNavigate, labels = [], onLabelsChange, selectedLabel }) {
     const [isAddingLabel, setIsAddingLabel] = useState(false);
     const [newLabelName, setNewLabelName] = useState('');
 
@@ -75,7 +75,7 @@ export function Sidebar({ activeTab, setActiveTab, labels = [], onLabelsChange, 
             const res = await api.deleteLabel(id);
             if (res.error) throw new Error(res.error);
             if (onLabelsChange) onLabelsChange();
-            if (selectedLabel === id) setSelectedLabel(null);
+            if (selectedLabel === id) onNavigate(activeTab, null);
         } catch (err) {
             console.error("Failed to delete label:", err);
         }
@@ -94,10 +94,17 @@ export function Sidebar({ activeTab, setActiveTab, labels = [], onLabelsChange, 
                         <Sparkles size={24} className="text-blue-400" />
                     </div>
                     <div>
-                        <h2 className="text-lg font-bold text-white tracking-tight">Dorae AI</h2>
+                        <h2 className="text-lg font-bold text-white tracking-tight">Task AI</h2>
                         <span className="text-[10px] text-gray-500 font-mono uppercase tracking-[0.2em]">{__APP_VERSION__}</span>
                     </div>
                 </div>
+                <button
+                    onClick={() => window.location.href = '/'}
+                    className="p-2 rounded-xl hover:bg-white/5 border border-transparent hover:border-white/10 text-gray-500 hover:text-white transition-all flex items-center justify-center group"
+                    title="Back to Home"
+                >
+                    <Home size={18} className="group-hover:scale-110 transition-transform" />
+                </button>
             </div>
 
             <div className="flex-1 px-4 overflow-y-auto space-y-8 scrollbar-hide">
@@ -110,10 +117,7 @@ export function Sidebar({ activeTab, setActiveTab, labels = [], onLabelsChange, 
                             icon={item.icon}
                             label={item.label}
                             isActive={activeTab === item.id && !selectedLabel}
-                            onClick={() => {
-                                setActiveTab(item.id);
-                                setSelectedLabel(null);
-                            }}
+                            onClick={() => onNavigate(item.id, null)}
                         />
                     ))}
                 </nav>
@@ -162,7 +166,7 @@ export function Sidebar({ activeTab, setActiveTab, labels = [], onLabelsChange, 
                                     id={`sidebar-label-${label.name}`}
                                     label={label.name}
                                     isActive={selectedLabel === label.name}
-                                    onClick={() => setSelectedLabel(label.name)}
+                                    onClick={() => onNavigate(activeTab, label.name)}
                                     data={{ type: 'sidebar-label', target: label.name, color: label.color }}
                                 />
                                 <button
