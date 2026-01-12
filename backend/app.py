@@ -145,6 +145,32 @@ def delete_task(task_id):
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
+@app.route('/api/tasks/<task_id>', methods=['PUT'])
+def update_task(task_id):
+    try:
+        data = request.json
+        update_fields = {}
+        allowed_fields = ['title', 'priority', 'category', 'status', 'importance']
+        
+        for field in allowed_fields:
+            if field in data:
+                update_fields[field] = data[field]
+                
+        if not update_fields:
+            return jsonify({"error": "No valid fields to update"}), 400
+
+        result = tasks_collection.update_one(
+            {"_id": ObjectId(task_id)},
+            {"$set": update_fields}
+        )
+        
+        if result.matched_count == 0:
+            return jsonify({"error": "Task not found"}), 404
+            
+        return jsonify(update_fields), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
 @app.route('/api/tasks', methods=['POST'])
 def create_task():
     try:

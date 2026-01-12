@@ -16,6 +16,15 @@ export const api = {
         return res.json();
     },
 
+    updateTask: async (taskId, updates) => {
+        const res = await fetch(`${API_BASE}/tasks/${taskId}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(updates),
+        });
+        return res.json();
+    },
+
     deleteTask: (taskId) =>
         fetch(`${API_BASE}/tasks/${taskId}`, { method: 'DELETE' }),
 
