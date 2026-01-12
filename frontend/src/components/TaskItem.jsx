@@ -1,10 +1,54 @@
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { format } from 'date-fns';
 import { ChevronDown, ChevronUp, Plus, Check, X, Clock, AlertCircle, Sparkles, Trash2, Tag, Flag } from 'lucide-react';
 import { api } from '../api';
 import { motion, AnimatePresence } from 'framer-motion';
 
-export function TaskItem({ task, onUpdate }) {
+// Helper Dropdown Component
+const Dropdown = ({ options, value, onChange, className, renderOption, triggerClassName }) => {
+    const [isOpen, setIsOpen] = useState(false);
+    const ref = useRef(null);
+
+    useEffect(() => {
+        const handleClickOutside = (event) => {
+            if (ref.current && !ref.current.contains(event.target)) {
+                setIsOpen(false);
+            }
+        };
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => document.removeEventListener('mousedown', handleClickOutside);
+    }, []);
+
+    return (
+        <div className="relative" ref={ref}>
+            <button
+                onClick={(e) => { e.stopPropagation(); setIsOpen(!isOpen); }}
+                className={triggerClassName}
+            >
+                {value}
+            </button>
+            {isOpen && (
+                <div className="absolute top-full left-0 mt-1 z-50 bg-[#1a1f2e] border border-gray-700 rounded-lg shadow-xl overflow-hidden min-w-[120px]">
+                    {options.map((opt) => (
+                        <div
+                            key={opt}
+                            className="px-3 py-2 text-xs text-gray-300 hover:bg-white/5 cursor-pointer flex items-center gap-2 capitalize"
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                onChange(opt);
+                                setIsOpen(false);
+                            }}
+                        >
+                            {renderOption ? renderOption(opt) : opt}
+                        </div>
+                    ))}
+                </div>
+            )}
+        </div>
+    );
+};
+
+export function TaskItem({ task, onUpdate, showTags }) {
     const [expanded, setExpanded] = useState(false);
     const [newDetail, setNewDetail] = useState('');
     const [isSubmitting, setIsSubmitting] = useState(false);
@@ -83,18 +127,8 @@ export function TaskItem({ task, onUpdate }) {
     };
 
     const priorities = ['low', 'medium', 'high', 'urgent'];
-    const nextPriority = () => {
-        const idx = priorities.indexOf(task.priority || 'medium');
-        const next = priorities[(idx + 1) % priorities.length];
-        updateField('priority', next);
-    };
-
     const categories = ['General', 'Planning', 'Development', 'Bug Fix', 'Design'];
-    const nextCategory = () => {
-        const idx = categories.indexOf(task.category || 'General');
-        const next = categories[(idx + 1) % categories.length];
-        updateField('category', next);
-    };
+    const statuses = ['pending', 'in_progress', 'completed'];
 
     const getPriorityColor = (p) => {
         switch (p) {
@@ -106,46 +140,73 @@ export function TaskItem({ task, onUpdate }) {
         }
     };
 
+    const getStatusStyle = (s) => {
+        switch (s) {
+            case 'completed': return 'text-green-400 bg-green-400/10 border-green-400/20';
+            case 'in_progress': return 'text-yellow-400 bg-yellow-400/10 border-yellow-400/20';
+            default: return 'text-gray-400 bg-gray-400/10 border-gray-400/20';
+        }
+    };
+
+    const formatStatus = (s) => {
+        if (!s) return 'Pending';
+        return s.split('_').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
+    };
+
     return (
         <motion.div
             layout
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.98 }}
-            className={`group hover:bg-white/[0.02] transition-colors rounded-xl border border-white/5 bg-[#1a1f2e]/50 overflow-hidden mb-3 ${expanded ? 'ring-1 ring-blue-500/20' : ''}`}
+            className={`group hover:bg-white/[0.02] transition-colors rounded-xl border border-white/5 bg-[#1a1f2e]/50 mb-3 ${expanded ? 'ring-1 ring-blue-500/20' : ''}`}
         >
             <div
                 className="p-4 flex items-center gap-4 cursor-pointer select-none"
                 onClick={() => setExpanded(!expanded)}
             >
                 <div
-                    className={`w-3 h-3 rounded-full shrink-0 ${task.status === 'completed' ? 'bg-green-500' : 'bg-blue-500'} shadow-[0_0_10px_rgba(59,130,246,0.3)]`}
+                    className={`w-3 h-3 rounded-full shrink-0 shadow-[0_0_10px_rgba(59,130,246,0.3)] transition-colors ${task.status === 'completed' ? 'bg-green-500 shadow-[0_0_10px_rgba(34,197,94,0.3)]' :
+                        task.status === 'in_progress' ? 'bg-yellow-500 shadow-[0_0_10px_rgba(234,179,8,0.3)]' :
+                            'bg-blue-500 shadow-[0_0_10px_rgba(59,130,246,0.3)]'
+                        }`}
                 />
 
-                <h3 className={`flex-1 font-medium text-gray-200 ${task.status === 'completed' ? 'line-through opacity-50' : ''}`}>
+                <h3 className={`flex-1 font-medium text-gray-200 text-left ${task.status === 'completed' ? 'line-through opacity-50' : ''}`}>
                     {task.title}
                 </h3>
 
-                <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity" onClick={e => e.stopPropagation()}>
-                    <button
-                        onClick={nextPriority}
-                        className={`text-[10px] px-2 py-1 rounded border uppercase tracking-wider font-semibold transition-colors ${getPriorityColor(task.priority)}`}
-                    >
-                        {task.priority || 'normal'}
-                    </button>
+                <div className={`flex items-center gap-2 transition-opacity ${showTags ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`} onClick={e => e.stopPropagation()}>
 
-                    <button
-                        onClick={nextCategory}
-                        className="text-[10px] px-2 py-1 rounded border border-white/10 text-gray-400 hover:text-gray-300 hover:bg-white/5 uppercase tracking-wider font-medium"
-                    >
-                        {task.category || 'General'}
-                    </button>
+                    <Dropdown
+                        options={statuses}
+                        value={formatStatus(task.status)}
+                        onChange={(val) => updateField('status', val)}
+                        triggerClassName={`text-[10px] px-2 py-1 rounded border uppercase tracking-wider font-semibold transition-colors ${getStatusStyle(task.status)}`}
+                        renderOption={(opt) => (
+                            <div className="flex items-center gap-2">
+                                <div className={`w-2 h-2 rounded-full ${opt === 'completed' ? 'bg-green-500' : opt === 'in_progress' ? 'bg-yellow-500' : 'bg-blue-500'}`}></div>
+                                {formatStatus(opt)}
+                            </div>
+                        )}
+                    />
+
+                    <Dropdown
+                        options={priorities}
+                        value={task.priority || 'NORMAL'}
+                        onChange={(val) => updateField('priority', val)}
+                        triggerClassName={`text-[10px] px-2 py-1 rounded border uppercase tracking-wider font-semibold transition-colors ${getPriorityColor(task.priority)}`}
+                    />
+
+                    <Dropdown
+                        options={categories}
+                        value={task.category || 'GENERAL'}
+                        onChange={(val) => updateField('category', val)}
+                        triggerClassName="text-[10px] px-2 py-1 rounded border border-white/10 text-gray-400 hover:text-gray-300 hover:bg-white/5 uppercase tracking-wider font-medium"
+                    />
 
                     <button className="p-1.5 text-gray-500 hover:text-red-400 transition-colors" onClick={handleDeleteTask}>
                         <Trash2 size={14} />
-                    </button>
-                    <button className="p-1.5 text-gray-500 hover:text-green-400 transition-colors" onClick={handleCloseTask}>
-                        <Check size={14} />
                     </button>
                 </div>
 

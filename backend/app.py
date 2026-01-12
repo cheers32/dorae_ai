@@ -156,8 +156,23 @@ def update_task(task_id):
             if field in data:
                 update_fields[field] = data[field]
                 
-        if not update_fields:
-            return jsonify({"error": "No valid fields to update"}), 400
+        if 'status' in data:
+            if data['status'] == 'completed':
+                now = datetime.utcnow().isoformat()
+                update_fields['completed_at'] = now
+                
+                # Add completion event to timeline
+                tasks_collection.update_one(
+                    {"_id": ObjectId(task_id)},
+                    {"$push": {"updates": {
+                        "id": str(uuid.uuid4()),
+                        "content": "Task completed",
+                        "type": "status_change",
+                        "timestamp": now
+                    }}}
+                )
+            else:
+                update_fields['completed_at'] = None
 
         result = tasks_collection.update_one(
             {"_id": ObjectId(task_id)},
@@ -297,22 +312,32 @@ def analyze_task(task_id):
             return jsonify({"error": "AI analysis failed"}), 500
             
         # Update task with analysis results
-        update_fields = {
-            "ai_analysis": {
-                "summary": analysis.get('summary'),
-                "suggestions": analysis.get('suggestions')
-            },
-            "priority": analysis.get('priority', task['priority']),
-            "category": analysis.get('category', task['category']),
-            "importance": analysis.get('importance', task['importance'])
+
+        # Add analysis to timeline
+        update_item = {
+            "id": str(uuid.uuid4()),
+            "content": f"AI Plan: {analysis['suggestions']}",
+            "type": "ai_analysis",
+            "timestamp": datetime.utcnow().isoformat()
         }
-        
+
         tasks_collection.update_one(
             {"_id": ObjectId(task_id)},
-            {"$set": update_fields}
+            {
+                "$set": {
+                    "ai_analysis": {
+                        "summary": analysis.get('summary'),
+                        "suggestions": analysis.get('suggestions')
+                    },
+                    "priority": analysis.get('priority', task['priority']),
+                    "category": analysis.get('category', task['category']),
+                    "importance": analysis.get('importance', task['importance'])
+                },
+                "$push": {"updates": update_item}
+            }
         )
         
-        return jsonify(update_fields), 200
+        return jsonify(analysis), 200
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 

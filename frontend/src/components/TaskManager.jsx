@@ -3,7 +3,7 @@ import { api } from '../api';
 import { TaskItem } from './TaskItem';
 import { Sidebar } from './Sidebar';
 import { ChatInterface } from './ChatInterface';
-import { Plus, Home as HomeIcon } from 'lucide-react';
+import { Plus, Home as HomeIcon, Tag as TagIcon } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 
@@ -13,6 +13,8 @@ export const TaskManager = () => {
     const [newTaskTitle, setNewTaskTitle] = useState('');
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
+    const [showTags, setShowTags] = useState(false);
+
     const navigate = useNavigate();
 
     const handleLogout = () => {
@@ -68,11 +70,7 @@ export const TaskManager = () => {
 
     return (
         <div className="flex h-screen bg-[#0f1014] text-gray-200 font-sans overflow-hidden">
-            {/* Back to Home Button Overlay or Integrated into Sidebar */}
             <Sidebar activeTab={activeTab} setActiveTab={setActiveTab} />
-
-            {/* Extra floating home button for navigation */}
-
 
             <main className="flex-1 flex flex-col min-w-0 bg-[#0f1014] h-full relative">
                 <header className="px-8 py-8 flex justify-between items-center">
@@ -86,18 +84,29 @@ export const TaskManager = () => {
                                 : 'Manage your daily goals and track progress.'}
                         </p>
                     </div>
-                    {localStorage.getItem('userProfile') && (
-                        <div className="flex items-center gap-3 bg-gray-900/50 px-4 py-2 rounded-full border border-gray-800">
-                            <img
-                                src={JSON.parse(localStorage.getItem('userProfile')).picture}
-                                alt="Profile"
-                                className="w-8 h-8 rounded-full border border-gray-700"
-                            />
-                            <span className="text-sm font-medium text-gray-300">
-                                {JSON.parse(localStorage.getItem('userProfile')).name}
-                            </span>
-                        </div>
-                    )}
+
+                    <div className="flex items-center gap-4">
+                        <button
+                            onClick={() => setShowTags(!showTags)}
+                            className={`p-2 rounded-lg transition-colors ${showTags ? 'text-blue-400 bg-blue-400/10' : 'text-gray-500 hover:text-gray-300'}`}
+                            title="Toggle Tags Visibility"
+                        >
+                            <TagIcon size={20} />
+                        </button>
+
+                        {localStorage.getItem('userProfile') && (
+                            <div className="flex items-center gap-3 bg-gray-900/50 px-4 py-2 rounded-full border border-gray-800">
+                                <img
+                                    src={JSON.parse(localStorage.getItem('userProfile')).picture}
+                                    alt="Profile"
+                                    className="w-8 h-8 rounded-full border border-gray-700"
+                                />
+                                <span className="text-sm font-medium text-gray-300">
+                                    {JSON.parse(localStorage.getItem('userProfile')).name}
+                                </span>
+                            </div>
+                        )}
+                    </div>
                 </header>
 
                 {activeTab === 'assistant' ? (
@@ -150,7 +159,7 @@ export const TaskManager = () => {
                                     ) : (
                                         <AnimatePresence mode='popLayout'>
                                             {tasks.map(task => (
-                                                <TaskItem key={task._id} task={task} onUpdate={fetchTasks} />
+                                                <TaskItem key={task._id} task={task} onUpdate={fetchTasks} showTags={showTags} />
                                             ))}
                                         </AnimatePresence>
                                     )}
