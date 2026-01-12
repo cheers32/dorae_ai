@@ -221,8 +221,8 @@ export const TaskItem = forwardRef(({ task, onUpdate, showTags, style, dragHandl
                     </div>
                     <div
                         className={`w-3 h-3 rounded-full shrink-0 shadow-[0_0_10px_rgba(59,130,246,0.3)] transition-colors ${task.status === 'completed' ? 'bg-green-500 shadow-[0_0_10px_rgba(34,197,94,0.3)]' :
-                                task.status === 'in_progress' ? 'bg-yellow-500 shadow-[0_0_10px_rgba(234,179,8,0.3)]' :
-                                    'bg-blue-500 shadow-[0_0_10px_rgba(59,130,246,0.3)]'
+                            task.status === 'in_progress' ? 'bg-yellow-500 shadow-[0_0_10px_rgba(234,179,8,0.3)]' :
+                                'bg-blue-500 shadow-[0_0_10px_rgba(59,130,246,0.3)]'
                             }`}
                     />
 
@@ -260,6 +260,29 @@ export const TaskItem = forwardRef(({ task, onUpdate, showTags, style, dragHandl
                             >
                                 <Pencil size={12} />
                             </button>
+
+                            {/* Labels Display */}
+                            <div className="flex flex-wrap gap-1 ml-2">
+                                {task.labels?.map(labelName => (
+                                    <span
+                                        key={labelName}
+                                        className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-medium bg-blue-500/10 text-blue-400 border border-blue-500/20 group/label hover:bg-blue-500/20 transition-colors"
+                                        onClick={(e) => e.stopPropagation()}
+                                    >
+                                        {labelName}
+                                        <X
+                                            size={10}
+                                            className="cursor-pointer hover:text-red-400 opacity-0 group-hover/label:opacity-100 transition-opacity"
+                                            onClick={async (e) => {
+                                                e.stopPropagation();
+                                                const newLabels = task.labels.filter(l => l !== labelName);
+                                                await api.updateTask(task._id, { labels: newLabels });
+                                                onUpdate();
+                                            }}
+                                        />
+                                    </span>
+                                ))}
+                            </div>
                         </div>
                     )}
                 </div>

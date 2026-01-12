@@ -1,9 +1,32 @@
 const API_BASE = '/api';
 
 export const api = {
-    getTasks: async (status) => {
-        const params = status ? `?status=${status}` : '';
-        const res = await fetch(`${API_BASE}/tasks${params}`);
+    getTasks: async (status, label) => {
+        const query = new URLSearchParams();
+        if (status) query.append('status', status);
+        if (label) query.append('label', label);
+        const res = await fetch(`${API_BASE}/tasks${query.toString() ? '?' + query.toString() : ''}`);
+        return res.json();
+    },
+
+    getLabels: async () => {
+        const res = await fetch(`${API_BASE}/labels`);
+        return res.json();
+    },
+
+    createLabel: async (name, color) => {
+        const res = await fetch(`${API_BASE}/labels`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ name, color }),
+        });
+        return res.json();
+    },
+
+    deleteLabel: async (labelId) => {
+        const res = await fetch(`${API_BASE}/labels/${labelId}`, {
+            method: 'DELETE',
+        });
         return res.json();
     },
 

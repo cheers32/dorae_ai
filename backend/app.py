@@ -30,6 +30,7 @@ try:
     client = MongoClient(MONGO_URI, tlsCAFile=certifi.where())
     db = client['dorae_db']
     tasks_collection = db['tasks']
+    labels_collection = db['labels']
     print("Connected to MongoDB")
 except Exception as e:
     print(f"Error connecting to MongoDB: {e}")
@@ -120,6 +121,7 @@ def log_traffic():
 def get_tasks():
     try:
         status = request.args.get('status')
+        label = request.args.get('label')
         query = {}
         
         if status == 'deleted':
@@ -132,6 +134,9 @@ def get_tasks():
         else:
             # Default: exclude deleted
             query['status'] = {'$ne': 'deleted'}
+
+        if label:
+            query['labels'] = label
         
         # Sort by order ascending, then created_at desc
         tasks = list(tasks_collection.find(query).sort([('order', 1), ('created_at', -1)]))
@@ -213,7 +218,7 @@ def update_task(task_id):
     try:
         data = request.json
         update_fields = {}
-        allowed_fields = ['title', 'priority', 'category', 'status', 'importance']
+        allowed_fields = ['title', 'priority', 'category', 'status', 'importance', 'labels']
         
         for field in allowed_fields:
             if field in data:
@@ -278,6 +283,7 @@ def create_task():
             "priority": "medium", # Default
             "importance": 3,      # Default
             "category": "General", # Default
+            "labels": [],         # New: labels array
             "updates": [{
                 "id": str(uuid.uuid4()),
                 "content": "Task created",
@@ -445,6 +451,43 @@ def chat():
         response_text = ai_service.chat_with_task_context(message, tasks_context)
         
         return jsonify({"reply": response_text}), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+# --- Label Endpoints ---
+
+@app.route('/api/labels', methods=['GET'])
+def get_labels():
+    try:
+        labels = list(labels_collection.find({}))
+        return jsonify([serialize_doc(label) for label in labels]), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+@app.route('/api/labels', methods=['POST'])
+def create_label():
+    try:
+        data = request.json
+        if not data or 'name' not in data:
+            return jsonify({"error": "Label name is required"}), 400
+        
+        new_label = {
+            "name": data['name'],
+            "color": data.get('color', '#3B82F6'), # Default blue
+            "created_at": datetime.utcnow().isoformat()
+        }
+        
+        result = labels_collection.insert_one(new_label)
+        new_label['_id'] = result.inserted_id
+        return jsonify(serialize_doc(new_label)), 201
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+@app.route('/api/labels/<label_id>', methods=['DELETE'])
+def delete_label(label_id):
+    try:
+        result = labels_collection.delete_one({"_id": ObjectId(label_id)})
+        return jsonify({"message": "Label deleted"}), 200
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 

@@ -26,7 +26,9 @@ import { createPortal } from 'react-dom';
 
 export const TaskManager = () => {
     const [tasks, setTasks] = useState([]);
-    const [activeTab, setActiveTab] = useState('active'); // 'active' | 'closed' | 'assistant'
+    const [labels, setLabels] = useState([]);
+    const [activeTab, setActiveTab] = useState('active');
+    const [selectedLabel, setSelectedLabel] = useState(null);
     const [newTaskTitle, setNewTaskTitle] = useState('');
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
@@ -46,6 +48,15 @@ export const TaskManager = () => {
         })
     );
 
+    const fetchLabels = async () => {
+        try {
+            const data = await api.getLabels();
+            setLabels(data);
+        } catch (err) {
+            console.error("Failed to fetch labels", err);
+        }
+    };
+
     const handleLogout = () => {
         localStorage.removeItem('isAuthenticated');
         localStorage.removeItem('userProfile');
@@ -64,7 +75,7 @@ export const TaskManager = () => {
             if (activeTab === 'closed') status = 'completed';
             if (activeTab === 'trash') status = 'deleted';
 
-            const data = await api.getTasks(status);
+            const data = await api.getTasks(status, selectedLabel);
             if (data.error) throw new Error(data.error);
             setTasks(data);
         } catch (err) {
@@ -76,11 +87,15 @@ export const TaskManager = () => {
     };
 
     useEffect(() => {
+        fetchLabels();
+    }, []);
+
+    useEffect(() => {
         fetchTasks();
-    }, [activeTab]);
+    }, [activeTab, selectedLabel]);
 
     const customCollisionDetection = (args) => {
-        // First check for sidebar collisions specifically
+        // First check for sidebar collisions (regular tabs and labels)
         const sidebarCollisions = rectIntersection({
             ...args,
             droppableContainers: args.droppableContainers.filter(container =>
@@ -92,7 +107,6 @@ export const TaskManager = () => {
             return sidebarCollisions;
         }
 
-        // If no sidebar collision, fall back to closestCenter for the sortable list
         return closestCenter(args);
     };
 
@@ -121,8 +135,29 @@ export const TaskManager = () => {
             return;
         }
 
-        // Check if dropped over sidebar
-        if (over.id.toString().startsWith('sidebar-')) {
+        const overId = over.id.toString();
+
+        // Check if dropped over a label
+        if (overId.startsWith('sidebar-label-')) {
+            const labelName = over.data.current.target;
+            const taskId = active.id;
+            const task = tasks.find(t => t._id === taskId);
+
+            if (task && (!task.labels || !task.labels.includes(labelName))) {
+                try {
+                    const newLabels = [...(task.labels || []), labelName];
+                    await api.updateTask(taskId, { labels: newLabels });
+                    fetchTasks();
+                } catch (err) {
+                    console.error("Failed to tag task", err);
+                }
+            }
+            setActiveId(null);
+            return;
+        }
+
+        // Check if dropped over sidebar tabs
+        if (overId.startsWith('sidebar-') && !overId.includes('label-')) {
             const targetTab = over.data.current.target;
             const taskId = active.id;
 
@@ -183,7 +218,14 @@ export const TaskManager = () => {
             onDragEnd={handleDragEnd}
         >
             <div className="flex h-screen bg-[#0f1014] text-gray-200 font-sans overflow-hidden">
-                <Sidebar activeTab={activeTab} setActiveTab={setActiveTab} />
+                <Sidebar
+                    activeTab={activeTab}
+                    setActiveTab={setActiveTab}
+                    labels={labels}
+                    onLabelsChange={fetchLabels}
+                    selectedLabel={selectedLabel}
+                    setSelectedLabel={setSelectedLabel}
+                />
 
                 <main className="flex-1 flex flex-col min-w-0 bg-[#0f1014] h-full relative">
                     <header className="px-8 py-8 flex justify-between items-center">
