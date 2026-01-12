@@ -194,7 +194,7 @@ export const TaskItem = forwardRef(({ task, onUpdate, showTags, style, dragHandl
             >
                 <div
                     {...dragHandleProps}
-                    className="cursor-grab active:cursor-grabbing text-gray-600 hover:text-gray-400 transition-colors"
+                    className="p-1 cursor-grab active:cursor-grabbing text-gray-600 hover:text-gray-400 transition-colors"
                     onClick={(e) => e.stopPropagation()}
                 >
                     <GripVertical size={16} />
