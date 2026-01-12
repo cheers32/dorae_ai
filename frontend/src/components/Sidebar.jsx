@@ -94,7 +94,7 @@ export function Sidebar({ activeTab, onNavigate, labels = [], onLabelsChange, se
                         <Sparkles size={24} className="text-blue-400" />
                     </div>
                     <div>
-                        <h2 className="text-lg font-bold text-white tracking-tight">Task AI</h2>
+                        <h2 className="text-lg font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-blue-200 tracking-tight">Task AI</h2>
                         <span className="text-[10px] text-gray-500 font-mono uppercase tracking-[0.2em]">{__APP_VERSION__}</span>
                     </div>
                 </div>
