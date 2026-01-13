@@ -378,7 +378,7 @@ export const TaskItem = forwardRef(({ task, onUpdate, showTags, style, dragHandl
                     )}
                 </div>
 
-                <span className="text-[10px] text-gray-600 font-mono mt-3">
+                <span className="text-[10px] text-gray-400 font-mono mt-3">
                     {(() => {
                         const lastUpdate = task.updates && task.updates.length > 0
                             ? parseUTCDate(task.updates.reduce((max, u) => new Date(u.timestamp) > new Date(max) ? u.timestamp : max, task.updates[0].timestamp))
@@ -401,7 +401,7 @@ export const TaskItem = forwardRef(({ task, onUpdate, showTags, style, dragHandl
                             <div className="py-4 space-y-1">
                                 {task.updates.map((update) => (
                                     <div key={update.id} className="flex gap-4 group/item text-sm">
-                                        <div className="w-24 text-xs text-gray-500 text-right pt-0.5 font-mono shrink-0">
+                                        <div className="w-24 text-xs text-gray-400 text-right pt-0.5 font-mono shrink-0">
                                             {format(parseUTCDate(update.timestamp), 'MMM d, HH:mm')}
                                         </div>
                                         <div className="relative border-l-2 border-white/5 pl-4 pb-1 flex-1">
@@ -457,7 +457,7 @@ export const TaskItem = forwardRef(({ task, onUpdate, showTags, style, dragHandl
                                                     </div>
                                                 ) : (
                                                     <div className="group/content flex items-start gap-2">
-                                                        <p className={`text-gray-300 text-left whitespace-pre-wrap ${['creation', 'status_change', 'property_change', 'deletion'].includes(update.type) ? 'italic opacity-60' : ''}`}>
+                                                        <p className={`text-left whitespace-pre-wrap ${['creation', 'status_change', 'property_change', 'deletion'].includes(update.type) ? 'text-gray-400 italic' : 'text-gray-300'}`}>
                                                             {update.content}
                                                         </p>
                                                         {!['status_change', 'creation', 'property_change', 'deletion'].includes(update.type) && (
@@ -507,7 +507,7 @@ export const TaskItem = forwardRef(({ task, onUpdate, showTags, style, dragHandl
                                 ))}
 
                                 <div className="flex gap-4 group/add mt-2">
-                                    <div className="w-24 text-xs text-gray-600 text-right pt-2 font-mono shrink-0">Now</div>
+                                    <div className="w-24 text-xs text-gray-400 text-right pt-2 font-mono shrink-0">Now</div>
                                     <div className="relative border-l-2 border-white/5 pl-4 pb-2 flex-1">
                                         <div className="absolute -left-[5px] top-2.5 w-2 h-2 rounded-full border border-gray-600 bg-[#13161c]" />
                                         <form onSubmit={handleAddDetail} className="relative">
