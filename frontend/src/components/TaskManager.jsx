@@ -3,7 +3,7 @@ import { api } from '../api';
 import { TaskItem, SortableTaskItem } from './TaskItem';
 import { Sidebar } from './Sidebar';
 import { ChatInterface } from './ChatInterface';
-import { Plus, Home as HomeIcon, Tag as TagIcon, ArrowLeft } from 'lucide-react';
+import { Plus, Home as HomeIcon, Tag as TagIcon, ArrowLeft, Trash2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import {
@@ -190,6 +190,17 @@ export const TaskManager = () => {
         }
     };
 
+    const handleEmptyTrash = async () => {
+        if (window.confirm("Are you sure you want to permanently delete all items in the trash? This action cannot be undone.")) {
+            try {
+                await api.emptyTrash();
+                fetchTasks();
+            } catch (err) {
+                console.error("Failed to empty trash", err);
+            }
+        }
+    };
+
 
 
     const handleDragEnd = async (event) => {
@@ -369,6 +380,16 @@ export const TaskManager = () => {
                         </div>
 
                         <div className="flex items-center gap-4">
+                            {activeTab === 'trash' && tasks.length > 0 && (
+                                <button
+                                    onClick={handleEmptyTrash}
+                                    className="px-3 py-2 rounded-lg transition-colors flex items-center gap-2 text-red-400 bg-red-400/10 hover:bg-red-400/20"
+                                    title="Empty Trash"
+                                >
+                                    <Trash2 size={18} />
+                                    <span className="text-sm font-medium">Empty Trash</span>
+                                </button>
+                            )}
                             <button
                                 onClick={() => setShowTags(!showTags)}
                                 className={`px-3 py-2 rounded-lg transition-colors flex items-center gap-2 ${showTags ? 'text-blue-400 bg-blue-400/10' : 'text-gray-500 hover:text-gray-300'}`}

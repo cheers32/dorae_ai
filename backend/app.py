@@ -205,6 +205,14 @@ def delete_task(task_id):
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
+@app.route('/api/tasks/trash', methods=['DELETE'])
+def empty_trash():
+    try:
+        result = tasks_collection.delete_many({"status": "deleted"})
+        return jsonify({"message": f"Deleted {result.deleted_count} tasks"}), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
 @app.route('/api/tasks/<task_id>/update/<update_id>', methods=['DELETE'])
 def delete_task_update(task_id, update_id):
     try:

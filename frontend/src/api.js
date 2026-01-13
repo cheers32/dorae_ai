@@ -100,6 +100,13 @@ export const api = {
     deleteTask: (taskId) =>
         fetch(`${API_BASE}/tasks/${taskId}`, { method: 'DELETE' }),
 
+    emptyTrash: async () => {
+        const res = await fetch(`${API_BASE}/tasks/trash`, {
+            method: 'DELETE',
+        });
+        return res.json();
+    },
+
     login: async (userProfile) => {
         try {
             const response = await fetch(`${API_BASE}/login`, {
