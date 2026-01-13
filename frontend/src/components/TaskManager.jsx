@@ -15,6 +15,7 @@ import {
     useSensor,
     useSensors,
     DragOverlay,
+    pointerWithin,
 } from '@dnd-kit/core';
 import {
     arrayMove,
@@ -240,7 +241,8 @@ export const TaskManager = () => {
 
         // Standard logic: dragging a task
         // First check for sidebar collisions (regular tabs and labels)
-        const sidebarCollisions = rectIntersection({
+        // Use pointerWithin to ensure the mouse cursor is physically over the sidebar item
+        const sidebarCollisions = pointerWithin({
             ...args,
             droppableContainers: args.droppableContainers.filter(container =>
                 container.id.toString().startsWith('sidebar-')
@@ -433,7 +435,7 @@ export const TaskManager = () => {
             onDragEnd={handleDragEnd}
             onDragOver={handleDragOver}
         >
-            <div className="flex h-screen bg-[#0f1014] text-gray-200 font-sans overflow-hidden">
+            <div className="flex h-screen bg-[#0f1014] text-gray-200 font-sans overflow-hidden gap-8">
                 <Sidebar
                     activeTab={activeTab}
                     onNavigate={changeView}
