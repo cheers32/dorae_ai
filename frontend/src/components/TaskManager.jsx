@@ -340,7 +340,7 @@ export const TaskManager = () => {
             let newStatus = null;
             if (targetTab === 'closed') newStatus = 'completed';
             if (targetTab === 'trash') newStatus = 'deleted';
-            if (targetTab === 'active') newStatus = 'pending';
+            if (targetTab === 'active') newStatus = 'active';
 
             if (newStatus) {
                 try {
@@ -349,7 +349,7 @@ export const TaskManager = () => {
                     } else {
                         // If moving to 'active', also clear folderId
                         const updates = { status: newStatus };
-                        if (newStatus === 'pending') {
+                        if (newStatus === 'active') {
                             updates.folderId = null;
                         }
                         await api.updateTask(taskId, updates);

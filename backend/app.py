@@ -374,7 +374,7 @@ def create_task():
         
         new_task = {
             "title": data['title'],
-            "status": "pending",
+            "status": "active",
             "created_at": datetime.utcnow().isoformat(),
             "completed_at": None,
             "priority": "medium", # Default
