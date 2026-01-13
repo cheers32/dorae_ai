@@ -369,7 +369,24 @@ export const TaskManager = () => {
             const taskId = active.id;
 
             try {
-                await api.updateTask(taskId, { folderId: folderId, status: 'Active' });
+                // Find folder name to add as label
+                const folderName = folders.find(f => f._id === folderId)?.name;
+                const task = tasks.find(t => t._id === taskId);
+
+                const updates = {
+                    folderId: folderId,
+                    status: 'Active'
+                };
+
+                // Add label if folder name exists and task doesn't already have it
+                if (folderName && task) {
+                    const currentLabels = task.labels || [];
+                    if (!currentLabels.includes(folderName)) {
+                        updates.labels = [...currentLabels, folderName];
+                    }
+                }
+
+                await api.updateTask(taskId, updates);
                 fetchTasks(false);
             } catch (err) {
                 console.error("Failed to move task to folder", err);
