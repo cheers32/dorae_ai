@@ -71,6 +71,9 @@ export const TaskItem = forwardRef(({ task, onUpdate, showTags, style, dragHandl
     const [localLabels, setLocalLabels] = useState(task.labels || []);
     const [deletingUpdateId, setDeletingUpdateId] = useState(null);
     const localRef = useRef(null); // Local ref to track the DOM element
+    const textareaRef = useRef(null);
+    const updateTextareaRef = useRef(null);
+    const newUpdateTextareaRef = useRef(null);
 
     // Sync refs
     useEffect(() => {
@@ -83,6 +86,27 @@ export const TaskItem = forwardRef(({ task, onUpdate, showTags, style, dragHandl
     useEffect(() => {
         setLocalLabels(task.labels || []);
     }, [task.labels]);
+
+    useEffect(() => {
+        if (isEditingTitle && textareaRef.current) {
+            textareaRef.current.style.height = 'auto';
+            textareaRef.current.style.height = `${textareaRef.current.scrollHeight}px`;
+        }
+    }, [isEditingTitle, editedTitle]);
+
+    useEffect(() => {
+        if (editingId && updateTextareaRef.current) {
+            updateTextareaRef.current.style.height = 'auto';
+            updateTextareaRef.current.style.height = `${updateTextareaRef.current.scrollHeight}px`;
+        }
+    }, [editingId, editContent]);
+
+    useEffect(() => {
+        if (newUpdateTextareaRef.current) {
+            newUpdateTextareaRef.current.style.height = 'auto';
+            newUpdateTextareaRef.current.style.height = `${newUpdateTextareaRef.current.scrollHeight}px`;
+        }
+    }, [newDetail]);
 
     const sensors = useSensors(
         useSensor(PointerSensor, {
@@ -248,13 +272,13 @@ export const TaskItem = forwardRef(({ task, onUpdate, showTags, style, dragHandl
             className={`group hover:bg-white/[0.04] transition-colors border-b border-white/5 bg-transparent ${expanded ? 'bg-white/[0.02]' : ''}`}
         >
             <div
-                className="flex items-center gap-4 cursor-pointer pr-4"
+                className="flex items-start gap-4 cursor-pointer pr-4"
                 onClick={() => setExpanded(!expanded)}
                 {...(expanded ? {} : dragHandleProps)}
             >
-                <div className="py-2 px-4 flex items-center gap-4 flex-1 min-w-0">
+                <div className="py-2 px-4 flex items-start gap-4 flex-1 min-w-0">
                     <div
-                        className={`p-1 text-gray-600 hover:text-gray-400 transition-colors ${expanded ? 'cursor-pointer' : 'cursor-grab active:cursor-grabbing'}`}
+                        className={`p-1 mt-0.5 text-gray-600 hover:text-gray-400 transition-colors ${expanded ? 'cursor-pointer' : 'cursor-grab active:cursor-grabbing'}`}
                         onClick={(e) => {
                             if (expanded) {
                                 e.stopPropagation();
@@ -265,7 +289,7 @@ export const TaskItem = forwardRef(({ task, onUpdate, showTags, style, dragHandl
                         {expanded ? <ChevronUp size={16} /> : <GripVertical size={16} />}
                     </div>
                     <div
-                        className={`w-3 h-3 rounded-full shrink-0 transition-colors ${localLabels.length > 0 && availableLabels.find(l => l.name === localLabels[0])?.color
+                        className={`w-3 h-3 mt-1.5 rounded-full shrink-0 transition-colors ${localLabels.length > 0 && availableLabels.find(l => l.name === localLabels[0])?.color
                             ? ''
                             : `shadow-[0_0_10px_rgba(59,130,246,0.3)] ${task.status === 'completed' ? 'bg-green-500 shadow-[0_0_10px_rgba(34,197,94,0.3)]' :
                                 task.status === 'in_progress' ? 'bg-yellow-500 shadow-[0_0_10px_rgba(234,179,8,0.3)]' :
@@ -283,24 +307,29 @@ export const TaskItem = forwardRef(({ task, onUpdate, showTags, style, dragHandl
                     />
 
                     {isEditingTitle ? (
-                        <input
+                        <textarea
+                            ref={textareaRef}
                             autoFocus
                             value={editedTitle}
                             onChange={(e) => setEditedTitle(e.target.value)}
                             onBlur={handleSaveTitle}
-                            className="flex-1 bg-black/40 border border-blue-500/50 rounded px-2 py-0.5 text-gray-200 focus:outline-none"
+                            className="flex-1 bg-black/40 border border-blue-500/50 rounded px-2 py-0.5 text-gray-200 focus:outline-none resize-none overflow-hidden"
                             onClick={(e) => e.stopPropagation()}
                             onPointerDown={(e) => e.stopPropagation()}
                             onKeyDown={(e) => {
                                 e.stopPropagation();
-                                if (e.key === 'Enter') handleSaveTitle();
+                                if (e.key === 'Enter' && !e.shiftKey) {
+                                    e.preventDefault();
+                                    handleSaveTitle();
+                                }
                                 if (e.key === 'Escape') setIsEditingTitle(false);
                             }}
+                            rows={1}
                         />
                     ) : (
-                        <div className="flex-1 min-w-0 flex items-center gap-2 group/title">
+                        <div className="flex-1 min-w-0 flex items-start gap-2 group/title">
                             <h3
-                                className={`font-medium text-gray-200 text-left ${expanded ? 'break-words whitespace-normal cursor-text' : 'truncate'} ${(task.status === 'Deleted' || task.status === 'deleted') ? 'line-through opacity-50' : ''}`}
+                                className={`font-medium text-gray-200 text-left ${expanded ? 'break-words whitespace-pre-wrap cursor-text' : 'truncate'} ${(task.status === 'Deleted' || task.status === 'deleted') ? 'line-through opacity-50' : ''}`}
                                 onClick={(e) => expanded && e.stopPropagation()}
                             >
                                 {task.title}
@@ -342,7 +371,7 @@ export const TaskItem = forwardRef(({ task, onUpdate, showTags, style, dragHandl
                     )}
                 </div>
 
-                <span className="text-[10px] text-gray-600 font-mono">
+                <span className="text-[10px] text-gray-600 font-mono mt-3">
                     {(() => {
                         const lastUpdate = task.updates && task.updates.length > 0
                             ? new Date(Math.max(...task.updates.map(u => new Date(u.timestamp))))
@@ -372,16 +401,20 @@ export const TaskItem = forwardRef(({ task, onUpdate, showTags, style, dragHandl
                                             <div className="absolute -left-[5px] top-1.5 w-2 h-2 rounded-full bg-gray-700 ring-4 ring-[#13161c]" />
                                             {editingId === update.id ? (
                                                 <div className="flex items-center gap-2 w-full">
-                                                    <input
-                                                        type="text"
+                                                    <textarea
+                                                        ref={updateTextareaRef}
                                                         value={editContent}
                                                         onChange={(e) => setEditContent(e.target.value)}
-                                                        className="flex-1 bg-gray-900 border border-gray-800 rounded px-3 py-1.5 text-sm text-gray-200 focus:outline-none focus:border-blue-500 transition-all placeholder:text-gray-600"
+                                                        className="flex-1 bg-gray-900 border border-gray-800 rounded px-3 py-1.5 text-sm text-gray-200 focus:outline-none focus:border-blue-500 transition-all placeholder:text-gray-600 resize-none overflow-hidden"
                                                         autoFocus
                                                         onKeyDown={(e) => {
-                                                            if (e.key === 'Enter') handleSaveEdit(update.id);
+                                                            if (e.key === 'Enter' && !e.shiftKey) {
+                                                                e.preventDefault();
+                                                                handleSaveEdit(update.id);
+                                                            }
                                                             if (e.key === 'Escape') setEditingId(null);
                                                         }}
+                                                        rows={1}
                                                     />
                                                     <button
                                                         className="text-green-400 hover:text-green-300 p-1 bg-green-400/10 rounded"
@@ -417,7 +450,7 @@ export const TaskItem = forwardRef(({ task, onUpdate, showTags, style, dragHandl
                                                     </div>
                                                 ) : (
                                                     <div className="group/content flex items-start gap-2">
-                                                        <p className={`text-gray-300 ${['creation', 'status_change', 'property_change', 'deletion'].includes(update.type) ? 'italic opacity-60' : ''}`}>
+                                                        <p className={`text-gray-300 text-left whitespace-pre-wrap ${['creation', 'status_change', 'property_change', 'deletion'].includes(update.type) ? 'italic opacity-60' : ''}`}>
                                                             {update.content}
                                                         </p>
                                                         {!['status_change', 'creation', 'property_change', 'deletion'].includes(update.type) && (
@@ -471,12 +504,19 @@ export const TaskItem = forwardRef(({ task, onUpdate, showTags, style, dragHandl
                                     <div className="relative border-l-2 border-white/5 pl-4 pb-2 flex-1">
                                         <div className="absolute -left-[5px] top-2.5 w-2 h-2 rounded-full border border-gray-600 bg-[#13161c]" />
                                         <form onSubmit={handleAddDetail} className="relative">
-                                            <input
-                                                type="text"
+                                            <textarea
+                                                ref={newUpdateTextareaRef}
                                                 placeholder="Add update..."
                                                 value={newDetail}
                                                 onChange={(e) => setNewDetail(e.target.value)}
-                                                className="w-full bg-gray-900 border border-gray-800 rounded-xl px-4 py-3 text-sm text-gray-200 focus:outline-none focus:border-blue-500 focus:ring-0 transition-all placeholder:text-gray-600"
+                                                className="w-full bg-gray-900 border border-gray-800 rounded-xl px-4 py-3 text-sm text-gray-200 focus:outline-none focus:border-blue-500 focus:ring-0 transition-all placeholder:text-gray-600 resize-none overflow-hidden"
+                                                rows={1}
+                                                onKeyDown={(e) => {
+                                                    if (e.key === 'Enter' && !e.shiftKey) {
+                                                        e.preventDefault();
+                                                        handleAddDetail(e);
+                                                    }
+                                                }}
                                             />
                                         </form>
                                     </div>
