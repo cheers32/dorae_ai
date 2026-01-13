@@ -314,8 +314,8 @@ export const TaskManager = () => {
             return;
         }
 
-        // Check if dropped over a label
-        if (overId.startsWith('sidebar-label-')) {
+        // Check if dropped over a label (Tagging Task -> Label)
+        if (overId.startsWith('sidebar-label-') && !activeId.startsWith('sidebar-label-')) {
             const labelName = over.data.current.target;
             const taskId = active.id;
             const task = tasks.find(t => t._id === taskId);
@@ -398,11 +398,27 @@ export const TaskManager = () => {
         if (active.id !== over.id) {
             // Check if reordering sidebar items
             if (activeId.startsWith('sidebar-') && overId.startsWith('sidebar-')) {
-                const oldIndex = sidebarItems.indexOf(activeId.replace('sidebar-', ''));
-                const newIndex = sidebarItems.indexOf(overId.replace('sidebar-', ''));
+                // Check if reordering labels
+                if (activeId.startsWith('sidebar-label-') && overId.startsWith('sidebar-label-')) {
+                    setLabels(items => {
+                        const oldIndex = items.findIndex(l => `sidebar-label-${l.name}` === activeId);
+                        const newIndex = items.findIndex(l => `sidebar-label-${l.name}` === overId);
+                        const newItems = arrayMove(items, oldIndex, newIndex);
 
-                if (oldIndex !== -1 && newIndex !== -1) {
-                    setSidebarItems(items => arrayMove(items, oldIndex, newIndex));
+                        // Persist order
+                        const labelIds = newItems.map(l => l._id);
+                        api.reorderLabels(labelIds).catch(err => console.error("Failed to save label order", err));
+
+                        return newItems;
+                    });
+                } else {
+                    // Reordering main sidebar items
+                    const oldIndex = sidebarItems.indexOf(activeId.replace('sidebar-', ''));
+                    const newIndex = sidebarItems.indexOf(overId.replace('sidebar-', ''));
+
+                    if (oldIndex !== -1 && newIndex !== -1) {
+                        setSidebarItems(items => arrayMove(items, oldIndex, newIndex));
+                    }
                 }
             } else {
                 // Reordering tasks

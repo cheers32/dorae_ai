@@ -125,6 +125,15 @@ export const api = {
         return res.json();
     },
 
+    reorderLabels: async (labelIds) => {
+        const res = await fetch(`${API_BASE}/labels/reorder`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ labelIds }),
+        });
+        return res.json();
+    },
+
     deleteTask: (taskId) =>
         fetch(`${API_BASE}/tasks/${taskId}`, { method: 'DELETE' }),
 

@@ -76,34 +76,25 @@ const SortableSidebarItem = ({ id, icon: Icon, label, isActive, onClick, data, i
 const DraggableSidebarLabel = ({ id, label, isActive, onClick, color, data, count, onDelete, onColorChange }) => {
     const [isDeleting, setIsDeleting] = useState(false);
 
-    // Both Draggable and Droppable
-    const { isOver, setNodeRef: setDroppableRef } = useDroppable({
-        id: id,
-        data: data
-    });
-
     const {
         attributes,
         listeners,
-        setNodeRef: setDraggableRef,
+        setNodeRef,
         transform,
-        isDragging
-    } = useDraggable({
+        transition,
+        isDragging,
+        isOver
+    } = useSortable({
         id: id,
         data: data
     });
 
-    // Combine refs
-    const setNodeRef = (node) => {
-        setDroppableRef(node);
-        setDraggableRef(node);
-    };
-
-    const style = transform ? {
-        transform: CSS.Translate.toString(transform),
+    const style = {
+        transform: CSS.Transform.toString(transform),
+        transition,
         opacity: isDragging ? 0.5 : 1,
         zIndex: isDragging ? 999 : undefined,
-    } : undefined;
+    };
 
     return (
         <div
@@ -411,20 +402,22 @@ export function Sidebar({ activeTab, onNavigate, labels = [], onLabelsChange, se
                             )}
                         </AnimatePresence>
 
-                        {labels.map((label) => (
-                            <DraggableSidebarLabel
-                                key={label._id}
-                                id={`sidebar-label-${label.name}`}
-                                label={label.name}
-                                isActive={selectedLabel === label.name}
-                                onClick={() => onNavigate(activeTab, label.name)}
-                                color={label.color}
-                                data={{ type: 'sidebar-label', target: label.name, color: label.color }}
-                                count={stats.labels && stats.labels[label.name]}
-                                onDelete={(e) => handleDeleteLabel(e, label._id)}
-                                onColorChange={(e) => handleColorChange(e, label._id)}
-                            />
-                        ))}
+                        <SortableContext items={labels.map(l => `sidebar-label-${l.name}`)} strategy={verticalListSortingStrategy}>
+                            {labels.map((label) => (
+                                <DraggableSidebarLabel
+                                    key={label._id}
+                                    id={`sidebar-label-${label.name}`}
+                                    label={label.name}
+                                    isActive={selectedLabel === label.name}
+                                    onClick={() => onNavigate(activeTab, label.name)}
+                                    color={label.color}
+                                    data={{ type: 'sidebar-label', target: label.name, color: label.color }}
+                                    count={stats.labels && stats.labels[label.name]}
+                                    onDelete={(e) => handleDeleteLabel(e, label._id)}
+                                    onColorChange={(e) => handleColorChange(e, label._id)}
+                                />
+                            ))}
+                        </SortableContext>
 
 
                         {!isAddingLabel && labels.length === 0 && (

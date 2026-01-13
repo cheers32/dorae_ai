@@ -578,7 +578,9 @@ def get_labels():
             query['user_email'] = user_email
         else:
             query['$or'] = [{'user_email': None}, {'user_email': {'$exists': False}}]
-        labels = list(labels_collection.find(query))
+        
+        # Sort by order (asc) then created_at (desc)
+        labels = list(labels_collection.find(query).sort([('order', 1), ('created_at', -1)]))
         return jsonify([serialize_doc(label) for label in labels]), 200
     except Exception as e:
         return jsonify({"error": str(e)}), 500
@@ -590,16 +592,43 @@ def create_label():
         if not data or 'name' not in data:
             return jsonify({"error": "Label name is required"}), 400
         
+        # Get count for default order
+        count = labels_collection.count_documents({})
+
         new_label = {
             "name": data['name'],
             "color": data.get('color', '#3B82F6'), # Default blue
             "user_email": data.get('user_email'),
-            "created_at": datetime.utcnow().isoformat()
+            "created_at": datetime.utcnow().isoformat(),
+            "order": count  # Add to end
         }
         
         result = labels_collection.insert_one(new_label)
         new_label['_id'] = result.inserted_id
         return jsonify(serialize_doc(new_label)), 201
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+@app.route('/api/labels/reorder', methods=['PUT'])
+def reorder_labels():
+    try:
+        data = request.json
+        if not data or 'labelIds' not in data:
+            return jsonify({"error": "labelIds list is required"}), 400
+        
+        label_ids = data['labelIds']
+        
+        from pymongo import UpdateOne
+        operations = []
+        for index, label_id in enumerate(label_ids):
+            operations.append(
+                UpdateOne({"_id": ObjectId(label_id)}, {"$set": {"order": index}})
+            )
+            
+        if operations:
+            labels_collection.bulk_write(operations)
+            
+        return jsonify({"message": "Labels reordered"}), 200
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
