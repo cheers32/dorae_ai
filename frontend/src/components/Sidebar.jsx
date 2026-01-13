@@ -12,7 +12,8 @@ import {
     LogOut,
     MessageSquare,
     Palette,
-    Folder
+    Folder,
+    Check
 } from 'lucide-react';
 import { api } from '../api';
 import { useDroppable, useDraggable } from '@dnd-kit/core';
@@ -72,7 +73,9 @@ const SortableSidebarItem = ({ id, icon: Icon, label, isActive, onClick, data, i
     );
 };
 
-const DraggableSidebarLabel = ({ id, label, isActive, onClick, color, data, count }) => {
+const DraggableSidebarLabel = ({ id, label, isActive, onClick, color, data, count, onDelete, onColorChange }) => {
+    const [isDeleting, setIsDeleting] = useState(false);
+
     // Both Draggable and Droppable
     const { isOver, setNodeRef: setDroppableRef } = useDroppable({
         id: id,
@@ -103,27 +106,73 @@ const DraggableSidebarLabel = ({ id, label, isActive, onClick, color, data, coun
     } : undefined;
 
     return (
-        <button
+        <div
             ref={setNodeRef}
+            style={style}
             {...listeners}
             {...attributes}
-            style={style}
-            className={`nav-item w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all touch-none cursor-grab active:cursor-grabbing ${isActive ? 'bg-blue-500/10 text-blue-400' : 'text-gray-400 hover:text-gray-200 hover:bg-white/5'
-                } ${isOver && !isDragging ? 'bg-blue-500/20 border-blue-400 shadow-[0_0_15px_rgba(59,130,246,0.3)]' : ''}`}
-            onClick={onClick}
+            className="relative group w-full"
         >
-            <div className="w-2 h-2 rounded-full pointer-events-none" style={{ backgroundColor: color || '#3B82F6' }} />
-            <span className={`text-sm font-medium pointer-events-none ${isOver ? 'text-blue-400' : ''}`}>{label}</span>
-            {count !== undefined && count > 0 && (
-                <span className={`ml-auto text-xs ${isActive ? 'text-blue-400' : 'text-gray-600'}`}>{count}</span>
-            )}
-            {isActive && !isOver && (
-                <motion.div
-                    className="absolute left-0 w-1 h-6 bg-blue-500 rounded-r-full"
-                    layoutId="activeIndicator"
-                />
-            )}
-        </button>
+            <button
+                className={`nav-item w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all touch-none cursor-grab active:cursor-grabbing ${isActive ? 'bg-blue-500/10 text-blue-400' : 'text-gray-400 hover:text-gray-200 hover:bg-white/5'
+                    } ${isOver && !isDragging ? 'bg-blue-500/20 border-blue-400 shadow-[0_0_15px_rgba(59,130,246,0.3)]' : ''}`}
+                onClick={onClick}
+            >
+                <div className="w-2 h-2 rounded-full pointer-events-none" style={{ backgroundColor: color || '#3B82F6' }} />
+                <span className={`text-sm font-medium pointer-events-none ${isOver ? 'text-blue-400' : ''}`}>{label}</span>
+                {count !== undefined && count > 0 && (
+                    <span className={`ml-auto text-xs transition-opacity group-hover:opacity-0 ${isActive ? 'text-blue-400' : 'text-gray-600'}`}>{count}</span>
+                )}
+                {isActive && !isOver && (
+                    <motion.div
+                        className="absolute left-0 w-1 h-6 bg-blue-500 rounded-r-full"
+                        layoutId="activeIndicator"
+                    />
+                )}
+            </button>
+            <div
+                className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-all z-50"
+                onPointerDown={(e) => e.stopPropagation()}
+            >
+                {isDeleting ? (
+                    <div className="flex items-center gap-1">
+                        <button
+                            onClick={onDelete}
+                            className="p-1 text-green-400 hover:text-green-300 transition-colors bg-green-400/10 rounded"
+                            title="Confirm Delete"
+                        >
+                            <Check size={12} />
+                        </button>
+                        <button
+                            onClick={() => setIsDeleting(false)}
+                            className="p-1 text-gray-500 hover:text-gray-300 transition-colors"
+                            title="Cancel"
+                        >
+                            <X size={12} />
+                        </button>
+                    </div>
+                ) : (
+                    <>
+                        <label className="relative cursor-pointer p-1 text-gray-600 hover:text-blue-400 transition-colors">
+                            <Palette size={12} />
+                            <input
+                                type="color"
+                                value={color || '#3B82F6'}
+                                onChange={onColorChange}
+                                className="absolute inset-0 opacity-0 cursor-pointer"
+                            />
+                        </label>
+                        <button
+                            onClick={() => setIsDeleting(true)}
+                            className="relative p-1 text-gray-600 hover:text-red-400 transition-all"
+                            title="Delete Label"
+                        >
+                            <Trash2 size={12} />
+                        </button>
+                    </>
+                )}
+            </div>
+        </div>
     );
 };
 
@@ -360,36 +409,20 @@ export function Sidebar({ activeTab, onNavigate, labels = [], onLabelsChange, se
                         </AnimatePresence>
 
                         {labels.map((label) => (
-                            <div key={label._id} className="relative group">
-                                <DraggableSidebarLabel
-                                    id={`sidebar-label-${label.name}`}
-                                    label={label.name}
-                                    isActive={selectedLabel === label.name}
-                                    onClick={() => onNavigate(activeTab, label.name)}
-                                    color={label.color}
-                                    data={{ type: 'sidebar-label', target: label.name, color: label.color }}
-                                    count={stats.labels && stats.labels[label.name]}
-                                />
-                                <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-all">
-                                    <label className="relative cursor-pointer p-1 text-gray-600 hover:text-blue-400 transition-colors">
-                                        <Palette size={12} />
-                                        <input
-                                            type="color"
-                                            value={label.color || '#3B82F6'}
-                                            onChange={(e) => handleColorChange(e, label._id)}
-                                            className="absolute inset-0 opacity-0 cursor-pointer"
-                                            onClick={(e) => e.stopPropagation()}
-                                        />
-                                    </label>
-                                    <button
-                                        onClick={(e) => handleDeleteLabel(e, label._id)}
-                                        className="p-1 text-gray-600 hover:text-red-400 transition-all"
-                                    >
-                                        <Trash2 size={12} />
-                                    </button>
-                                </div>
-                            </div>
+                            <DraggableSidebarLabel
+                                key={label._id}
+                                id={`sidebar-label-${label.name}`}
+                                label={label.name}
+                                isActive={selectedLabel === label.name}
+                                onClick={() => onNavigate(activeTab, label.name)}
+                                color={label.color}
+                                data={{ type: 'sidebar-label', target: label.name, color: label.color }}
+                                count={stats.labels && stats.labels[label.name]}
+                                onDelete={(e) => handleDeleteLabel(e, label._id)}
+                                onColorChange={(e) => handleColorChange(e, label._id)}
+                            />
                         ))}
+
 
                         {!isAddingLabel && labels.length === 0 && (
                             <p className="px-4 py-2 text-xs text-gray-600 italic">No labels yet</p>
