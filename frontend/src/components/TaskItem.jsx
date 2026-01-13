@@ -275,18 +275,19 @@ export const TaskItem = forwardRef(({ task, onUpdate, showTags, style, dragHandl
                             value={editedTitle}
                             onChange={(e) => setEditedTitle(e.target.value)}
                             onBlur={handleSaveTitle}
-                            onKeyDown={(e) => {
-                                if (e.key === 'Enter') handleSaveTitle();
-                                if (e.key === 'Escape') setIsEditingTitle(false);
-                            }}
                             className="flex-1 bg-black/40 border border-blue-500/50 rounded px-2 py-0.5 text-gray-200 focus:outline-none"
                             onClick={(e) => e.stopPropagation()}
                             onPointerDown={(e) => e.stopPropagation()}
+                            onKeyDown={(e) => {
+                                e.stopPropagation();
+                                if (e.key === 'Enter') handleSaveTitle();
+                                if (e.key === 'Escape') setIsEditingTitle(false);
+                            }}
                         />
                     ) : (
                         <div className="flex-1 min-w-0 flex items-center gap-2 group/title">
                             <h3
-                                className={`font-medium text-gray-200 text-left truncate ${task.status === 'deleted' ? 'line-through opacity-50' : ''}`}
+                                className={`font-medium text-gray-200 text-left ${expanded ? 'break-words whitespace-normal' : 'truncate'} ${task.status === 'deleted' ? 'line-through opacity-50' : ''}`}
                             >
                                 {task.title}
                             </h3>
