@@ -85,34 +85,24 @@ const SortableLabel = ({ labelName, color, onDelete }) => {
     };
 
     return (
+
+
         <span
             ref={setNodeRef}
             {...attributes}
             {...listeners}
-            className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-medium border group/label transition-colors"
+            className="inline-flex items-center gap-1.5 px-2 py-1 rounded border uppercase tracking-wider font-semibold text-[10px] group/label transition-colors"
             style={style}
             onClick={(e) => e.stopPropagation()}
             onPointerDown={(e) => {
-                // Manually call the dnd-kit listener first
                 if (listeners && listeners.onPointerDown) {
                     listeners.onPointerDown(e);
                 }
-                // Then prevent propagation to the parent draggable (TaskItem)
-                e.preventDefault(); // Prevent default browser behavior
+                e.preventDefault();
                 e.stopPropagation();
             }}
         >
             {labelName}
-            <X
-                size={10}
-                className="cursor-pointer opacity-0 group-hover/label:opacity-100 transition-opacity"
-                style={{ color }}
-                onClick={(e) => {
-                    e.stopPropagation();
-                    onDelete();
-                }}
-                onPointerDown={(e) => e.stopPropagation()}
-            />
         </span>
     );
 };
@@ -126,6 +116,15 @@ export const TaskItem = forwardRef(({ task, onUpdate, showTags, style, dragHandl
     const [isEditingTitle, setIsEditingTitle] = useState(false);
     const [editedTitle, setEditedTitle] = useState(task.title);
     const [localLabels, setLocalLabels] = useState(task.labels || []);
+    const localRef = useRef(null); // Local ref to track the DOM element
+
+    // Sync refs
+    useEffect(() => {
+        if (ref) {
+            if (typeof ref === 'function') ref(localRef.current);
+            else ref.current = localRef.current;
+        }
+    }, [ref]);
 
     useEffect(() => {
         setLocalLabels(task.labels || []);
@@ -137,8 +136,36 @@ export const TaskItem = forwardRef(({ task, onUpdate, showTags, style, dragHandl
         })
     );
 
+    const pointerWithinTaskItem = (args) => {
+        const { pointerCoordinates } = args;
+        if (!pointerCoordinates || !localRef.current) return [];
+
+        const rect = localRef.current.getBoundingClientRect();
+        const isInside =
+            pointerCoordinates.x >= rect.left &&
+            pointerCoordinates.x <= rect.right &&
+            pointerCoordinates.y >= rect.top &&
+            pointerCoordinates.y <= rect.bottom;
+
+        if (isInside) {
+            return closestCenter(args);
+        }
+        return []; // No collisions if outside -> over will be null
+    };
+
     const handleLabelDragEnd = async (event) => {
         const { active, over } = event;
+
+        // If dropped outside, remove the label
+        if (!over) {
+            const labelToRemove = active.id;
+            const newLabels = localLabels.filter(l => l !== labelToRemove);
+            setLocalLabels(newLabels);
+            await api.updateTask(task._id, { labels: newLabels });
+            onUpdate();
+            return;
+        }
+
         if (active.id !== over.id) {
             setLocalLabels((items) => {
                 const oldIndex = items.indexOf(active.id);
@@ -252,18 +279,10 @@ export const TaskItem = forwardRef(({ task, onUpdate, showTags, style, dragHandl
     };
 
     const priorities = ['low', 'medium', 'high', 'urgent'];
-    const categories = ['General', 'Planning', 'Development', 'Bug Fix', 'Design'];
+
     const statuses = ['pending', 'in_progress', 'completed'];
 
-    const getPriorityColor = (p) => {
-        switch (p) {
-            case 'urgent': return 'text-red-400 bg-red-400/10 border-red-400/20';
-            case 'high': return 'text-orange-400 bg-orange-400/10 border-orange-400/20';
-            case 'medium': return 'text-blue-400 bg-blue-400/10 border-blue-400/20';
-            case 'low': return 'text-gray-400 bg-gray-400/10 border-gray-400/20';
-            default: return 'text-gray-400 bg-gray-400/10 border-gray-400/20';
-        }
-    };
+
 
     const getStatusStyle = (s) => {
         switch (s) {
@@ -281,7 +300,7 @@ export const TaskItem = forwardRef(({ task, onUpdate, showTags, style, dragHandl
     return (
         <motion.div
             layout={!isOverlay}
-            ref={ref}
+            ref={localRef}
             style={baseStyle}
             initial={isOverlay ? false : { opacity: 0, y: 10 }}
             animate={isOverlay ? false : { opacity: baseStyle.opacity, y: 0 }}
@@ -356,7 +375,7 @@ export const TaskItem = forwardRef(({ task, onUpdate, showTags, style, dragHandl
                             <div className="flex flex-wrap gap-1 ml-2">
                                 <DndContext
                                     sensors={sensors}
-                                    collisionDetection={closestCenter}
+                                    collisionDetection={pointerWithinTaskItem}
                                     onDragEnd={handleLabelDragEnd}
                                 >
                                     <SortableContext
@@ -400,19 +419,9 @@ export const TaskItem = forwardRef(({ task, onUpdate, showTags, style, dragHandl
                         )}
                     />
 
-                    <Dropdown
-                        options={priorities}
-                        value={task.priority || 'NORMAL'}
-                        onChange={(val) => updateField('priority', val)}
-                        triggerClassName={`text-[10px] px-2 py-1 rounded border uppercase tracking-wider font-semibold transition-colors ${getPriorityColor(task.priority)}`}
-                    />
 
-                    <Dropdown
-                        options={categories}
-                        value={task.category || 'GENERAL'}
-                        onChange={(val) => updateField('category', val)}
-                        triggerClassName="text-[10px] px-2 py-1 rounded border border-white/10 text-gray-400 hover:text-gray-300 hover:bg-white/5 uppercase tracking-wider font-medium"
-                    />
+
+
 
                     <button className="p-1.5 text-gray-500 hover:text-red-400 transition-colors" onClick={handleDeleteTask}>
                         <Trash2 size={14} />
