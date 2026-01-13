@@ -113,6 +113,19 @@ export const TaskManager = () => {
     }, [activeTab, selectedLabel]);
 
     const customCollisionDetection = (args) => {
+        // If dragging a sidebar label, prioritize tasks
+        if (args.active.id.toString().startsWith('sidebar-label-')) {
+            const taskCollisions = rectIntersection({
+                ...args,
+                droppableContainers: args.droppableContainers.filter(container =>
+                    !container.id.toString().startsWith('sidebar-')
+                )
+            });
+            if (taskCollisions.length > 0) return taskCollisions;
+            return closestCenter(args);
+        }
+
+        // Standard logic: dragging a task
         // First check for sidebar collisions (regular tabs and labels)
         const sidebarCollisions = rectIntersection({
             ...args,
@@ -154,7 +167,27 @@ export const TaskManager = () => {
             return;
         }
 
+        const activeId = active.id.toString();
         const overId = over.id.toString();
+
+        // Case 1: Dragging Sidebar Label -> Task
+        if (activeId.startsWith('sidebar-label-') && !overId.startsWith('sidebar-')) {
+            const labelName = active.data.current.target;
+            const taskId = over.id;
+            const task = tasks.find(t => t._id === taskId);
+
+            if (task && (!task.labels || !task.labels.includes(labelName))) {
+                try {
+                    const newLabels = [...(task.labels || []), labelName];
+                    await api.updateTask(taskId, { labels: newLabels });
+                    fetchTasks();
+                } catch (err) {
+                    console.error("Failed to tag task from sidebar", err);
+                }
+            }
+            setActiveId(null);
+            return;
+        }
 
         // Check if dropped over a label
         if (overId.startsWith('sidebar-label-')) {
@@ -370,7 +403,16 @@ export const TaskManager = () => {
 
             {createPortal(
                 <DragOverlay>
-                    {activeTask ? (
+                    {activeId && activeId.toString().startsWith('sidebar-label-') ? (
+                        <div className="px-3 py-1.5 rounded-full text-sm font-semibold shadow-lg flex items-center gap-2"
+                            style={{
+                                backgroundColor: labels.find(l => `sidebar-label-${l.name}` === activeId)?.color || '#3B82F6',
+                                color: '#fff'
+                            }}>
+                            <TagIcon size={14} className="text-white" />
+                            {labels.find(l => `sidebar-label-${l.name}` === activeId)?.name}
+                        </div>
+                    ) : activeTask ? (
                         <TaskItem
                             task={activeTask}
                             showTags={showTags}

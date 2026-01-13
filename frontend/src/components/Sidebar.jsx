@@ -14,7 +14,8 @@ import {
     Palette
 } from 'lucide-react';
 import { api } from '../api';
-import { useDroppable } from '@dnd-kit/core';
+import { useDroppable, useDraggable } from '@dnd-kit/core';
+import { CSS } from '@dnd-kit/utilities';
 
 const DroppableNavButton = ({ id, icon: Icon, label, isActive, onClick, isOverStyle, data }) => {
     const { isOver, setNodeRef } = useDroppable({
@@ -32,6 +33,58 @@ const DroppableNavButton = ({ id, icon: Icon, label, isActive, onClick, isOverSt
             {Icon && <Icon size={18} className={isOver ? 'text-blue-400' : ''} />}
             {!Icon && <div className="w-2 h-2 rounded-full" style={{ backgroundColor: data?.color || '#3B82F6' }} />}
             <span className={`text-sm font-medium ${isOver ? 'text-blue-400' : ''}`}>{label}</span>
+            {isActive && !isOver && (
+                <motion.div
+                    className="absolute left-0 w-1 h-6 bg-blue-500 rounded-r-full"
+                    layoutId="activeIndicator"
+                />
+            )}
+        </button>
+    );
+};
+
+const DraggableSidebarLabel = ({ id, label, isActive, onClick, color, data }) => {
+    // Both Draggable and Droppable
+    const { isOver, setNodeRef: setDroppableRef } = useDroppable({
+        id: id,
+        data: data
+    });
+
+    const {
+        attributes,
+        listeners,
+        setNodeRef: setDraggableRef,
+        transform,
+        isDragging
+    } = useDraggable({
+        id: id,
+        data: data
+    });
+
+    // Combine refs
+    const setNodeRef = (node) => {
+        setDroppableRef(node);
+        setDraggableRef(node);
+    };
+
+    const style = transform ? {
+        transform: CSS.Translate.toString(transform),
+        opacity: isDragging ? 0.5 : 1,
+        zIndex: isDragging ? 999 : undefined,
+    } : undefined;
+
+    return (
+        <button
+            ref={setNodeRef}
+            {...listeners}
+            {...attributes}
+            style={style}
+            className={`nav-item w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all touch-none cursor-grab active:cursor-grabbing ${isActive ? 'bg-blue-500/10 text-blue-400' : 'text-gray-400 hover:text-gray-200 hover:bg-white/5'
+                } ${isOver && !isDragging ? 'bg-blue-500/20 border-blue-400 shadow-[0_0_15px_rgba(59,130,246,0.3)]' : ''}`}
+            onClick={onClick}
+        >
+            <div className="w-2 h-2 rounded-full pointer-events-none" style={{ backgroundColor: color || '#3B82F6' }} />
+            <span className={`text-sm font-medium pointer-events-none ${isOver ? 'text-blue-400' : ''}`}>{label}</span>
             {isActive && !isOver && (
                 <motion.div
                     className="absolute left-0 w-1 h-6 bg-blue-500 rounded-r-full"
@@ -179,11 +232,12 @@ export function Sidebar({ activeTab, onNavigate, labels = [], onLabelsChange, se
 
                         {labels.map((label) => (
                             <div key={label._id} className="relative group">
-                                <DroppableNavButton
+                                <DraggableSidebarLabel
                                     id={`sidebar-label-${label.name}`}
                                     label={label.name}
                                     isActive={selectedLabel === label.name}
                                     onClick={() => onNavigate(activeTab, label.name)}
+                                    color={label.color}
                                     data={{ type: 'sidebar-label', target: label.name, color: label.color }}
                                 />
                                 <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-all">
