@@ -15,6 +15,11 @@ export const api = {
         return res.json();
     },
 
+    getStats: async () => {
+        const res = await fetch(`${API_BASE}/stats`);
+        return res.json();
+    },
+
     createFolder: async (name) => {
         const res = await fetch(`${API_BASE}/folders`, {
             method: 'POST',

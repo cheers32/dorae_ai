@@ -20,7 +20,7 @@ import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable';
 
-const SortableSidebarItem = ({ id, icon: Icon, label, isActive, onClick, data, isFolder, onDelete }) => {
+const SortableSidebarItem = ({ id, icon: Icon, label, isActive, onClick, data, isFolder, onDelete, count }) => {
     const {
         attributes,
         listeners,
@@ -47,6 +47,9 @@ const SortableSidebarItem = ({ id, icon: Icon, label, isActive, onClick, data, i
                 {Icon && <Icon size={18} className={isOver ? 'text-blue-400' : ''} />}
                 {!Icon && <div className="w-2 h-2 rounded-full" style={{ backgroundColor: data?.color || '#3B82F6' }} />}
                 <span className={`text-sm font-medium ${isOver ? 'text-blue-400' : ''}`}>{label}</span>
+                {count !== undefined && count > 0 && (
+                    <span className={`ml-auto text-xs ${isActive ? 'text-blue-400' : 'text-gray-600'}`}>{count}</span>
+                )}
                 {isActive && !isOver && (
                     <motion.div
                         className="absolute left-0 w-1 h-6 bg-blue-500 rounded-r-full"
@@ -69,7 +72,7 @@ const SortableSidebarItem = ({ id, icon: Icon, label, isActive, onClick, data, i
     );
 };
 
-const DraggableSidebarLabel = ({ id, label, isActive, onClick, color, data }) => {
+const DraggableSidebarLabel = ({ id, label, isActive, onClick, color, data, count }) => {
     // Both Draggable and Droppable
     const { isOver, setNodeRef: setDroppableRef } = useDroppable({
         id: id,
@@ -111,6 +114,9 @@ const DraggableSidebarLabel = ({ id, label, isActive, onClick, color, data }) =>
         >
             <div className="w-2 h-2 rounded-full pointer-events-none" style={{ backgroundColor: color || '#3B82F6' }} />
             <span className={`text-sm font-medium pointer-events-none ${isOver ? 'text-blue-400' : ''}`}>{label}</span>
+            {count !== undefined && count > 0 && (
+                <span className={`ml-auto text-xs ${isActive ? 'text-blue-400' : 'text-gray-600'}`}>{count}</span>
+            )}
             {isActive && !isOver && (
                 <motion.div
                     className="absolute left-0 w-1 h-6 bg-blue-500 rounded-r-full"
@@ -121,7 +127,7 @@ const DraggableSidebarLabel = ({ id, label, isActive, onClick, color, data }) =>
     );
 };
 
-export function Sidebar({ activeTab, onNavigate, labels = [], onLabelsChange, selectedLabel, folders = [], onFoldersChange, selectedFolder, sidebarItems = [] }) {
+export function Sidebar({ activeTab, onNavigate, labels = [], onLabelsChange, selectedLabel, folders = [], onFoldersChange, selectedFolder, sidebarItems = [], stats = {} }) {
     const [isAddingLabel, setIsAddingLabel] = useState(false);
     const [newLabelName, setNewLabelName] = useState('');
     const [isAddingFolder, setIsAddingFolder] = useState(false);
@@ -263,6 +269,7 @@ export function Sidebar({ activeTab, onNavigate, labels = [], onLabelsChange, se
                                         data={{ type: 'folder', target: folder._id, folderId: folder._id }}
                                         isFolder={true}
                                         onDelete={(e) => handleDeleteFolder(e, folder._id)}
+                                        count={stats.folders && stats.folders[folder._id]}
                                     />
                                 );
                             } else {
@@ -277,6 +284,7 @@ export function Sidebar({ activeTab, onNavigate, labels = [], onLabelsChange, se
                                         isActive={activeTab === itemId && !selectedLabel}
                                         onClick={() => onNavigate(itemId, null)}
                                         data={{ type: 'sidebar', target: itemId }}
+                                        count={stats[itemId]}
                                     />
                                 );
                             }
@@ -360,6 +368,7 @@ export function Sidebar({ activeTab, onNavigate, labels = [], onLabelsChange, se
                                     onClick={() => onNavigate(activeTab, label.name)}
                                     color={label.color}
                                     data={{ type: 'sidebar-label', target: label.name, color: label.color }}
+                                    count={stats.labels && stats.labels[label.name]}
                                 />
                                 <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-all">
                                     <label className="relative cursor-pointer p-1 text-gray-600 hover:text-blue-400 transition-colors">

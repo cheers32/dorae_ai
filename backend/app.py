@@ -213,6 +213,55 @@ def empty_trash():
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
+@app.route('/api/stats', methods=['GET'])
+def get_stats():
+    try:
+        # Aggregation pipeline could be more efficient, but individual counts are simple for now
+        
+        # 1. Active Tasks (status != 'completed' AND status != 'deleted' AND no folder)
+        active_count = tasks_collection.count_documents({
+            'status': {'$nin': ['completed', 'deleted']},
+            '$or': [{'folderId': None}, {'folderId': {'$exists': False}}]
+        })
+        
+        # 2. Closed Tasks (status == 'completed')
+        closed_count = tasks_collection.count_documents({'status': 'completed'})
+        
+        # 3. Trash (status == 'deleted')
+        trash_count = tasks_collection.count_documents({'status': 'deleted'})
+        
+        # 4. Folders
+        folders = list(folders_collection.find())
+        folder_counts = {}
+        for folder in folders:
+            folder_id = str(folder['_id'])
+            count = tasks_collection.count_documents({
+                'status': {'$ne': 'deleted'},
+                'folderId': folder_id
+            })
+            folder_counts[folder_id] = count
+            
+        # 5. Labels
+        labels = list(labels_collection.find())
+        label_counts = {}
+        for label in labels:
+            label_name = label['name']
+            count = tasks_collection.count_documents({
+                'status': {'$ne': 'deleted'},
+                'labels': label_name
+            })
+            label_counts[label_name] = count
+            
+        return jsonify({
+            'active': active_count,
+            'closed': closed_count,
+            'trash': trash_count,
+            'folders': folder_counts,
+            'labels': label_counts
+        }), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
 @app.route('/api/tasks/<task_id>/update/<update_id>', methods=['DELETE'])
 def delete_task_update(task_id, update_id):
     try:

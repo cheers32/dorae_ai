@@ -40,6 +40,13 @@ export const TaskManager = () => {
     const [history, setHistory] = useState([]);
     // Sidebar Order State
     const [sidebarItems, setSidebarItems] = useState([]);
+    const [stats, setStats] = useState({
+        active: 0,
+        closed: 0,
+        trash: 0,
+        folders: {},
+        labels: {}
+    });
 
     const navigate = useNavigate();
 
@@ -98,6 +105,15 @@ export const TaskManager = () => {
         navigate('/login');
     };
 
+    const fetchStats = async () => {
+        try {
+            const data = await api.getStats();
+            setStats(data);
+        } catch (err) {
+            console.error("Failed to fetch stats", err);
+        }
+    };
+
     const fetchTasks = async () => {
         if (activeTab === 'assistant') {
             setLoading(false);
@@ -131,6 +147,7 @@ export const TaskManager = () => {
     useEffect(() => {
         fetchLabels();
         fetchFolders();
+        fetchStats();
     }, []);
 
     // Sync folders with sidebarItems
@@ -170,6 +187,7 @@ export const TaskManager = () => {
 
     useEffect(() => {
         fetchTasks();
+        fetchStats();
     }, [activeTab, selectedLabel, selectedFolder]);
 
     const [dropAnimation, setDropAnimation] = useState(null); // null by default, or undefined
@@ -401,6 +419,7 @@ export const TaskManager = () => {
                     selectedLabel={selectedLabel}
                     selectedFolder={selectedFolder}
                     sidebarItems={sidebarItems}
+                    stats={stats}
                 />
 
                 <main className="flex-1 flex flex-col min-w-0 bg-[#0f1014] h-full relative">
@@ -424,6 +443,14 @@ export const TaskManager = () => {
                             <div className="flex items-baseline gap-4">
                                 <h1 className="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-blue-200">
                                     {getHeaderTitle()}
+                                    <span className="text-lg text-gray-500 font-normal ml-2">
+                                        ({activeTab === 'active' && !selectedLabel && !selectedFolder ? stats.active :
+                                            activeTab === 'closed' ? stats.closed :
+                                                activeTab === 'trash' ? stats.trash :
+                                                    activeTab === 'folder' && selectedFolder ? (stats.folders[selectedFolder] || 0) :
+                                                        selectedLabel ? (stats.labels[selectedLabel] || 0) :
+                                                            tasks.length})
+                                    </span>
                                 </h1>
                                 <p className="text-gray-500 text-lg border-l border-gray-800 pl-4 py-0.5 leading-none">
                                     {activeTab === 'assistant'
