@@ -299,12 +299,12 @@ export const TaskItem = forwardRef(({ task, onUpdate, showTags, style, dragHandl
 
     return (
         <motion.div
-            layout={!isOverlay}
+
             ref={localRef}
             style={baseStyle}
-            initial={isOverlay ? false : { opacity: 0, y: 10 }}
-            animate={isOverlay ? false : { opacity: baseStyle.opacity, y: 0 }}
-            exit={isOverlay ? false : { opacity: 0, scale: 0.98 }}
+            initial={isOverlay ? false : { opacity: 0 }}
+            animate={isOverlay ? false : { opacity: baseStyle.opacity }}
+            exit={isOverlay ? false : { opacity: 0 }}
             className={`group hover:bg-white/[0.02] transition-colors rounded-xl border border-white/5 bg-[#1a1f2e]/50 mb-3 ${expanded ? 'ring-1 ring-blue-500/20' : ''}`}
         >
             <div
