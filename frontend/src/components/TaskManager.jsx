@@ -209,6 +209,22 @@ export const TaskManager = () => {
         }
     }, [sidebarItems]);
 
+    // Keyboard navigation
+    useEffect(() => {
+        const handleKeyDown = (event) => {
+            // Command + [ for back navigation
+            if ((event.metaKey || event.ctrlKey) && event.key === '[') {
+                if (history.length > 0) {
+                    event.preventDefault();
+                    handleBack();
+                }
+            }
+        };
+
+        window.addEventListener('keydown', handleKeyDown);
+        return () => window.removeEventListener('keydown', handleKeyDown);
+    }, [history, handleBack]);
+
     useEffect(() => {
         fetchTasks(true);
         fetchStats();
