@@ -303,6 +303,7 @@ export const TaskManager = () => {
                     const newLabels = [...(task.labels || []), labelName];
                     await api.updateTask(taskId, { labels: newLabels });
                     fetchTasks(false);
+                    setShowTags(true);
                 } catch (err) {
                     console.error("Failed to tag task from sidebar", err);
                 }
@@ -322,6 +323,7 @@ export const TaskManager = () => {
                     const newLabels = [...(task.labels || []), labelName];
                     await api.updateTask(taskId, { labels: newLabels });
                     fetchTasks(false);
+                    setShowTags(true);
                 } catch (err) {
                     console.error("Failed to tag task", err);
                 }
