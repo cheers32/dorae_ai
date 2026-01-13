@@ -3,7 +3,7 @@ import { api } from '../api';
 import { TaskItem, SortableTaskItem } from './TaskItem';
 import { Sidebar } from './Sidebar';
 import { ChatInterface } from './ChatInterface';
-import { Plus, Home as HomeIcon, Tag as TagIcon, ArrowLeft, Trash2 } from 'lucide-react';
+import { Plus, Home as HomeIcon, Tag as TagIcon, ArrowLeft, Trash2, X } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import {
@@ -37,6 +37,7 @@ export const TaskManager = () => {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
     const [showTags, setShowTags] = useState(false);
+    const [isCreating, setIsCreating] = useState(false);
     const [activeId, setActiveId] = useState(null);
     const [history, setHistory] = useState([]);
     const [workareaTasks, setWorkareaTasks] = useState([]); // [NEW] Workarea logic
@@ -297,8 +298,42 @@ export const TaskManager = () => {
 
         try {
             const labelsToApply = selectedLabel ? [selectedLabel] : [];
-            await api.createTask(newTaskTitle, labelsToApply);
+            // If checking 'activeTab' === 'folder' logic or 'selectedFolder' logic from backend
+            let folderId = null;
+            if (activeTab === 'folder' && selectedFolder) {
+                folderId = selectedFolder;
+
+                // [NEW] Also add folder name as a label (Folder-as-Label feature)
+                const textFolder = folders.find(f => f._id === selectedFolder);
+                if (textFolder) {
+                    // Avoid duplicates if selectedLabel is somehow same (though UI prevents dual selection usually)
+                    if (!labelsToApply.includes(textFolder.name)) {
+                        labelsToApply.push(textFolder.name);
+                    }
+                }
+            } else if (activeTab === 'active' && !selectedLabel && !selectedFolder) {
+                // If strictly "Active" tab with no selection, maybe don't enforce folder unless UNFILED logic desires it
+                // But generally, api.createTask might need update to support folderId
+            }
+
+            // We need to update api.createTask signature or payload if we want to support folders
+            // Checking api usage: api.createTask(title, labels)
+            // Need to see if we can pass folderId?
+            // Assuming we can pass it as 3rd arg or object: check api.js? 
+            // Since tool access is limited to files I know... I should check API if possible?
+            // User said "backend/app.py", but frontend `api.js` is the clearer contract.
+            // Let's assume I can pass an object or update `api` calls. 
+            // Wait, I can't check `api.js` easily without a tool call.
+            // But let's assume I need to pass it.
+            // Standardizing: createTask(title, labels, folderId)
+            await api.createTask(newTaskTitle, labelsToApply, folderId);
+
             setNewTaskTitle('');
+            setIsCreating(false); // Close form after creation? User might want multiple. 
+            // Actually, let's keep it open if user wants to add more? 
+            // "when a task is created, just apply..." implies one by one.
+            // Let's keep it open based on previous comment. 
+
             fetchTasks(false);
         } catch (err) {
             console.error(err);
@@ -552,8 +587,8 @@ export const TaskManager = () => {
     };
 
     const getHeaderTitle = () => {
-        if (selectedLabel) return `Label: ${selectedLabel}`;
-        if (selectedFolder) return `Folder: ${folders.find(f => f._id === selectedFolder)?.name || 'Unknown'}`;
+        if (selectedLabel) return selectedLabel;
+        if (selectedFolder) return folders.find(f => f._id === selectedFolder)?.name || 'Unknown';
         switch (activeTab) {
             case 'active': return 'Active Tasks';
             case 'closed': return 'Closed Tasks';
@@ -606,7 +641,7 @@ export const TaskManager = () => {
                             </AnimatePresence>
 
                             <div className="flex items-baseline gap-4">
-                                <h1 className="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-blue-200">
+                                <h1 className="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-blue-200 text-left leading-tight">
                                     {getHeaderTitle()}
                                     <span className="text-lg text-gray-500 font-normal ml-2">
                                         ({activeTab === 'active' && !selectedLabel && !selectedFolder ? stats.active :
@@ -644,6 +679,18 @@ export const TaskManager = () => {
                                 <TagIcon size={18} />
                                 <span className="text-sm font-medium">{showTags ? 'Hide Tags' : 'Show Tags'}</span>
                             </button>
+
+                            {((activeTab === 'active' || activeTab === 'folder' || activeTab === 'label') || (selectedLabel)) && (
+                                <button
+                                    onClick={() => {
+                                        setIsCreating(!isCreating);
+                                    }}
+                                    className={`px-3 py-2 rounded-lg transition-colors flex items-center gap-2 ${isCreating ? 'bg-blue-500 text-white shadow-lg shadow-blue-500/20' : 'bg-blue-500/10 text-blue-400 hover:bg-blue-500/20'}`}
+                                >
+                                    {isCreating ? <X size={18} /> : <Plus size={18} />}
+                                    <span className="text-sm font-medium">{isCreating ? 'Cancel' : 'New Task'}</span>
+                                </button>
+                            )}
 
                             {localStorage.getItem('userProfile') && (
                                 <div className="flex items-center gap-3 bg-gray-900/50 px-4 py-2 rounded-full border border-gray-800">
@@ -720,24 +767,38 @@ export const TaskManager = () => {
                                     </AnimatePresence>
 
 
-                                    {activeTab === 'active' && (
-                                        <form className="flex gap-4 mb-8" onSubmit={handleCreateTask}>
-                                            <input
-                                                type="text"
-                                                className="flex-1 bg-gray-900 border border-gray-800 rounded-xl px-5 py-4 text-base focus:outline-none focus:border-blue-500 focus:ring-0 transition-all placeholder:text-gray-600"
-                                                placeholder="What needs to be done?"
-                                                value={newTaskTitle}
-                                                onChange={(e) => setNewTaskTitle(e.target.value)}
-                                            />
-                                            <button
-                                                type="submit"
-                                                disabled={!newTaskTitle.trim()}
-                                                className="bg-gradient-to-r from-blue-600 to-blue-400 hover:from-blue-500 hover:to-blue-300 text-white px-8 rounded-xl font-medium transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                                    <AnimatePresence>
+                                        {isCreating && (
+                                            <motion.form
+                                                initial={{ height: 0, opacity: 0, marginBottom: 0 }}
+                                                animate={{ height: 'auto', opacity: 1, marginBottom: 32 }}
+                                                exit={{ height: 0, opacity: 0, marginBottom: 0 }}
+                                                className="flex gap-4 overflow-hidden"
+                                                onSubmit={(e) => {
+                                                    handleCreateTask(e);
+                                                }}
                                             >
-                                                <Plus size={20} /> Create
-                                            </button>
-                                        </form>
-                                    )}
+                                                <input
+                                                    type="text"
+                                                    autoFocus
+                                                    className="flex-1 bg-gray-900 border border-gray-800 rounded-xl px-5 py-4 text-base focus:outline-none focus:border-blue-500 focus:ring-0 transition-all placeholder:text-gray-600"
+                                                    placeholder={selectedFolder ? `Add task to ${stats.folders[selectedFolder] ? folders.find(f => f._id === selectedFolder)?.name : 'folder'}...` : selectedLabel ? `Add task to ${selectedLabel}...` : "What needs to be done?"}
+                                                    value={newTaskTitle}
+                                                    onChange={(e) => setNewTaskTitle(e.target.value)}
+                                                    onKeyDown={(e) => {
+                                                        if (e.key === 'Escape') setIsCreating(false);
+                                                    }}
+                                                />
+                                                <button
+                                                    type="submit"
+                                                    disabled={!newTaskTitle.trim()}
+                                                    className="bg-gradient-to-r from-blue-600 to-blue-400 hover:from-blue-500 hover:to-blue-300 text-white px-8 rounded-xl font-medium transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                                                >
+                                                    <Plus size={20} /> Create
+                                                </button>
+                                            </motion.form>
+                                        )}
+                                    </AnimatePresence>
 
                                     <div className="flex-1 overflow-y-auto pr-2 space-y-4 scrollbar-thin scrollbar-thumb-gray-800 scrollbar-track-transparent">
                                         {loading ? (

@@ -107,11 +107,11 @@ export const api = {
         return res.json();
     },
 
-    createTask: async (title, labels = []) => {
+    createTask: async (title, labels = [], folderId = null) => {
         const res = await fetch(`${API_BASE}/tasks`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ title, labels, user_email: getUserEmail() }),
+            body: JSON.stringify({ title, labels, user_email: getUserEmail(), folderId }),
         });
         return res.json();
     },
