@@ -16,8 +16,9 @@ import {
 } from 'lucide-react';
 import { api } from '../api';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useSortable } from '@dnd-kit/sortable';
+import { useSortable, SortableContext, horizontalListSortingStrategy, arrayMove } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
+import { DndContext, closestCenter, PointerSensor, useSensor, useSensors } from '@dnd-kit/core';
 
 // Helper Dropdown Component
 const Dropdown = ({ options, value, onChange, className, renderOption, triggerClassName }) => {
@@ -63,6 +64,59 @@ const Dropdown = ({ options, value, onChange, className, renderOption, triggerCl
     );
 };
 
+const SortableLabel = ({ labelName, color, onDelete }) => {
+    const {
+        attributes,
+        listeners,
+        setNodeRef,
+        transform,
+        transition,
+        isDragging
+    } = useSortable({ id: labelName });
+
+    const style = {
+        transform: CSS.Transform.toString(transform),
+        transition,
+        backgroundColor: `${color}1a`, // 10% opacity
+        color: color,
+        borderColor: `${color}33`, // 20% opacity
+        opacity: isDragging ? 0.5 : 1,
+        cursor: 'grab'
+    };
+
+    return (
+        <span
+            ref={setNodeRef}
+            {...attributes}
+            {...listeners}
+            className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-medium border group/label transition-colors"
+            style={style}
+            onClick={(e) => e.stopPropagation()}
+            onPointerDown={(e) => {
+                // Manually call the dnd-kit listener first
+                if (listeners && listeners.onPointerDown) {
+                    listeners.onPointerDown(e);
+                }
+                // Then prevent propagation to the parent draggable (TaskItem)
+                e.preventDefault(); // Prevent default browser behavior
+                e.stopPropagation();
+            }}
+        >
+            {labelName}
+            <X
+                size={10}
+                className="cursor-pointer opacity-0 group-hover/label:opacity-100 transition-opacity"
+                style={{ color }}
+                onClick={(e) => {
+                    e.stopPropagation();
+                    onDelete();
+                }}
+                onPointerDown={(e) => e.stopPropagation()}
+            />
+        </span>
+    );
+};
+
 export const TaskItem = forwardRef(({ task, onUpdate, showTags, style, dragHandleProps, isOverlay, availableLabels = [] }, ref) => {
     const [expanded, setExpanded] = useState(false);
     const [newDetail, setNewDetail] = useState('');
@@ -71,6 +125,33 @@ export const TaskItem = forwardRef(({ task, onUpdate, showTags, style, dragHandl
     const [editContent, setEditContent] = useState('');
     const [isEditingTitle, setIsEditingTitle] = useState(false);
     const [editedTitle, setEditedTitle] = useState(task.title);
+    const [localLabels, setLocalLabels] = useState(task.labels || []);
+
+    useEffect(() => {
+        setLocalLabels(task.labels || []);
+    }, [task.labels]);
+
+    const sensors = useSensors(
+        useSensor(PointerSensor, {
+            activationConstraint: { distance: 5 }
+        })
+    );
+
+    const handleLabelDragEnd = async (event) => {
+        const { active, over } = event;
+        if (active.id !== over.id) {
+            setLocalLabels((items) => {
+                const oldIndex = items.indexOf(active.id);
+                const newIndex = items.indexOf(over.id);
+                const newLabels = arrayMove(items, oldIndex, newIndex);
+
+                // Persist immediately
+                api.updateTask(task._id, { labels: newLabels }).then(onUpdate).catch(console.error);
+
+                return newLabels;
+            });
+        }
+    };
 
     const baseStyle = {
         ...style,
@@ -219,18 +300,18 @@ export const TaskItem = forwardRef(({ task, onUpdate, showTags, style, dragHandl
                         <GripVertical size={16} />
                     </div>
                     <div
-                        className={`w-3 h-3 rounded-full shrink-0 transition-colors ${task.labels && task.labels.length > 0 && availableLabels.find(l => l.name === task.labels[0])?.color
-                                ? ''
-                                : `shadow-[0_0_10px_rgba(59,130,246,0.3)] ${task.status === 'completed' ? 'bg-green-500 shadow-[0_0_10px_rgba(34,197,94,0.3)]' :
-                                    task.status === 'in_progress' ? 'bg-yellow-500 shadow-[0_0_10px_rgba(234,179,8,0.3)]' :
-                                        'bg-blue-500 shadow-[0_0_10px_rgba(59,130,246,0.3)]'
-                                }`
+                        className={`w-3 h-3 rounded-full shrink-0 transition-colors ${localLabels.length > 0 && availableLabels.find(l => l.name === localLabels[0])?.color
+                            ? ''
+                            : `shadow-[0_0_10px_rgba(59,130,246,0.3)] ${task.status === 'completed' ? 'bg-green-500 shadow-[0_0_10px_rgba(34,197,94,0.3)]' :
+                                task.status === 'in_progress' ? 'bg-yellow-500 shadow-[0_0_10px_rgba(234,179,8,0.3)]' :
+                                    'bg-blue-500 shadow-[0_0_10px_rgba(59,130,246,0.3)]'
+                            }`
                             }`}
                         style={
-                            task.labels && task.labels.length > 0
+                            localLabels.length > 0
                                 ? {
-                                    backgroundColor: availableLabels.find(l => l.name === task.labels[0])?.color || '#3B82F6',
-                                    boxShadow: `0 0 10px ${availableLabels.find(l => l.name === task.labels[0])?.color || '#3B82F6'}4d` // 4d is approx 30% alpha
+                                    backgroundColor: availableLabels.find(l => l.name === localLabels[0])?.color || '#3B82F6',
+                                    boxShadow: `0 0 10px ${availableLabels.find(l => l.name === localLabels[0])?.color || '#3B82F6'}4d`
                                 }
                                 : {}
                         }
@@ -273,34 +354,33 @@ export const TaskItem = forwardRef(({ task, onUpdate, showTags, style, dragHandl
 
                             {/* Labels Display */}
                             <div className="flex flex-wrap gap-1 ml-2">
-                                {task.labels?.map(labelName => {
-                                    const labelColor = availableLabels.find(l => l.name === labelName)?.color || '#3B82F6';
-                                    return (
-                                        <span
-                                            key={labelName}
-                                            className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-medium border group/label transition-colors"
-                                            style={{
-                                                backgroundColor: `${labelColor}1a`, // 10% opacity
-                                                color: labelColor,
-                                                borderColor: `${labelColor}33` // 20% opacity
-                                            }}
-                                            onClick={(e) => e.stopPropagation()}
-                                        >
-                                            {labelName}
-                                            <X
-                                                size={10}
-                                                className="cursor-pointer opacity-0 group-hover/label:opacity-100 transition-opacity"
-                                                style={{ color: labelColor }}
-                                                onClick={async (e) => {
-                                                    e.stopPropagation();
-                                                    const newLabels = task.labels.filter(l => l !== labelName);
-                                                    await api.updateTask(task._id, { labels: newLabels });
-                                                    onUpdate();
-                                                }}
-                                            />
-                                        </span>
-                                    );
-                                })}
+                                <DndContext
+                                    sensors={sensors}
+                                    collisionDetection={closestCenter}
+                                    onDragEnd={handleLabelDragEnd}
+                                >
+                                    <SortableContext
+                                        items={localLabels}
+                                        strategy={horizontalListSortingStrategy}
+                                    >
+                                        {localLabels.map(labelName => {
+                                            const labelColor = availableLabels.find(l => l.name === labelName)?.color || '#3B82F6';
+                                            return (
+                                                <SortableLabel
+                                                    key={labelName}
+                                                    labelName={labelName}
+                                                    color={labelColor}
+                                                    onDelete={async () => {
+                                                        const newLabels = localLabels.filter(l => l !== labelName);
+                                                        setLocalLabels(newLabels);
+                                                        await api.updateTask(task._id, { labels: newLabels });
+                                                        onUpdate();
+                                                    }}
+                                                />
+                                            );
+                                        })}
+                                    </SortableContext>
+                                </DndContext>
                             </div>
                         </div>
                     )}
