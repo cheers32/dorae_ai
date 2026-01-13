@@ -364,7 +364,7 @@ export const TaskManager = () => {
         }
 
         // Check if dropped over a folder
-        if (overId.startsWith('sidebar-folder-')) {
+        if (overId.startsWith('sidebar-folder-') && !activeId.startsWith('sidebar-')) {
             const folderId = over.data.current.folderId;
             const taskId = active.id;
 
@@ -417,7 +417,20 @@ export const TaskManager = () => {
                     const newIndex = sidebarItems.indexOf(overId.replace('sidebar-', ''));
 
                     if (oldIndex !== -1 && newIndex !== -1) {
-                        setSidebarItems(items => arrayMove(items, oldIndex, newIndex));
+                        setSidebarItems(items => {
+                            const newItems = arrayMove(items, oldIndex, newIndex);
+
+                            // Extract folder IDs in order and persist
+                            const folderIds = newItems
+                                .filter(id => id.startsWith('folder-'))
+                                .map(id => id.replace('folder-', ''));
+
+                            if (folderIds.length > 0) {
+                                api.reorderFolders(folderIds).catch(err => console.error("Failed to save folder order", err));
+                            }
+
+                            return newItems;
+                        });
                     }
                 }
             } else {

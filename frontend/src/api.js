@@ -65,6 +65,15 @@ export const api = {
         return res.json();
     },
 
+    reorderFolders: async (folderIds) => {
+        const res = await fetch(`${API_BASE}/folders/reorder`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ folderIds }),
+        });
+        return res.json();
+    },
+
     getLabels: async () => {
         const query = new URLSearchParams();
         const userEmail = getUserEmail();

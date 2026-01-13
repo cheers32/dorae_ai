@@ -675,7 +675,9 @@ def get_folders():
             query['user_email'] = user_email
         else:
             query['$or'] = [{'user_email': None}, {'user_email': {'$exists': False}}]
-        folders = list(folders_collection.find(query))
+            
+        # Sort by order (asc) then created_at (desc)
+        folders = list(folders_collection.find(query).sort([('order', 1), ('created_at', -1)]))
         return jsonify([serialize_doc(f) for f in folders]), 200
     except Exception as e:
         return jsonify({"error": str(e)}), 500
@@ -687,15 +689,42 @@ def create_folder():
         if not data or 'name' not in data:
             return jsonify({"error": "Folder name is required"}), 400
         
+        # Get count for default order
+        count = folders_collection.count_documents({})
+
         new_folder = {
             "name": data['name'],
             "user_email": data.get('user_email'),
-            "created_at": datetime.utcnow().isoformat()
+            "created_at": datetime.utcnow().isoformat(),
+            "order": count # Add default order
         }
         
         result = folders_collection.insert_one(new_folder)
         new_folder['_id'] = result.inserted_id
         return jsonify(serialize_doc(new_folder)), 201
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+@app.route('/api/folders/reorder', methods=['PUT'])
+def reorder_folders():
+    try:
+        data = request.json
+        if not data or 'folderIds' not in data:
+            return jsonify({"error": "folderIds list is required"}), 400
+        
+        folder_ids = data['folderIds']
+        
+        from pymongo import UpdateOne
+        operations = []
+        for index, folder_id in enumerate(folder_ids):
+            operations.append(
+                UpdateOne({"_id": ObjectId(folder_id)}, {"$set": {"order": index}})
+            )
+            
+        if operations:
+            folders_collection.bulk_write(operations)
+            
+        return jsonify({"message": "Folders reordered"}), 200
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
