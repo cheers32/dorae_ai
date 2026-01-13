@@ -673,6 +673,15 @@ def create_folder():
 @app.route('/api/folders/<folder_id>', methods=['DELETE'])
 def delete_folder(folder_id):
     try:
+        # Check if folder has items
+        count = tasks_collection.count_documents({
+            'folderId': folder_id,
+            'status': {'$nin': ['Deleted', 'deleted']}
+        })
+        
+        if count > 0:
+            return jsonify({"error": "Cannot delete folder with active tasks"}), 400
+
         result = folders_collection.delete_one({"_id": ObjectId(folder_id)})
         return jsonify({"message": "Folder deleted"}), 200
     except Exception as e:

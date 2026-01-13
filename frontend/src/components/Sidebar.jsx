@@ -320,7 +320,7 @@ export function Sidebar({ activeTab, onNavigate, labels = [], onLabelsChange, se
                                         onClick={() => onNavigate('folder', null, folder._id)}
                                         data={{ type: 'folder', target: folder._id, folderId: folder._id }}
                                         isFolder={true}
-                                        onDelete={(e) => handleDeleteFolder(e, folder._id)}
+                                        onDelete={(!stats.folders || !stats.folders[folder._id]) ? (e) => handleDeleteFolder(e, folder._id) : null}
                                         count={stats.folders && stats.folders[folder._id]}
                                     />
                                 );
