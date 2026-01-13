@@ -67,8 +67,8 @@ const parseUTCDate = (dateString) => {
     return new Date(normalized);
 };
 
-export const TaskItem = forwardRef(({ task, onUpdate, showTags, style, dragHandleProps, isOverlay, availableLabels = [] }, ref) => {
-    const [expanded, setExpanded] = useState(false);
+export const TaskItem = forwardRef(({ task, onUpdate, showTags, style, dragHandleProps, isOverlay, availableLabels = [], onSendToWorkarea, onRemoveFromWorkarea, isWorkarea, defaultExpanded }, ref) => {
+    const [expanded, setExpanded] = useState(defaultExpanded || false);
     const [newDetail, setNewDetail] = useState('');
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [editingId, setEditingId] = useState(null);
@@ -244,9 +244,9 @@ export const TaskItem = forwardRef(({ task, onUpdate, showTags, style, dragHandl
         }
     };
 
+    // Deprecated in favor of inline isDeleting state
+    // Kept if needed for other contexts, but UI now uses setIsDeleting(true)
     const handleDeleteTask = (e) => {
-        // Deprecated in favor of inline isDeleting state
-        // Kept if needed for other contexts, but UI now uses setIsDeleting(true)
         e.stopPropagation();
         setIsDeleting(true);
     };
@@ -378,15 +378,45 @@ export const TaskItem = forwardRef(({ task, onUpdate, showTags, style, dragHandl
                     )}
                 </div>
 
-                <span className="text-[10px] text-gray-400 font-mono mt-3">
-                    {(() => {
-                        const lastUpdate = task.updates && task.updates.length > 0
-                            ? parseUTCDate(task.updates.reduce((max, u) => new Date(u.timestamp) > new Date(max) ? u.timestamp : max, task.updates[0].timestamp))
-                            : parseUTCDate(task.created_at);
-                        return format(lastUpdate, 'MMM d, HH:mm');
-                    })()}
-                </span>
+                <div className="flex items-center gap-3">
+                    <span className="text-[10px] text-gray-400 font-mono mt-3">
+                        {(() => {
+                            const lastUpdate = task.updates && task.updates.length > 0
+                                ? parseUTCDate(task.updates.reduce((max, u) => new Date(u.timestamp) > new Date(max) ? u.timestamp : max, task.updates[0].timestamp))
+                                : parseUTCDate(task.created_at);
+                            return format(lastUpdate, 'MMM d, HH:mm');
+                        })()}
+                    </span>
 
+                    {/* [NEW] Send/Remove Workarea Button */}
+                    {!isOverlay && expanded && (
+                        <div className="mt-2.5">
+                            {isWorkarea ? (
+                                <button
+                                    className="p-1 px-2 text-[10px] font-bold uppercase tracking-wider bg-red-500/10 text-red-400 hover:bg-red-500/20 rounded border border-red-500/20 transition-colors"
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        if (onRemoveFromWorkarea) onRemoveFromWorkarea();
+                                    }}
+                                    title="Remove from Workarea"
+                                >
+                                    Unpin
+                                </button>
+                            ) : (
+                                <button
+                                    className="p-1 px-2 text-[10px] font-bold uppercase tracking-wider bg-blue-500/10 text-blue-400 hover:bg-blue-500/20 rounded border border-blue-500/20 transition-colors"
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        if (onSendToWorkarea) onSendToWorkarea();
+                                    }}
+                                    title="Send to Workarea"
+                                >
+                                    To Workarea
+                                </button>
+                            )}
+                        </div>
+                    )}
+                </div>
             </div>
 
             <AnimatePresence>

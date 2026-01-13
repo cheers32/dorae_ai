@@ -39,6 +39,11 @@ export const TaskManager = () => {
     const [showTags, setShowTags] = useState(false);
     const [activeId, setActiveId] = useState(null);
     const [history, setHistory] = useState([]);
+    const [workareaTasks, setWorkareaTasks] = useState([]); // [NEW] Workarea logic
+
+    // Filter out workarea tasks from main list
+    const visibleTasks = tasks.filter(t => !workareaTasks.find(wt => wt._id === t._id));
+
     // Sidebar Order State
     const [sidebarItems, setSidebarItems] = useState([]);
     const [stats, setStats] = useState({
@@ -255,6 +260,20 @@ export const TaskManager = () => {
             return closestCenter(args);
         }
 
+        // [NEW] Check if dragging a workarea task
+        const isWorkareaTask = args.active.id.toString().startsWith('workarea-');
+
+        // If dragging a workarea task, strictly constrain to workarea container or other workarea tasks
+        if (isWorkareaTask) {
+            const workareaCollisions = rectIntersection({
+                ...args,
+                droppableContainers: args.droppableContainers.filter(container =>
+                    container.id.toString().startsWith('workarea-')
+                )
+            });
+            return workareaCollisions.length > 0 ? workareaCollisions : closestCenter(args);
+        }
+
         // Standard logic: dragging a task
         // First check for sidebar collisions (regular tabs and labels)
         // Use pointerWithin to ensure the mouse cursor is physically over the sidebar item
@@ -299,6 +318,17 @@ export const TaskManager = () => {
 
 
 
+    const handleSendToWorkarea = (task) => {
+        if (!workareaTasks.find(t => t._id === task._id)) {
+            // [MODIFIED] Add _forceExpanded: true to keep it expanded after pinning
+            setWorkareaTasks(prev => [...prev, { ...task, _forceExpanded: true }]);
+        }
+    };
+
+    const handleRemoveFromWorkarea = (taskId) => {
+        setWorkareaTasks(prev => prev.filter(t => t._id !== taskId));
+    };
+
     const handleDragEnd = async (event) => {
         const { active, over } = event;
 
@@ -310,16 +340,36 @@ export const TaskManager = () => {
         const activeId = active.id.toString();
         const overId = over.id.toString();
 
+        // Helper to get task regardless of where it is (Main list or Workarea)
+        const getTaskAndList = (rawId) => {
+            const isWorkarea = rawId.startsWith('workarea-task-');
+            const realId = isWorkarea ? rawId.replace('workarea-task-', '') : rawId;
+            // Search in workarea first if it looks like a workarea task, otherwise main list
+            // But actually we should search both because a task implies presence.
+            const taskInWorkarea = workareaTasks.find(t => t._id === realId);
+            const taskInMain = tasks.find(t => t._id === realId);
+
+            return {
+                task: taskInWorkarea || taskInMain,
+                isWorkarea,
+                realId
+            };
+        };
+
         // Case 1: Dragging Sidebar Label -> Task
         if (activeId.startsWith('sidebar-label-') && !overId.startsWith('sidebar-')) {
             const labelName = active.data.current.target;
-            const taskId = over.id;
-            const task = tasks.find(t => t._id === taskId);
+            const { task, realId } = getTaskAndList(overId);
 
             if (task && (!task.labels || !task.labels.includes(labelName))) {
                 try {
                     const newLabels = [...(task.labels || []), labelName];
-                    await api.updateTask(taskId, { labels: newLabels });
+                    await api.updateTask(realId, { labels: newLabels });
+
+                    // Update local states to reflect changes immediately
+                    setTasks(prev => prev.map(t => t._id === realId ? { ...t, labels: newLabels } : t));
+                    setWorkareaTasks(prev => prev.map(t => t._id === realId ? { ...t, labels: newLabels } : t));
+
                     fetchTasks(false);
                     setShowTags(true);
                 } catch (err) {
@@ -333,13 +383,17 @@ export const TaskManager = () => {
         // Check if dropped over a label (Tagging Task -> Label)
         if (overId.startsWith('sidebar-label-') && !activeId.startsWith('sidebar-label-')) {
             const labelName = over.data.current.target;
-            const taskId = active.id;
-            const task = tasks.find(t => t._id === taskId);
+            const { task, realId } = getTaskAndList(activeId);
 
             if (task && (!task.labels || !task.labels.includes(labelName))) {
                 try {
                     const newLabels = [...(task.labels || []), labelName];
-                    await api.updateTask(taskId, { labels: newLabels });
+                    await api.updateTask(realId, { labels: newLabels });
+
+                    // Update local states
+                    setTasks(prev => prev.map(t => t._id === realId ? { ...t, labels: newLabels } : t));
+                    setWorkareaTasks(prev => prev.map(t => t._id === realId ? { ...t, labels: newLabels } : t));
+
                     fetchTasks(false);
                     setShowTags(true);
                 } catch (err) {
@@ -353,7 +407,7 @@ export const TaskManager = () => {
         // Check if dropped over sidebar tabs
         if (overId.startsWith('sidebar-') && !overId.includes('label-') && !overId.includes('folder-')) {
             const targetTab = over.data.current.target;
-            const taskId = active.id;
+            const { realId } = getTaskAndList(activeId);
 
             let newStatus = null;
             if (targetTab === 'closed') newStatus = 'Closed';
@@ -363,15 +417,18 @@ export const TaskManager = () => {
             if (newStatus) {
                 try {
                     if (newStatus === 'Deleted') {
-                        await api.deleteTask(taskId);
+                        await api.deleteTask(realId);
                     } else {
                         // If moving to 'active', also clear folderId
                         const updates = { status: newStatus };
                         if (newStatus === 'Active') {
                             updates.folderId = null;
                         }
-                        await api.updateTask(taskId, updates);
+                        await api.updateTask(realId, updates);
                     }
+                    // Remove from workarea if deleted or status changed? 
+                    // Maybe keep it if status changed but still valid for workarea?
+                    // If deleted/closed, typically we might want to refresh.
                     fetchTasks(false);
                 } catch (err) {
                     console.error("Failed to update status through drag", err);
@@ -382,12 +439,11 @@ export const TaskManager = () => {
         // Check if dropped over a folder
         if (overId.startsWith('sidebar-folder-') && !activeId.startsWith('sidebar-')) {
             const folderId = over.data.current.folderId;
-            const taskId = active.id;
+            const { task, realId } = getTaskAndList(activeId);
 
             try {
                 // Find folder name to add as label
                 const folderName = folders.find(f => f._id === folderId)?.name;
-                const task = tasks.find(t => t._id === taskId);
 
                 const updates = {
                     folderId: folderId,
@@ -402,7 +458,14 @@ export const TaskManager = () => {
                     }
                 }
 
-                await api.updateTask(taskId, updates);
+                await api.updateTask(realId, updates);
+
+                // Update local states if labels changed
+                if (updates.labels) {
+                    setTasks(prev => prev.map(t => t._id === realId ? { ...t, labels: updates.labels } : t));
+                    setWorkareaTasks(prev => prev.map(t => t._id === realId ? { ...t, labels: updates.labels } : t));
+                }
+
                 fetchTasks(false);
             } catch (err) {
                 console.error("Failed to move task to folder", err);
@@ -451,17 +514,30 @@ export const TaskManager = () => {
                 }
             } else {
                 // Reordering tasks
-                setTasks((items) => {
-                    const oldIndex = items.findIndex((item) => item._id === active.id);
-                    const newIndex = items.findIndex((item) => item._id === over.id);
-                    const newItems = arrayMove(items, oldIndex, newIndex);
+                const activeIsWorkarea = activeId.startsWith('workarea-task-');
+                const overIsWorkarea = overId.startsWith('workarea-task-');
 
-                    // Persist order to backend
-                    const taskIds = newItems.map(t => t._id);
-                    api.reorderTasks(taskIds).catch(err => console.error("Failed to save order", err));
+                if (activeIsWorkarea && overIsWorkarea) {
+                    // Reordering within Workarea
+                    setWorkareaTasks((items) => {
+                        const oldIndex = items.findIndex((item) => `workarea-task-${item._id}` === active.id);
+                        const newIndex = items.findIndex((item) => `workarea-task-${item._id}` === over.id);
+                        return arrayMove(items, oldIndex, newIndex);
+                    });
+                } else if (!activeIsWorkarea && !overIsWorkarea) {
+                    // Reordering standard list
+                    setTasks((items) => {
+                        const oldIndex = items.findIndex((item) => item._id === active.id);
+                        const newIndex = items.findIndex((item) => item._id === over.id);
+                        const newItems = arrayMove(items, oldIndex, newIndex);
 
-                    return newItems;
-                });
+                        // Persist order to backend
+                        const taskIds = newItems.map(t => t._id);
+                        api.reorderTasks(taskIds).catch(err => console.error("Failed to save order", err));
+
+                        return newItems;
+                    });
+                }
             }
         }
         setActiveId(null);
@@ -605,6 +681,45 @@ export const TaskManager = () => {
                                 </div>
                             ) : (
                                 <>
+                                    {/* [NEW] Workarea Section (Pinned to Top) */}
+                                    <AnimatePresence>
+                                        {workareaTasks.length > 0 && (
+                                            <motion.div
+                                                initial={{ height: 0, opacity: 0 }}
+                                                animate={{ height: 'auto', opacity: 1 }}
+                                                exit={{ height: 0, opacity: 0 }}
+                                                className="border-b border-white/10 bg-[#0f1014] relative flex flex-col shrink-0 max-h-[40vh]"
+                                            >
+                                                <div className="px-8 py-3 bg-[#0f1014]/90 backdrop-blur border-b border-white/5 flex items-center justify-between sticky top-0 z-10">
+                                                    <h2 className="text-sm font-bold uppercase tracking-widest text-blue-400">Work Area</h2>
+                                                    <span className="text-xs text-gray-500">{workareaTasks.length} tasks pinned</span>
+                                                </div>
+                                                <div className="overflow-y-auto px-8 py-4 space-y-3 scrollbar-thin scrollbar-thumb-gray-800 scrollbar-track-transparent">
+                                                    <SortableContext
+                                                        items={workareaTasks.map(t => `workarea-task-${t._id}`)}
+                                                        strategy={verticalListSortingStrategy}
+                                                    >
+                                                        {workareaTasks.map(task => (
+                                                            <SortableTaskItem
+                                                                key={`workarea-${task._id}`}
+                                                                id={`workarea-task-${task._id}`}
+                                                                task={task}
+                                                                onUpdate={() => fetchTasks(false)}
+                                                                showTags={true}
+                                                                availableLabels={labels}
+                                                                isWorkarea={true}
+                                                                defaultExpanded={task._forceExpanded}
+                                                                onRemoveFromWorkarea={() => handleRemoveFromWorkarea(task._id)}
+                                                            />
+
+                                                        ))}
+                                                    </SortableContext>
+                                                </div>
+                                            </motion.div>
+                                        )}
+                                    </AnimatePresence>
+
+
                                     {activeTab === 'active' && (
                                         <form className="flex gap-4 mb-8" onSubmit={handleCreateTask}>
                                             <input
@@ -633,12 +748,20 @@ export const TaskManager = () => {
                                             </div>
                                         ) : (
                                             <SortableContext
-                                                items={tasks.map(t => t._id)}
+                                                items={visibleTasks.map(t => t._id)}
                                                 strategy={verticalListSortingStrategy}
                                             >
                                                 <div className="space-y-3">
-                                                    {tasks.map(task => (
-                                                        <SortableTaskItem key={task._id} id={task._id} task={task} onUpdate={() => fetchTasks(false)} showTags={showTags} availableLabels={labels} />
+                                                    {visibleTasks.map(task => (
+                                                        <SortableTaskItem
+                                                            key={task._id}
+                                                            id={task._id}
+                                                            task={task}
+                                                            onUpdate={() => fetchTasks(false)}
+                                                            showTags={showTags}
+                                                            availableLabels={labels}
+                                                            onSendToWorkarea={() => handleSendToWorkarea(task)}
+                                                        />
                                                     ))}
                                                 </div>
                                             </SortableContext>
@@ -648,33 +771,45 @@ export const TaskManager = () => {
                             )}
                         </div>
                     )}
-                </main>
-            </div>
 
-            {createPortal(
-                <DragOverlay dropAnimation={dropAnimation}>
-                    {activeId && activeId.toString().startsWith('sidebar-label-') ? (
-                        <div className="px-3 py-1.5 rounded-full text-sm font-semibold shadow-lg flex items-center gap-2"
-                            style={{
-                                backgroundColor: labels.find(l => `sidebar-label-${l.name}` === activeId)?.color || '#3B82F6',
-                                color: '#fff'
-                            }}>
-                            <TagIcon size={14} className="text-white" />
-                            {labels.find(l => `sidebar-label-${l.name}` === activeId)?.name}
-                        </div>
-                    ) : activeTask ? (
-                        <TaskItem
-                            task={activeTask}
-                            showTags={showTags}
-                            isOverlay={true}
-                            onUpdate={() => { }}
-                            availableLabels={labels}
-                        />
-                    ) : null}
-                </DragOverlay>,
-                document.body
-            )}
-        </DndContext>
+
+                </main>
+            </div >
+
+            {
+                createPortal(
+                    <DragOverlay dropAnimation={dropAnimation} >
+                        {activeId && activeId.toString().startsWith('sidebar-label-') ? (
+                            <div className="px-3 py-1.5 rounded-full text-sm font-semibold shadow-lg flex items-center gap-2"
+                                style={{
+                                    backgroundColor: labels.find(l => `sidebar-label-${l.name}` === activeId)?.color || '#3B82F6',
+                                    color: '#fff'
+                                }}>
+                                <TagIcon size={14} className="text-white" />
+                                {labels.find(l => `sidebar-label-${l.name}` === activeId)?.name}
+                            </div>
+                        ) : activeTask ? (
+                            <TaskItem
+                                task={activeTask}
+                                showTags={showTags}
+                                isOverlay={true}
+                                onUpdate={() => { }}
+                                availableLabels={labels}
+                            />
+                        ) : (activeId && activeId.toString().startsWith('workarea-task-')) ? (
+                            <TaskItem
+                                task={workareaTasks.find(t => `workarea-task-${t._id}` === activeId)}
+                                showTags={true}
+                                isOverlay={true}
+                                onUpdate={() => { }}
+                                availableLabels={labels}
+                                isWorkarea={true}
+                            />
+                        ) : null}
+                    </DragOverlay >,
+                    document.body
+                )}
+        </DndContext >
     );
 }
 
