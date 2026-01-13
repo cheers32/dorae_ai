@@ -243,11 +243,11 @@ export const TaskItem = forwardRef(({ task, onUpdate, showTags, style, dragHandl
             <div
                 className="flex items-center gap-4 cursor-pointer pr-4"
                 onClick={() => setExpanded(!expanded)}
+                {...dragHandleProps}
             >
                 <div className="py-2 px-4 flex items-center gap-4 flex-1 min-w-0">
                     <div
                         className="p-1 text-gray-600 hover:text-gray-400 transition-colors cursor-grab active:cursor-grabbing"
-                        {...dragHandleProps}
                     >
                         <GripVertical size={16} />
                     </div>
@@ -281,6 +281,7 @@ export const TaskItem = forwardRef(({ task, onUpdate, showTags, style, dragHandl
                             }}
                             className="flex-1 bg-black/40 border border-blue-500/50 rounded px-2 py-0.5 text-gray-200 focus:outline-none"
                             onClick={(e) => e.stopPropagation()}
+                            onPointerDown={(e) => e.stopPropagation()}
                         />
                     ) : (
                         <div className="flex-1 min-w-0 flex items-center gap-2 group/title">
@@ -298,6 +299,7 @@ export const TaskItem = forwardRef(({ task, onUpdate, showTags, style, dragHandl
                                     setIsEditingTitle(true);
                                     setEditedTitle(task.title);
                                 }}
+                                onPointerDown={(e) => e.stopPropagation()}
                                 className="opacity-0 group-hover/title:opacity-100 p-1 text-gray-500 hover:text-blue-400 transition-all hover:bg-white/5 rounded"
                                 title="Edit title"
                             >
