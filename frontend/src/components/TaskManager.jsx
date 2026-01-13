@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { api } from '../api';
 import { TaskItem, SortableTaskItem } from './TaskItem';
 import { Sidebar } from './Sidebar';
@@ -63,6 +63,11 @@ export const TaskManager = () => {
 
     // Navigation Utils
     const changeView = (tab, label = null, folder = null, pushToHistory = true) => {
+        // Prevent re-clicking the same view from clearing tasks
+        if (activeTab === tab && selectedLabel === label && selectedFolder === folder) {
+            return;
+        }
+
         if (pushToHistory) {
             setHistory(prev => [...prev, { tab: activeTab, label: selectedLabel, folder: selectedFolder }]);
         }
@@ -120,7 +125,9 @@ export const TaskManager = () => {
         }
     };
 
+    const fetchRequestId = useRef(0);
     const fetchTasks = async (useLoading = true) => {
+        const requestId = ++fetchRequestId.current;
         if (activeTab === 'assistant') {
             setLoading(false);
             return;
@@ -142,13 +149,21 @@ export const TaskManager = () => {
             }
 
             const data = await api.getTasks(status, selectedLabel, queryFolderId);
-            if (data.error) throw new Error(data.error);
-            setTasks(data);
+
+            // Race condition check: Only update if this is still the latest request
+            if (requestId === fetchRequestId.current) {
+                if (data.error) throw new Error(data.error);
+                setTasks(data);
+            }
         } catch (err) {
-            console.error("Failed to fetch tasks", err);
-            setError("Unable to load tasks. The server might be down or misconfigured (DB connection).");
+            if (requestId === fetchRequestId.current) {
+                console.error("Failed to fetch tasks", err);
+                setError("Unable to load tasks. The server might be down or misconfigured (DB connection).");
+            }
         } finally {
-            setLoading(false);
+            if (requestId === fetchRequestId.current) {
+                setLoading(false);
+            }
         }
     };
 
