@@ -266,8 +266,11 @@ export function Sidebar({ activeTab, onNavigate, labels = [], onLabelsChange, se
             transition={{ duration: 0.5 }}
         >
             <div className="px-6 mb-10 flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                    <div className="p-2.5 bg-blue-500/10 rounded-xl">
+                <div
+                    className="flex items-center gap-3 cursor-pointer group"
+                    onClick={() => onNavigate('active', null)}
+                >
+                    <div className="p-2.5 bg-blue-500/10 rounded-xl group-hover:bg-blue-500/20 transition-colors">
                         <Sparkles size={24} className="text-blue-400" />
                     </div>
                     <div className="flex flex-col items-start px-1">
