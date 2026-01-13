@@ -1,22 +1,42 @@
 const API_BASE = '/api';
 
+const getUserEmail = () => {
+    const userProfile = localStorage.getItem('userProfile');
+    if (userProfile) {
+        try {
+            return JSON.parse(userProfile).email;
+        } catch (e) {
+            return null;
+        }
+    }
+    return null;
+};
+
 export const api = {
     getTasks: async (status, label, folderId) => {
         const query = new URLSearchParams();
+        const userEmail = getUserEmail();
+        if (userEmail) query.append('user_email', userEmail);
         if (status) query.append('status', status);
         if (label) query.append('label', label);
         if (folderId) query.append('folderId', folderId);
-        const res = await fetch(`${API_BASE}/tasks${query.toString() ? '?' + query.toString() : ''}`);
+        const res = await fetch(`${API_BASE}/tasks?${query.toString()}`);
         return res.json();
     },
 
     getFolders: async () => {
-        const res = await fetch(`${API_BASE}/folders`);
+        const query = new URLSearchParams();
+        const userEmail = getUserEmail();
+        if (userEmail) query.append('user_email', userEmail);
+        const res = await fetch(`${API_BASE}/folders?${query.toString()}`);
         return res.json();
     },
 
     getStats: async () => {
-        const res = await fetch(`${API_BASE}/stats`);
+        const query = new URLSearchParams();
+        const userEmail = getUserEmail();
+        if (userEmail) query.append('user_email', userEmail);
+        const res = await fetch(`${API_BASE}/stats?${query.toString()}`);
         return res.json();
     },
 
@@ -24,7 +44,7 @@ export const api = {
         const res = await fetch(`${API_BASE}/folders`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ name }),
+            body: JSON.stringify({ name, user_email: getUserEmail() }),
         });
         return res.json();
     },
@@ -46,7 +66,10 @@ export const api = {
     },
 
     getLabels: async () => {
-        const res = await fetch(`${API_BASE}/labels`);
+        const query = new URLSearchParams();
+        const userEmail = getUserEmail();
+        if (userEmail) query.append('user_email', userEmail);
+        const res = await fetch(`${API_BASE}/labels?${query.toString()}`);
         return res.json();
     },
 
@@ -54,7 +77,7 @@ export const api = {
         const res = await fetch(`${API_BASE}/labels`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ name, color }),
+            body: JSON.stringify({ name, color, user_email: getUserEmail() }),
         });
         return res.json();
     },
@@ -79,7 +102,7 @@ export const api = {
         const res = await fetch(`${API_BASE}/tasks`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ title, labels }),
+            body: JSON.stringify({ title, labels, user_email: getUserEmail() }),
         });
         return res.json();
     },
@@ -106,7 +129,10 @@ export const api = {
         fetch(`${API_BASE}/tasks/${taskId}`, { method: 'DELETE' }),
 
     emptyTrash: async () => {
-        const res = await fetch(`${API_BASE}/tasks/trash`, {
+        const query = new URLSearchParams();
+        const userEmail = getUserEmail();
+        if (userEmail) query.append('user_email', userEmail);
+        const res = await fetch(`${API_BASE}/tasks/trash?${query.toString()}`, {
             method: 'DELETE',
         });
         return res.json();
@@ -182,7 +208,7 @@ export const api = {
         const res = await fetch(`${API_BASE}/chat`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ message })
+            body: JSON.stringify({ message, user_email: getUserEmail() })
         });
         if (!res.ok) throw new Error('Failed to send message');
         return res.json();

@@ -139,6 +139,12 @@ def get_tasks():
         if label:
             query['labels'] = label
 
+        user_email = request.args.get('user_email')
+        if user_email:
+            query['user_email'] = user_email
+        else:
+            query['$or'] = [{'user_email': None}, {'user_email': {'$exists': False}}]
+
         folder_id = request.args.get('folderId')
         if folder_id == 'null':
              query['$or'] = [{'folderId': None}, {'folderId': {'$exists': False}}]
@@ -207,8 +213,15 @@ def delete_task(task_id):
 
 @app.route('/api/tasks/trash', methods=['DELETE'])
 def empty_trash():
+    user_email = request.args.get('user_email')
+    query = {"status": "deleted"}
+    if user_email:
+        query["user_email"] = user_email
+    else:
+        query['$or'] = [{'user_email': None}, {'user_email': {'$exists': False}}]
+
     try:
-        result = tasks_collection.delete_many({"status": "deleted"})
+        result = tasks_collection.delete_many(query)
         return jsonify({"message": f"Deleted {result.deleted_count} tasks"}), 200
     except Exception as e:
         return jsonify({"error": str(e)}), 500
@@ -218,38 +231,57 @@ def get_stats():
     try:
         # Aggregation pipeline could be more efficient, but individual counts are simple for now
         
-        # 1. Active Tasks (status != 'completed' AND status != 'deleted' AND no folder)
-        active_count = tasks_collection.count_documents({
+        user_email = request.args.get('user_email')
+        base_query = {}
+        if user_email:
+            base_query['user_email'] = user_email
+        else:
+            base_query['$or'] = [{'user_email': None}, {'user_email': {'$exists': False}}]
+        
+        # 1. Active Tasks
+        active_query = {
             'status': {'$nin': ['completed', 'deleted']},
             '$or': [{'folderId': None}, {'folderId': {'$exists': False}}]
-        })
+        }
+        active_query.update(base_query)
+        active_count = tasks_collection.count_documents(active_query)
         
-        # 2. Closed Tasks (status == 'completed')
-        closed_count = tasks_collection.count_documents({'status': 'completed'})
+        # 2. Closed Tasks
+        closed_query = {'status': 'completed'}
+        closed_query.update(base_query)
+        closed_count = tasks_collection.count_documents(closed_query)
         
-        # 3. Trash (status == 'deleted')
-        trash_count = tasks_collection.count_documents({'status': 'deleted'})
+        # 3. Trash
+        trash_query = {'status': 'deleted'}
+        trash_query.update(base_query)
+        trash_count = tasks_collection.count_documents(trash_query)
         
         # 4. Folders
-        folders = list(folders_collection.find())
+        folder_query = base_query.copy()
+        folders = list(folders_collection.find(folder_query))
         folder_counts = {}
         for folder in folders:
             folder_id = str(folder['_id'])
-            count = tasks_collection.count_documents({
+            f_count_query = {
                 'status': {'$ne': 'deleted'},
                 'folderId': folder_id
-            })
+            }
+            f_count_query.update(base_query)
+            count = tasks_collection.count_documents(f_count_query)
             folder_counts[folder_id] = count
             
         # 5. Labels
-        labels = list(labels_collection.find())
+        label_query = base_query.copy()
+        labels = list(labels_collection.find(label_query))
         label_counts = {}
         for label in labels:
             label_name = label['name']
-            count = tasks_collection.count_documents({
+            l_count_query = {
                 'status': {'$ne': 'deleted'},
                 'labels': label_name
-            })
+            }
+            l_count_query.update(base_query)
+            count = tasks_collection.count_documents(l_count_query)
             label_counts[label_name] = count
             
         return jsonify({
@@ -351,6 +383,7 @@ def create_task():
             "category": "General", # Default
             "labels": data.get('labels', []), # Use provided labels or empty array
             "folderId": data.get('folderId'),
+            "user_email": data.get('user_email'), # Associate with user
             "updates": [{
                 "id": str(uuid.uuid4()),
                 "content": "Task created",
@@ -502,7 +535,14 @@ def chat():
             
         # Fetch all tasks for context (RAG-lite)
         # In a real app, you might only fetch active ones or limit the number
-        cursor = tasks_collection.find({}).sort('created_at', -1)
+        # Fetch all tasks for context (RAG-lite)
+        query = {}
+        if 'user_email' in data:
+            query['user_email'] = data['user_email']
+        else:
+            query['$or'] = [{'user_email': None}, {'user_email': {'$exists': False}}]
+            
+        cursor = tasks_collection.find(query).sort('created_at', -1)
         tasks = list(cursor)
         
         # Serialize simply for AI context
@@ -526,7 +566,13 @@ def chat():
 @app.route('/api/labels', methods=['GET'])
 def get_labels():
     try:
-        labels = list(labels_collection.find({}))
+        user_email = request.args.get('user_email')
+        query = {}
+        if user_email:
+            query['user_email'] = user_email
+        else:
+            query['$or'] = [{'user_email': None}, {'user_email': {'$exists': False}}]
+        labels = list(labels_collection.find(query))
         return jsonify([serialize_doc(label) for label in labels]), 200
     except Exception as e:
         return jsonify({"error": str(e)}), 500
@@ -541,6 +587,7 @@ def create_label():
         new_label = {
             "name": data['name'],
             "color": data.get('color', '#3B82F6'), # Default blue
+            "user_email": data.get('user_email'),
             "created_at": datetime.utcnow().isoformat()
         }
         
@@ -587,7 +634,13 @@ def delete_label(label_id):
 @app.route('/api/folders', methods=['GET'])
 def get_folders():
     try:
-        folders = list(folders_collection.find({}))
+        user_email = request.args.get('user_email')
+        query = {}
+        if user_email:
+            query['user_email'] = user_email
+        else:
+            query['$or'] = [{'user_email': None}, {'user_email': {'$exists': False}}]
+        folders = list(folders_collection.find(query))
         return jsonify([serialize_doc(f) for f in folders]), 200
     except Exception as e:
         return jsonify({"error": str(e)}), 500
@@ -601,6 +654,7 @@ def create_folder():
         
         new_folder = {
             "name": data['name'],
+            "user_email": data.get('user_email'),
             "created_at": datetime.utcnow().isoformat()
         }
         
