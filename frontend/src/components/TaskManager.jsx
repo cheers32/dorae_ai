@@ -66,6 +66,9 @@ export const TaskManager = () => {
         if (pushToHistory) {
             setHistory(prev => [...prev, { tab: activeTab, label: selectedLabel, folder: selectedFolder }]);
         }
+        // Immediate UI reset to prevent jitter
+        setLoading(true);
+        setTasks([]);
         setActiveTab(tab);
         setSelectedLabel(label);
         setSelectedFolder(folder);
@@ -75,7 +78,10 @@ export const TaskManager = () => {
         if (history.length === 0) return;
         const lastView = history[history.length - 1];
         setHistory(prev => prev.slice(0, -1));
-        setHistory(prev => prev.slice(0, -1));
+
+        // Immediate UI reset
+        setLoading(true);
+        setTasks([]);
         setActiveTab(lastView.tab);
         setSelectedLabel(lastView.label);
         setSelectedFolder(lastView.folder);
@@ -114,11 +120,13 @@ export const TaskManager = () => {
         }
     };
 
-    const fetchTasks = async () => {
+    const fetchTasks = async (useLoading = true) => {
         if (activeTab === 'assistant') {
             setLoading(false);
             return;
         }
+
+        if (useLoading) setLoading(true);
 
         try {
             setError(null);
@@ -186,7 +194,7 @@ export const TaskManager = () => {
     }, [sidebarItems]);
 
     useEffect(() => {
-        fetchTasks();
+        fetchTasks(true);
         fetchStats();
     }, [activeTab, selectedLabel, selectedFolder]);
 
@@ -239,7 +247,7 @@ export const TaskManager = () => {
             const labelsToApply = selectedLabel ? [selectedLabel] : [];
             await api.createTask(newTaskTitle, labelsToApply);
             setNewTaskTitle('');
-            fetchTasks();
+            fetchTasks(false);
         } catch (err) {
             console.error(err);
         }
@@ -249,7 +257,7 @@ export const TaskManager = () => {
         if (window.confirm("Are you sure you want to permanently delete all items in the trash? This action cannot be undone.")) {
             try {
                 await api.emptyTrash();
-                fetchTasks();
+                fetchTasks(false);
             } catch (err) {
                 console.error("Failed to empty trash", err);
             }
@@ -279,7 +287,7 @@ export const TaskManager = () => {
                 try {
                     const newLabels = [...(task.labels || []), labelName];
                     await api.updateTask(taskId, { labels: newLabels });
-                    fetchTasks();
+                    fetchTasks(false);
                 } catch (err) {
                     console.error("Failed to tag task from sidebar", err);
                 }
@@ -298,7 +306,7 @@ export const TaskManager = () => {
                 try {
                     const newLabels = [...(task.labels || []), labelName];
                     await api.updateTask(taskId, { labels: newLabels });
-                    fetchTasks();
+                    fetchTasks(false);
                 } catch (err) {
                     console.error("Failed to tag task", err);
                 }
@@ -329,7 +337,7 @@ export const TaskManager = () => {
                         }
                         await api.updateTask(taskId, updates);
                     }
-                    fetchTasks();
+                    fetchTasks(false);
                 } catch (err) {
                     console.error("Failed to update status through drag", err);
                 }
@@ -343,7 +351,7 @@ export const TaskManager = () => {
 
             try {
                 await api.updateTask(taskId, { folderId: folderId });
-                fetchTasks();
+                fetchTasks(false);
             } catch (err) {
                 console.error("Failed to move task to folder", err);
             }
@@ -507,7 +515,7 @@ export const TaskManager = () => {
                                         <h3 className="text-xl font-semibold mb-2">Unavailable</h3>
                                         <p className="mb-6 text-sm opacity-80">{error}</p>
                                         <button
-                                            onClick={fetchTasks}
+                                            onClick={() => fetchTasks(true)}
                                             className="bg-red-500 hover:bg-red-600 text-white px-6 py-2 rounded-xl text-sm font-medium transition-colors"
                                         >
                                             Retry Connection
@@ -549,7 +557,7 @@ export const TaskManager = () => {
                                             >
                                                 <div className="space-y-3">
                                                     {tasks.map(task => (
-                                                        <SortableTaskItem key={task._id} id={task._id} task={task} onUpdate={fetchTasks} showTags={showTags} availableLabels={labels} />
+                                                        <SortableTaskItem key={task._id} id={task._id} task={task} onUpdate={() => fetchTasks(false)} showTags={showTags} availableLabels={labels} />
                                                     ))}
                                                 </div>
                                             </SortableContext>
