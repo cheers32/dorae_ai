@@ -514,7 +514,7 @@ export const TaskManager = () => {
                             </AnimatePresence>
 
                             <div className="flex items-baseline gap-4">
-                                <h1 className="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-blue-200">
+                                <h1 className="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-blue-200">
                                     {getHeaderTitle()}
                                     <span className="text-lg text-gray-500 font-normal ml-2">
                                         ({activeTab === 'active' && !selectedLabel && !selectedFolder ? stats.active :
