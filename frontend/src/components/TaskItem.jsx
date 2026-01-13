@@ -60,6 +60,13 @@ const SortableLabel = ({ labelName, color, onDelete }) => {
     );
 };
 
+const parseUTCDate = (dateString) => {
+    if (!dateString) return new Date();
+    // Ensure the date string ends with Z to trigger UTC parsing
+    const normalized = dateString.endsWith('Z') ? dateString : `${dateString}Z`;
+    return new Date(normalized);
+};
+
 export const TaskItem = forwardRef(({ task, onUpdate, showTags, style, dragHandleProps, isOverlay, availableLabels = [] }, ref) => {
     const [expanded, setExpanded] = useState(false);
     const [newDetail, setNewDetail] = useState('');
@@ -374,8 +381,8 @@ export const TaskItem = forwardRef(({ task, onUpdate, showTags, style, dragHandl
                 <span className="text-[10px] text-gray-600 font-mono mt-3">
                     {(() => {
                         const lastUpdate = task.updates && task.updates.length > 0
-                            ? new Date(Math.max(...task.updates.map(u => new Date(u.timestamp))))
-                            : new Date(task.created_at);
+                            ? parseUTCDate(task.updates.reduce((max, u) => new Date(u.timestamp) > new Date(max) ? u.timestamp : max, task.updates[0].timestamp))
+                            : parseUTCDate(task.created_at);
                         return format(lastUpdate, 'MMM d, HH:mm');
                     })()}
                 </span>
@@ -395,7 +402,7 @@ export const TaskItem = forwardRef(({ task, onUpdate, showTags, style, dragHandl
                                 {task.updates.map((update) => (
                                     <div key={update.id} className="flex gap-4 group/item text-sm">
                                         <div className="w-24 text-xs text-gray-500 text-right pt-0.5 font-mono shrink-0">
-                                            {format(new Date(update.timestamp), 'MMM d, HH:mm')}
+                                            {format(parseUTCDate(update.timestamp), 'MMM d, HH:mm')}
                                         </div>
                                         <div className="relative border-l-2 border-white/5 pl-4 pb-1 flex-1">
                                             <div className="absolute -left-[5px] top-1.5 w-2 h-2 rounded-full bg-gray-700 ring-4 ring-[#13161c]" />
