@@ -294,7 +294,7 @@ export const TaskItem = forwardRef(({ task, onUpdate, showTags, style, dragHandl
 
                             {/* Labels Display */}
                             {showTags && (
-                                <div className="flex flex-wrap gap-1 ml-2">
+                                <div className="flex flex-wrap gap-1 ml-2 shrink-0 max-w-[60%]">
                                     <DndContext
                                         sensors={sensors}
                                         collisionDetection={pointerWithinTaskItem}
