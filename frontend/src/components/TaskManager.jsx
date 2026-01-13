@@ -367,7 +367,7 @@ export const TaskManager = () => {
             const taskId = active.id;
 
             try {
-                await api.updateTask(taskId, { folderId: folderId });
+                await api.updateTask(taskId, { folderId: folderId, status: 'Active' });
                 fetchTasks(false);
             } catch (err) {
                 console.error("Failed to move task to folder", err);

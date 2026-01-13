@@ -321,6 +321,11 @@ def update_task(task_id):
             if field in data:
                 update_fields[field] = data[field]
                 
+        # Fetch current task to check status
+        current_task = tasks_collection.find_one({"_id": ObjectId(task_id)})
+        if not current_task:
+             return jsonify({"error": "Task not found"}), 404
+
         if 'status' in data:
             new_status = data['status']
             if new_status == 'Closed':
@@ -329,16 +334,17 @@ def update_task(task_id):
             else:
                 update_fields['completed_at'] = None
             
-            # Add status change event to timeline (for ALL status changes)
-            tasks_collection.update_one(
-                {"_id": ObjectId(task_id)},
-                {"$push": {"updates": {
-                    "id": str(uuid.uuid4()),
-                    "content": f"Task status changed to {new_status}",
-                    "type": "status_change",
-                    "timestamp": datetime.utcnow().isoformat()
-                }}}
-            )
+            # Add status change event ONLY if status is actually changing
+            if current_task.get('status') != new_status:
+                tasks_collection.update_one(
+                    {"_id": ObjectId(task_id)},
+                    {"$push": {"updates": {
+                        "id": str(uuid.uuid4()),
+                        "content": f"Task status changed to {new_status}",
+                        "type": "status_change",
+                        "timestamp": datetime.utcnow().isoformat()
+                    }}}
+                )
 
         # Log other property changes
         for prop in ['priority', 'category']:
