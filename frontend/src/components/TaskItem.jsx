@@ -372,35 +372,37 @@ export const TaskItem = forwardRef(({ task, onUpdate, showTags, style, dragHandl
                             </button>
 
                             {/* Labels Display */}
-                            <div className="flex flex-wrap gap-1 ml-2">
-                                <DndContext
-                                    sensors={sensors}
-                                    collisionDetection={pointerWithinTaskItem}
-                                    onDragEnd={handleLabelDragEnd}
-                                >
-                                    <SortableContext
-                                        items={localLabels}
-                                        strategy={horizontalListSortingStrategy}
+                            {showTags && (
+                                <div className="flex flex-wrap gap-1 ml-2">
+                                    <DndContext
+                                        sensors={sensors}
+                                        collisionDetection={pointerWithinTaskItem}
+                                        onDragEnd={handleLabelDragEnd}
                                     >
-                                        {localLabels.map(labelName => {
-                                            const labelColor = availableLabels.find(l => l.name === labelName)?.color || '#3B82F6';
-                                            return (
-                                                <SortableLabel
-                                                    key={labelName}
-                                                    labelName={labelName}
-                                                    color={labelColor}
-                                                    onDelete={async () => {
-                                                        const newLabels = localLabels.filter(l => l !== labelName);
-                                                        setLocalLabels(newLabels);
-                                                        await api.updateTask(task._id, { labels: newLabels });
-                                                        onUpdate();
-                                                    }}
-                                                />
-                                            );
-                                        })}
-                                    </SortableContext>
-                                </DndContext>
-                            </div>
+                                        <SortableContext
+                                            items={localLabels}
+                                            strategy={horizontalListSortingStrategy}
+                                        >
+                                            {localLabels.map(labelName => {
+                                                const labelColor = availableLabels.find(l => l.name === labelName)?.color || '#3B82F6';
+                                                return (
+                                                    <SortableLabel
+                                                        key={labelName}
+                                                        labelName={labelName}
+                                                        color={labelColor}
+                                                        onDelete={async () => {
+                                                            const newLabels = localLabels.filter(l => l !== labelName);
+                                                            setLocalLabels(newLabels);
+                                                            await api.updateTask(task._id, { labels: newLabels });
+                                                            onUpdate();
+                                                        }}
+                                                    />
+                                                );
+                                            })}
+                                        </SortableContext>
+                                    </DndContext>
+                                </div>
+                            )}
                         </div>
                     )}
                 </div>
