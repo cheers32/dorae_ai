@@ -355,7 +355,7 @@ export const TaskManager = () => {
                                             >
                                                 <div className="space-y-3">
                                                     {tasks.map(task => (
-                                                        <SortableTaskItem key={task._id} id={task._id} task={task} onUpdate={fetchTasks} showTags={showTags} />
+                                                        <SortableTaskItem key={task._id} id={task._id} task={task} onUpdate={fetchTasks} showTags={showTags} availableLabels={labels} />
                                                     ))}
                                                 </div>
                                             </SortableContext>
@@ -376,6 +376,7 @@ export const TaskManager = () => {
                             showTags={showTags}
                             isOverlay={true}
                             onUpdate={() => { }}
+                            availableLabels={labels}
                         />
                     ) : null}
                 </DragOverlay>,
