@@ -243,11 +243,10 @@ export const TaskItem = forwardRef(({ task, onUpdate, showTags, style, dragHandl
         }
     };
 
-    const handleDeleteTask = async (e) => {
-        e.stopPropagation();
-        const isTrash = task.status === 'deleted';
-        if (!confirm(isTrash ? 'Permanently delete this task?' : 'Move this task to trash?')) return;
+    const [isDeleting, setIsDeleting] = useState(false);
 
+    const confirmDelete = async (e) => {
+        e.stopPropagation();
         setIsSubmitting(true);
         try {
             await api.deleteTask(task._id);
@@ -256,7 +255,15 @@ export const TaskItem = forwardRef(({ task, onUpdate, showTags, style, dragHandl
             console.error(err);
         } finally {
             setIsSubmitting(false);
+            setIsDeleting(false);
         }
+    };
+
+    const handleDeleteTask = (e) => {
+        // Deprecated in favor of inline isDeleting state
+        // Kept if needed for other contexts, but UI now uses setIsDeleting(true)
+        e.stopPropagation();
+        setIsDeleting(true);
     };
 
     const handleDeleteUpdate = async (updateId) => {
@@ -425,9 +432,32 @@ export const TaskItem = forwardRef(({ task, onUpdate, showTags, style, dragHandl
 
 
 
-                    <button className="p-1.5 text-gray-500 hover:text-red-400 transition-colors" onClick={handleDeleteTask}>
-                        <Trash2 size={14} />
-                    </button>
+                    {isDeleting ? (
+                        <div className="flex items-center gap-1">
+                            <button
+                                className="p-1.5 text-green-400 hover:text-green-300 transition-colors bg-green-400/10 rounded"
+                                onClick={confirmDelete}
+                                title="Confirm Delete"
+                            >
+                                <Check size={14} />
+                            </button>
+                            <button
+                                className="p-1.5 text-gray-500 hover:text-gray-300 transition-colors"
+                                onClick={(e) => { e.stopPropagation(); setIsDeleting(false); }}
+                                title="Cancel"
+                            >
+                                <X size={14} />
+                            </button>
+                        </div>
+                    ) : (
+                        <button
+                            className="p-1.5 text-gray-500 hover:text-red-400 transition-colors"
+                            onClick={(e) => { e.stopPropagation(); setIsDeleting(true); }}
+                            title="Delete Task"
+                        >
+                            <Trash2 size={14} />
+                        </button>
+                    )}
 
                     <div className={`transition-transform duration-200 ${expanded ? 'rotate-180' : ''} text-gray-500`}>
                         <ChevronDown size={18} />
