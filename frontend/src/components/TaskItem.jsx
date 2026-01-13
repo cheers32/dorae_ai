@@ -287,24 +287,9 @@ export const TaskItem = forwardRef(({ task, onUpdate, showTags, style, dragHandl
                         <div className="flex-1 min-w-0 flex items-center gap-2 group/title">
                             <h3
                                 className={`font-medium text-gray-200 text-left truncate ${task.status === 'deleted' ? 'line-through opacity-50' : ''}`}
-                                onClick={(e) => {
-                                    e.stopPropagation();
-                                }}
                             >
                                 {task.title}
                             </h3>
-                            <button
-                                onClick={(e) => {
-                                    e.stopPropagation();
-                                    setIsEditingTitle(true);
-                                    setEditedTitle(task.title);
-                                }}
-                                onPointerDown={(e) => e.stopPropagation()}
-                                className="opacity-0 group-hover/title:opacity-100 p-1 text-gray-500 hover:text-blue-400 transition-all hover:bg-white/5 rounded"
-                                title="Edit title"
-                            >
-                                <Pencil size={12} />
-                            </button>
 
                             {/* Labels Display */}
                             {showTags && (
@@ -342,7 +327,7 @@ export const TaskItem = forwardRef(({ task, onUpdate, showTags, style, dragHandl
                     )}
                 </div>
 
-                <span className="text-[10px] text-gray-600 font-mono" onClick={e => e.stopPropagation()}>
+                <span className="text-[10px] text-gray-600 font-mono">
                     {(() => {
                         const lastUpdate = task.updates && task.updates.length > 0
                             ? new Date(Math.max(...task.updates.map(u => new Date(u.timestamp))))
@@ -471,14 +456,27 @@ export const TaskItem = forwardRef(({ task, onUpdate, showTags, style, dragHandl
                                         <Trash2 size={14} />
                                     </button>
                                 )}
-                                <button
-                                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium text-blue-400 hover:bg-blue-400/10 transition-colors"
-                                    onClick={handleAnalyzeTask}
-                                    disabled={isSubmitting}
-                                >
-                                    <Sparkles size={14} />
-                                    {isSubmitting ? 'Analyzing...' : 'AI Analyze'}
-                                </button>
+                                <div className="flex items-center gap-2">
+                                    <button
+                                        className="p-1.5 text-gray-500 hover:text-blue-400 transition-colors"
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            setIsEditingTitle(true);
+                                            setEditedTitle(task.title);
+                                        }}
+                                        title="Edit Title"
+                                    >
+                                        <Pencil size={14} />
+                                    </button>
+                                    <button
+                                        className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium text-blue-400 hover:bg-blue-400/10 transition-colors"
+                                        onClick={handleAnalyzeTask}
+                                        disabled={isSubmitting}
+                                    >
+                                        <Sparkles size={14} />
+                                        {isSubmitting ? 'Analyzing...' : 'AI Analyze'}
+                                    </button>
+                                </div>
                             </div>
                         </div>
                     </motion.div>
