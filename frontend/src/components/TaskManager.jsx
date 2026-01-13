@@ -545,7 +545,7 @@ export const TaskManager = () => {
 
                                     <div className="flex-1 overflow-y-auto pr-2 space-y-4 scrollbar-thin scrollbar-thumb-gray-800 scrollbar-track-transparent">
                                         {loading ? (
-                                            <div className="text-center py-12 text-gray-500 animate-pulse">Loading tasks...</div>
+                                            null
                                         ) : tasks.length === 0 ? (
                                             <div className="text-center py-20 bg-gray-900/50 rounded-2xl border border-gray-800/50 border-dashed">
                                                 <p className="text-gray-500 text-lg">No {activeTab} tasks found.</p>
