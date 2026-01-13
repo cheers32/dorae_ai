@@ -1,11 +1,42 @@
 const API_BASE = '/api';
 
 export const api = {
-    getTasks: async (status, label) => {
+    getTasks: async (status, label, folderId) => {
         const query = new URLSearchParams();
         if (status) query.append('status', status);
         if (label) query.append('label', label);
+        if (folderId) query.append('folderId', folderId);
         const res = await fetch(`${API_BASE}/tasks${query.toString() ? '?' + query.toString() : ''}`);
+        return res.json();
+    },
+
+    getFolders: async () => {
+        const res = await fetch(`${API_BASE}/folders`);
+        return res.json();
+    },
+
+    createFolder: async (name) => {
+        const res = await fetch(`${API_BASE}/folders`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ name }),
+        });
+        return res.json();
+    },
+
+    deleteFolder: async (folderId) => {
+        const res = await fetch(`${API_BASE}/folders/${folderId}`, {
+            method: 'DELETE',
+        });
+        return res.json();
+    },
+
+    updateFolder: async (folderId, name) => {
+        const res = await fetch(`${API_BASE}/folders/${folderId}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ name }),
+        });
         return res.json();
     },
 

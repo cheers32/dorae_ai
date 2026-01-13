@@ -11,7 +11,8 @@ import {
     X,
     LogOut,
     MessageSquare,
-    Palette
+    Palette,
+    Folder
 } from 'lucide-react';
 import { api } from '../api';
 import { useDroppable, useDraggable } from '@dnd-kit/core';
@@ -95,9 +96,11 @@ const DraggableSidebarLabel = ({ id, label, isActive, onClick, color, data }) =>
     );
 };
 
-export function Sidebar({ activeTab, onNavigate, labels = [], onLabelsChange, selectedLabel }) {
+export function Sidebar({ activeTab, onNavigate, labels = [], onLabelsChange, selectedLabel, folders = [], onFoldersChange, selectedFolder }) {
     const [isAddingLabel, setIsAddingLabel] = useState(false);
     const [newLabelName, setNewLabelName] = useState('');
+    const [isAddingFolder, setIsAddingFolder] = useState(false);
+    const [newFolderName, setNewFolderName] = useState('');
     const [editingLabelId, setEditingLabelId] = useState(null);
 
     const menuItems = [
@@ -147,6 +150,34 @@ export function Sidebar({ activeTab, onNavigate, labels = [], onLabelsChange, se
         }
     };
 
+    const handleAddFolder = async (e) => {
+        if (e) e.preventDefault();
+        if (!newFolderName.trim()) {
+            setIsAddingFolder(false);
+            return;
+        }
+
+        try {
+            await api.createFolder(newFolderName);
+            setNewFolderName('');
+            setIsAddingFolder(false);
+            if (onFoldersChange) onFoldersChange();
+        } catch (err) {
+            console.error(err);
+        }
+    };
+
+    const handleDeleteFolder = async (e, id) => {
+        e.stopPropagation();
+        try {
+            await api.deleteFolder(id);
+            if (onFoldersChange) onFoldersChange();
+            if (selectedFolder === id) onNavigate('active', null, null);
+        } catch (err) {
+            console.error("Failed to delete folder:", err);
+        }
+    };
+
     return (
         <motion.div
             className="w-[280px] h-screen bg-[#0f111a] border-r border-white/5 flex flex-col pt-8"
@@ -190,6 +221,68 @@ export function Sidebar({ activeTab, onNavigate, labels = [], onLabelsChange, se
                             onClick={() => onNavigate(item.id, null)}
                         />
                     ))}
+
+                    {/* Folders Section */}
+                    <div className="pt-2">
+                        <div className="px-4 flex items-center justify-between mb-2">
+                            <p className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">Folders</p>
+                            <button
+                                onClick={() => setIsAddingFolder(true)}
+                                className="p-1 text-gray-500 hover:text-blue-400 transition-colors"
+                            >
+                                <Plus size={14} />
+                            </button>
+                        </div>
+
+                        <div className="space-y-1">
+                            <AnimatePresence>
+                                {isAddingFolder && (
+                                    <motion.form
+                                        initial={{ opacity: 0, y: -10 }}
+                                        animate={{ opacity: 1, y: 0 }}
+                                        exit={{ opacity: 0, scale: 0.95 }}
+                                        onSubmit={handleAddFolder}
+                                        className="px-4 py-2"
+                                    >
+                                        <div className="relative">
+                                            <input
+                                                autoFocus
+                                                value={newFolderName}
+                                                onChange={(e) => setNewFolderName(e.target.value)}
+                                                onBlur={handleAddFolder}
+                                                placeholder="Folder name..."
+                                                className="w-full bg-white/5 border border-blue-500/30 rounded-lg px-3 py-1.5 text-sm text-white focus:outline-none focus:border-blue-500/50"
+                                            />
+                                            <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-1">
+                                                <X size={12} className="text-gray-500 cursor-pointer hover:text-gray-300" onClick={() => setIsAddingFolder(false)} />
+                                            </div>
+                                        </div>
+                                    </motion.form>
+                                )}
+                            </AnimatePresence>
+
+                            {folders.map(folder => (
+                                <div key={folder._id} className="relative group">
+                                    <DroppableNavButton
+                                        id={`sidebar-folder-${folder._id}`}
+                                        icon={Folder}
+                                        label={folder.name}
+                                        isActive={activeTab === 'folder' && selectedFolder === folder._id}
+                                        onClick={() => onNavigate('folder', null, folder._id)}
+                                        data={{ type: 'folder', target: folder._id, folderId: folder._id }}
+                                    />
+                                    <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-all">
+                                        <button
+                                            onClick={(e) => handleDeleteFolder(e, folder._id)}
+                                            className="p-1.5 text-gray-600 hover:text-red-400 transition-all rounded hover:bg-white/5"
+                                        >
+                                            <Trash2 size={12} />
+                                        </button>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
                 </nav>
 
                 <div className="space-y-1">
@@ -280,4 +373,3 @@ export function Sidebar({ activeTab, onNavigate, labels = [], onLabelsChange, se
         </motion.div>
     );
 }
-

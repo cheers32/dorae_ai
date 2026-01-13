@@ -26,9 +26,12 @@ import { createPortal } from 'react-dom';
 
 export const TaskManager = () => {
     const [tasks, setTasks] = useState([]);
+
     const [labels, setLabels] = useState([]);
+    const [folders, setFolders] = useState([]);
     const [activeTab, setActiveTab] = useState('active');
     const [selectedLabel, setSelectedLabel] = useState(null);
+    const [selectedFolder, setSelectedFolder] = useState(null);
     const [newTaskTitle, setNewTaskTitle] = useState('');
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
@@ -50,20 +53,32 @@ export const TaskManager = () => {
     );
 
     // Navigation Utils
-    const changeView = (tab, label = null, pushToHistory = true) => {
+    const changeView = (tab, label = null, folder = null, pushToHistory = true) => {
         if (pushToHistory) {
-            setHistory(prev => [...prev, { tab: activeTab, label: selectedLabel }]);
+            setHistory(prev => [...prev, { tab: activeTab, label: selectedLabel, folder: selectedFolder }]);
         }
         setActiveTab(tab);
         setSelectedLabel(label);
+        setSelectedFolder(folder);
     };
 
     const handleBack = () => {
         if (history.length === 0) return;
         const lastView = history[history.length - 1];
         setHistory(prev => prev.slice(0, -1));
+        setHistory(prev => prev.slice(0, -1));
         setActiveTab(lastView.tab);
         setSelectedLabel(lastView.label);
+        setSelectedFolder(lastView.folder);
+    };
+
+    const fetchFolders = async () => {
+        try {
+            const data = await api.getFolders();
+            setFolders(data);
+        } catch (err) {
+            console.error("Failed to fetch folders", err);
+        }
     };
 
     const fetchLabels = async () => {
@@ -92,8 +107,9 @@ export const TaskManager = () => {
             let status = 'active';
             if (activeTab === 'closed') status = 'completed';
             if (activeTab === 'trash') status = 'deleted';
+            if (activeTab === 'folder') status = null; // Folders can have any status, usually active. 
 
-            const data = await api.getTasks(status, selectedLabel);
+            const data = await api.getTasks(status, selectedLabel, selectedFolder);
             if (data.error) throw new Error(data.error);
             setTasks(data);
         } catch (err) {
@@ -106,11 +122,12 @@ export const TaskManager = () => {
 
     useEffect(() => {
         fetchLabels();
+        fetchFolders();
     }, []);
 
     useEffect(() => {
         fetchTasks();
-    }, [activeTab, selectedLabel]);
+    }, [activeTab, selectedLabel, selectedFolder]);
 
     const customCollisionDetection = (args) => {
         // If dragging a sidebar label, prioritize tasks
@@ -209,7 +226,7 @@ export const TaskManager = () => {
         }
 
         // Check if dropped over sidebar tabs
-        if (overId.startsWith('sidebar-') && !overId.includes('label-')) {
+        if (overId.startsWith('sidebar-') && !overId.includes('label-') && !overId.includes('folder-')) {
             const targetTab = over.data.current.target;
             const taskId = active.id;
 
@@ -229,6 +246,19 @@ export const TaskManager = () => {
                 } catch (err) {
                     console.error("Failed to update status through drag", err);
                 }
+            }
+        }
+
+        // Check if dropped over a folder
+        if (overId.startsWith('sidebar-folder-')) {
+            const folderId = over.data.current.folderId;
+            const taskId = active.id;
+
+            try {
+                await api.updateTask(taskId, { folderId: folderId });
+                fetchTasks();
+            } catch (err) {
+                console.error("Failed to move task to folder", err);
             }
             setActiveId(null);
             return;
@@ -252,10 +282,11 @@ export const TaskManager = () => {
 
     const getHeaderTitle = () => {
         if (selectedLabel) return `Label: ${selectedLabel}`;
+        if (selectedFolder) return `Folder: ${folders.find(f => f._id === selectedFolder)?.name || 'Unknown'}`;
         switch (activeTab) {
             case 'active': return 'Active Tasks';
             case 'closed': return 'Closed Tasks';
-            case 'trash': return 'Trash Bin';
+            case 'trash': return 'Deleted Tasks';
             case 'assistant': return 'AI Assistant';
             default: return 'Tasks';
         }
@@ -275,8 +306,11 @@ export const TaskManager = () => {
                     activeTab={activeTab}
                     onNavigate={changeView}
                     labels={labels}
+                    folders={folders}
                     onLabelsChange={fetchLabels}
+                    onFoldersChange={fetchFolders}
                     selectedLabel={selectedLabel}
+                    selectedFolder={selectedFolder}
                 />
 
                 <main className="flex-1 flex flex-col min-w-0 bg-[#0f1014] h-full relative">
@@ -427,3 +461,4 @@ export const TaskManager = () => {
         </DndContext>
     );
 }
+

@@ -31,6 +31,7 @@ try:
     db = client['dorae_db']
     tasks_collection = db['tasks']
     labels_collection = db['labels']
+    folders_collection = db['folders']
     print("Connected to MongoDB")
 except Exception as e:
     print(f"Error connecting to MongoDB: {e}")
@@ -137,6 +138,10 @@ def get_tasks():
 
         if label:
             query['labels'] = label
+
+        folder_id = request.args.get('folderId')
+        if folder_id:
+            query['folderId'] = folder_id
         
         # Sort by order ascending, then created_at desc
         tasks = list(tasks_collection.find(query).sort([('order', 1), ('created_at', -1)]))
@@ -218,7 +223,8 @@ def update_task(task_id):
     try:
         data = request.json
         update_fields = {}
-        allowed_fields = ['title', 'priority', 'category', 'status', 'importance', 'labels']
+        update_fields = {}
+        allowed_fields = ['title', 'priority', 'category', 'status', 'importance', 'labels', 'folderId']
         
         for field in allowed_fields:
             if field in data:
@@ -283,7 +289,9 @@ def create_task():
             "priority": "medium", # Default
             "importance": 3,      # Default
             "category": "General", # Default
+            "category": "General", # Default
             "labels": data.get('labels', []), # Use provided labels or empty array
+            "folderId": data.get('folderId'),
             "updates": [{
                 "id": str(uuid.uuid4()),
                 "content": "Task created",
@@ -514,6 +522,58 @@ def delete_label(label_id):
     try:
         result = labels_collection.delete_one({"_id": ObjectId(label_id)})
         return jsonify({"message": "Label deleted"}), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+@app.route('/api/folders', methods=['GET'])
+def get_folders():
+    try:
+        folders = list(folders_collection.find({}))
+        return jsonify([serialize_doc(f) for f in folders]), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+@app.route('/api/folders', methods=['POST'])
+def create_folder():
+    try:
+        data = request.json
+        if not data or 'name' not in data:
+            return jsonify({"error": "Folder name is required"}), 400
+        
+        new_folder = {
+            "name": data['name'],
+            "created_at": datetime.utcnow().isoformat()
+        }
+        
+        result = folders_collection.insert_one(new_folder)
+        new_folder['_id'] = result.inserted_id
+        return jsonify(serialize_doc(new_folder)), 201
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+@app.route('/api/folders/<folder_id>', methods=['DELETE'])
+def delete_folder(folder_id):
+    try:
+        result = folders_collection.delete_one({"_id": ObjectId(folder_id)})
+        return jsonify({"message": "Folder deleted"}), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+@app.route('/api/folders/<folder_id>', methods=['PUT'])
+def update_folder(folder_id):
+    try:
+        data = request.json
+        if 'name' not in data:
+             return jsonify({"error": "Name is required"}), 400
+             
+        result = folders_collection.update_one(
+            {"_id": ObjectId(folder_id)},
+            {"$set": {"name": data['name']}}
+        )
+        if result.matched_count == 0:
+            return jsonify({"error": "Folder not found"}), 404
+            
+        return jsonify({"message": "Folder updated"}), 200
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
