@@ -1,13 +1,7 @@
 import { useState, useRef, useEffect, forwardRef } from 'react';
 import { format } from 'date-fns';
 import {
-    ChevronDown,
-    ChevronUp,
     Trash2,
-    Clock,
-    AlertCircle,
-    MoreVertical,
-    Plus,
     X,
     GripVertical,
     Pencil,
@@ -20,49 +14,7 @@ import { useSortable, SortableContext, horizontalListSortingStrategy, arrayMove 
 import { CSS } from '@dnd-kit/utilities';
 import { DndContext, closestCenter, PointerSensor, useSensor, useSensors } from '@dnd-kit/core';
 
-// Helper Dropdown Component
-const Dropdown = ({ options, value, onChange, className, renderOption, triggerClassName }) => {
-    const [isOpen, setIsOpen] = useState(false);
-    const ref = useRef(null);
 
-    useEffect(() => {
-        const handleClickOutside = (event) => {
-            if (ref.current && !ref.current.contains(event.target)) {
-                setIsOpen(false);
-            }
-        };
-        document.addEventListener('mousedown', handleClickOutside);
-        return () => document.removeEventListener('mousedown', handleClickOutside);
-    }, []);
-
-    return (
-        <div className="relative" ref={ref}>
-            <button
-                onClick={(e) => { e.stopPropagation(); setIsOpen(!isOpen); }}
-                className={triggerClassName}
-            >
-                {value}
-            </button>
-            {isOpen && (
-                <div className="absolute top-full left-0 mt-1 z-50 bg-[#1a1f2e] border border-gray-700 rounded-lg shadow-xl overflow-hidden min-w-[120px]">
-                    {options.map((opt) => (
-                        <div
-                            key={opt}
-                            className="px-3 py-2 text-xs text-gray-300 hover:bg-white/5 cursor-pointer flex items-center gap-2 capitalize"
-                            onClick={(e) => {
-                                e.stopPropagation();
-                                onChange(opt);
-                                setIsOpen(false);
-                            }}
-                        >
-                            {renderOption ? renderOption(opt) : opt}
-                        </div>
-                    ))}
-                </div>
-            )}
-        </div>
-    );
-};
 
 const SortableLabel = ({ labelName, color, onDelete }) => {
     const {
@@ -276,33 +228,7 @@ export const TaskItem = forwardRef(({ task, onUpdate, showTags, style, dragHandl
         }
     };
 
-    const updateField = async (field, value) => {
-        try {
-            await api.updateTask(task._id, { [field]: value });
-            onUpdate();
-        } catch (err) {
-            console.error(err);
-        }
-    };
 
-    const priorities = ['low', 'medium', 'high', 'urgent'];
-
-    const statuses = ['pending', 'in_progress', 'completed'];
-
-
-
-    const getStatusStyle = (s) => {
-        switch (s) {
-            case 'completed': return 'text-green-400 bg-green-400/10 border-green-400/20';
-            case 'in_progress': return 'text-yellow-400 bg-yellow-400/10 border-yellow-400/20';
-            default: return 'text-gray-400 bg-gray-400/10 border-gray-400/20';
-        }
-    };
-
-    const formatStatus = (s) => {
-        if (!s) return 'Pending';
-        return s.split('_').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
-    };
 
     return (
         <motion.div
@@ -315,7 +241,7 @@ export const TaskItem = forwardRef(({ task, onUpdate, showTags, style, dragHandl
             className={`group hover:bg-white/[0.04] transition-colors border-b border-white/5 bg-transparent ${expanded ? 'bg-white/[0.02]' : ''}`}
         >
             <div
-                className="flex items-center gap-4 cursor-pointer"
+                className="flex items-center gap-4 cursor-pointer pr-4"
                 onClick={() => setExpanded(!expanded)}
             >
                 <div className="py-2 px-4 flex items-center gap-4 flex-1 min-w-0">
@@ -422,55 +348,7 @@ export const TaskItem = forwardRef(({ task, onUpdate, showTags, style, dragHandl
                         return format(lastUpdate, 'MMM d, HH:mm');
                     })()}
                 </span>
-                <div className={`flex items-center gap-2 pr-4 transition-opacity ${showTags ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`} onClick={e => e.stopPropagation()}>
-                    <Dropdown
-                        options={statuses}
-                        value={formatStatus(task.status)}
-                        onChange={(val) => updateField('status', val)}
-                        triggerClassName={`text-[10px] px-2 py-1 rounded border uppercase tracking-wider font-semibold transition-colors ${getStatusStyle(task.status)}`}
-                        renderOption={(opt) => (
-                            <div className="flex items-center gap-2">
-                                <div className={`w-2 h-2 rounded-full ${opt === 'completed' ? 'bg-green-500' : opt === 'in_progress' ? 'bg-yellow-500' : 'bg-blue-500'}`}></div>
-                                {formatStatus(opt)}
-                            </div>
-                        )}
-                    />
 
-
-
-
-
-                    {isDeleting ? (
-                        <div className="flex items-center gap-1">
-                            <button
-                                className="p-1.5 text-green-400 hover:text-green-300 transition-colors bg-green-400/10 rounded"
-                                onClick={confirmDelete}
-                                title="Confirm Delete"
-                            >
-                                <Check size={14} />
-                            </button>
-                            <button
-                                className="p-1.5 text-gray-500 hover:text-gray-300 transition-colors"
-                                onClick={(e) => { e.stopPropagation(); setIsDeleting(false); }}
-                                title="Cancel"
-                            >
-                                <X size={14} />
-                            </button>
-                        </div>
-                    ) : (
-                        <button
-                            className="p-1.5 text-gray-500 hover:text-red-400 transition-colors"
-                            onClick={(e) => { e.stopPropagation(); setIsDeleting(true); }}
-                            title="Delete Task"
-                        >
-                            <Trash2 size={14} />
-                        </button>
-                    )}
-
-                    <div className={`transition-transform duration-200 ${expanded ? 'rotate-180' : ''} text-gray-500`}>
-                        <ChevronDown size={18} />
-                    </div>
-                </div>
             </div>
 
             <AnimatePresence>
@@ -564,7 +442,33 @@ export const TaskItem = forwardRef(({ task, onUpdate, showTags, style, dragHandl
                                 </div>
                             </div>
 
-                            <div className="flex justify-end gap-2 pt-2 border-t border-white/5 mx-[-16px] px-4 bg-black/40 pb-2 mb-[-16px]">
+                            <div className="flex justify-between items-center gap-2 pt-2 border-t border-white/5 mx-[-16px] px-4 bg-black/40 pb-2 mb-[-16px]">
+                                {isDeleting ? (
+                                    <div className="flex items-center gap-1">
+                                        <button
+                                            className="p-1.5 text-green-400 hover:text-green-300 transition-colors bg-green-400/10 rounded"
+                                            onClick={confirmDelete}
+                                            title="Confirm Delete"
+                                        >
+                                            <Check size={14} />
+                                        </button>
+                                        <button
+                                            className="p-1.5 text-gray-500 hover:text-gray-300 transition-colors"
+                                            onClick={(e) => { e.stopPropagation(); setIsDeleting(false); }}
+                                            title="Cancel"
+                                        >
+                                            <X size={14} />
+                                        </button>
+                                    </div>
+                                ) : (
+                                    <button
+                                        className="p-1.5 text-gray-500 hover:text-red-400 transition-colors"
+                                        onClick={(e) => { e.stopPropagation(); setIsDeleting(true); }}
+                                        title="Delete Task"
+                                    >
+                                        <Trash2 size={14} />
+                                    </button>
+                                )}
                                 <button
                                     className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium text-blue-400 hover:bg-blue-400/10 transition-colors"
                                     onClick={handleAnalyzeTask}
