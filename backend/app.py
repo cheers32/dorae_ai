@@ -125,16 +125,16 @@ def get_tasks():
         label = request.args.get('label')
         query = {}
         
-        if status == 'deleted':
-            query['status'] = 'deleted'
-        elif status == 'active':
-            # Exclude completed and deleted
-            query['status'] = {'$nin': ['completed', 'deleted']}
+        if status == 'Deleted':
+            query['status'] = {'$in': ['Deleted', 'deleted']}
+        elif status == 'Active':
+            # Exclude completed/closed and deleted/trash
+            query['status'] = {'$nin': ['Closed', 'completed', 'Deleted', 'deleted']}
         elif status:
             query['status'] = status
         else:
             # Default: exclude deleted
-            query['status'] = {'$ne': 'deleted'}
+            query['status'] = {'$nin': ['Deleted', 'deleted']}
 
         if label:
             query['labels'] = label
@@ -189,7 +189,7 @@ def delete_task(task_id):
         if not task:
             return jsonify({"error": "Task not found"}), 404
 
-        if task.get('status') == 'deleted':
+        if task.get('status') in ['Deleted', 'deleted']:
              # Hard Delete
             result = tasks_collection.delete_one({"_id": ObjectId(task_id)})
             return jsonify({"message": "Task permanently deleted"}), 200
@@ -198,7 +198,7 @@ def delete_task(task_id):
             result = tasks_collection.update_one(
                 {"_id": ObjectId(task_id)},
                 {
-                    "$set": {"status": "deleted", "deleted_at": datetime.utcnow()},
+                    "$set": {"status": "Deleted", "deleted_at": datetime.utcnow()},
                     "$push": {"updates": {
                         "id": str(uuid.uuid4()),
                         "content": "Task moved to trash",
@@ -214,7 +214,7 @@ def delete_task(task_id):
 @app.route('/api/tasks/trash', methods=['DELETE'])
 def empty_trash():
     user_email = request.args.get('user_email')
-    query = {"status": "deleted"}
+    query = {"status": {"$in": ["Deleted", "deleted"]}}
     if user_email:
         query["user_email"] = user_email
     else:
@@ -240,19 +240,19 @@ def get_stats():
         
         # 1. Active Tasks
         active_query = {
-            'status': {'$nin': ['completed', 'deleted']},
+            'status': {'$nin': ['Closed', 'completed', 'Deleted', 'deleted']},
             '$or': [{'folderId': None}, {'folderId': {'$exists': False}}]
         }
         active_query.update(base_query)
         active_count = tasks_collection.count_documents(active_query)
         
         # 2. Closed Tasks
-        closed_query = {'status': 'completed'}
+        closed_query = {'status': {'$in': ['Closed', 'completed']}}
         closed_query.update(base_query)
         closed_count = tasks_collection.count_documents(closed_query)
         
         # 3. Trash
-        trash_query = {'status': 'deleted'}
+        trash_query = {'status': {'$in': ['Deleted', 'deleted']}}
         trash_query.update(base_query)
         trash_count = tasks_collection.count_documents(trash_query)
         
@@ -263,7 +263,7 @@ def get_stats():
         for folder in folders:
             folder_id = str(folder['_id'])
             f_count_query = {
-                'status': {'$ne': 'deleted'},
+                'status': {'$nin': ['Deleted', 'deleted']},
                 'folderId': folder_id
             }
             f_count_query.update(base_query)
@@ -277,7 +277,7 @@ def get_stats():
         for label in labels:
             label_name = label['name']
             l_count_query = {
-                'status': {'$ne': 'deleted'},
+                'status': {'$nin': ['Deleted', 'deleted']},
                 'labels': label_name
             }
             l_count_query.update(base_query)
@@ -323,7 +323,7 @@ def update_task(task_id):
                 
         if 'status' in data:
             new_status = data['status']
-            if new_status == 'completed':
+            if new_status == 'Closed':
                 now = datetime.utcnow().isoformat()
                 update_fields['completed_at'] = now
             else:
@@ -374,7 +374,7 @@ def create_task():
         
         new_task = {
             "title": data['title'],
-            "status": "active",
+            "status": "Active",
             "created_at": datetime.utcnow().isoformat(),
             "completed_at": None,
             "priority": "medium", # Default
@@ -459,7 +459,7 @@ def close_task(task_id):
             {"_id": ObjectId(task_id)},
             {
                 "$set": {
-                    "status": "completed",
+                    "status": "Closed",
                     "completed_at": datetime.utcnow().isoformat()
                 }
             }

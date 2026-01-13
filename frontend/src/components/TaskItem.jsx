@@ -254,7 +254,7 @@ export const TaskItem = forwardRef(({ task, onUpdate, showTags, style, dragHandl
                     <div
                         className={`w-3 h-3 rounded-full shrink-0 transition-colors ${localLabels.length > 0 && availableLabels.find(l => l.name === localLabels[0])?.color
                             ? ''
-                            : `shadow-[0_0_10px_rgba(59,130,246,0.3)] ${task.status === 'completed' ? 'bg-green-500 shadow-[0_0_10px_rgba(34,197,94,0.3)]' :
+                            : `shadow-[0_0_10px_rgba(59,130,246,0.3)] ${task.status === 'Closed' || task.status === 'completed' ? 'bg-green-500 shadow-[0_0_10px_rgba(34,197,94,0.3)]' :
                                 task.status === 'in_progress' ? 'bg-yellow-500 shadow-[0_0_10px_rgba(234,179,8,0.3)]' :
                                     'bg-blue-500 shadow-[0_0_10px_rgba(59,130,246,0.3)]'
                             }`
@@ -287,7 +287,7 @@ export const TaskItem = forwardRef(({ task, onUpdate, showTags, style, dragHandl
                     ) : (
                         <div className="flex-1 min-w-0 flex items-center gap-2 group/title">
                             <h3
-                                className={`font-medium text-gray-200 text-left ${expanded ? 'break-words whitespace-normal' : 'truncate'} ${task.status === 'deleted' ? 'line-through opacity-50' : ''}`}
+                                className={`font-medium text-gray-200 text-left ${expanded ? 'break-words whitespace-normal' : 'truncate'} ${(task.status === 'Deleted' || task.status === 'deleted') ? 'line-through opacity-50' : ''}`}
                             >
                                 {task.title}
                             </h3>

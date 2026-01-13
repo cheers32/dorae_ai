@@ -137,9 +137,9 @@ export const TaskManager = () => {
 
         try {
             setError(null);
-            let status = 'active';
-            if (activeTab === 'closed') status = 'completed';
-            if (activeTab === 'trash') status = 'deleted';
+            let status = 'Active';
+            if (activeTab === 'closed') status = 'Closed';
+            if (activeTab === 'trash') status = 'Deleted';
             if (activeTab === 'folder') status = null;
 
             let queryFolderId = selectedFolder;
@@ -338,18 +338,18 @@ export const TaskManager = () => {
             const taskId = active.id;
 
             let newStatus = null;
-            if (targetTab === 'closed') newStatus = 'completed';
-            if (targetTab === 'trash') newStatus = 'deleted';
-            if (targetTab === 'active') newStatus = 'active';
+            if (targetTab === 'closed') newStatus = 'Closed';
+            if (targetTab === 'trash') newStatus = 'Deleted';
+            if (targetTab === 'active') newStatus = 'Active';
 
             if (newStatus) {
                 try {
-                    if (newStatus === 'deleted') {
+                    if (newStatus === 'Deleted') {
                         await api.deleteTask(taskId);
                     } else {
                         // If moving to 'active', also clear folderId
                         const updates = { status: newStatus };
-                        if (newStatus === 'active') {
+                        if (newStatus === 'Active') {
                             updates.folderId = null;
                         }
                         await api.updateTask(taskId, updates);
