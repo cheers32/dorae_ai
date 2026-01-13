@@ -312,13 +312,13 @@ export const TaskItem = forwardRef(({ task, onUpdate, showTags, style, dragHandl
             initial={isOverlay ? false : { opacity: 0 }}
             animate={isOverlay ? false : { opacity: baseStyle.opacity }}
             exit={isOverlay ? false : { opacity: 0 }}
-            className={`group hover:bg-white/[0.02] transition-colors rounded-xl border border-white/5 bg-[#1a1f2e]/50 mb-3 ${expanded ? 'ring-1 ring-blue-500/20' : ''}`}
+            className={`group hover:bg-white/[0.04] transition-colors border-b border-white/5 bg-transparent ${expanded ? 'bg-white/[0.02]' : ''}`}
         >
             <div
                 className="flex items-center gap-4 cursor-pointer"
                 onClick={() => setExpanded(!expanded)}
             >
-                <div className="p-4 flex items-center gap-4 flex-1 min-w-0">
+                <div className="py-2 px-4 flex items-center gap-4 flex-1 min-w-0">
                     <div
                         className="p-1 text-gray-600 hover:text-gray-400 transition-colors cursor-grab active:cursor-grabbing"
                         {...dragHandleProps}
@@ -414,6 +414,14 @@ export const TaskItem = forwardRef(({ task, onUpdate, showTags, style, dragHandl
                     )}
                 </div>
 
+                <span className="text-[10px] text-gray-600 font-mono" onClick={e => e.stopPropagation()}>
+                    {(() => {
+                        const lastUpdate = task.updates && task.updates.length > 0
+                            ? new Date(Math.max(...task.updates.map(u => new Date(u.timestamp))))
+                            : new Date(task.created_at);
+                        return format(lastUpdate, 'MMM d, HH:mm');
+                    })()}
+                </span>
                 <div className={`flex items-center gap-2 pr-4 transition-opacity ${showTags ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`} onClick={e => e.stopPropagation()}>
                     <Dropdown
                         options={statuses}
