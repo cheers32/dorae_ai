@@ -434,18 +434,18 @@ export const TaskItem = forwardRef(({ task, onUpdate, showTags, style, dragHandl
                                 {isDeleting ? (
                                     <div className="flex items-center gap-1">
                                         <button
-                                            className="p-1.5 text-green-400 hover:text-green-300 transition-colors bg-green-400/10 rounded"
-                                            onClick={confirmDelete}
-                                            title="Confirm Delete"
-                                        >
-                                            <Check size={14} />
-                                        </button>
-                                        <button
                                             className="p-1.5 text-gray-500 hover:text-gray-300 transition-colors"
                                             onClick={(e) => { e.stopPropagation(); setIsDeleting(false); }}
                                             title="Cancel"
                                         >
                                             <X size={14} />
+                                        </button>
+                                        <button
+                                            className="p-1.5 text-green-400 hover:text-green-300 transition-colors bg-green-400/10 rounded"
+                                            onClick={confirmDelete}
+                                            title="Confirm Delete"
+                                        >
+                                            <Check size={14} />
                                         </button>
                                     </div>
                                 ) : (
