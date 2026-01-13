@@ -359,7 +359,7 @@ export const TaskItem = forwardRef(({ task, onUpdate, showTags, style, dragHandl
                     ) : (
                         <div className="flex-1 min-w-0 flex items-center gap-2 group/title">
                             <h3
-                                className={`font-medium text-gray-200 text-left truncate ${task.status === 'completed' ? 'line-through opacity-50' : ''}`}
+                                className={`font-medium text-gray-200 text-left truncate ${task.status === 'deleted' ? 'line-through opacity-50' : ''}`}
                                 onClick={(e) => {
                                     e.stopPropagation();
                                 }}
