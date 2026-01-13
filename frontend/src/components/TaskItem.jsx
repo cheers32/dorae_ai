@@ -69,6 +69,7 @@ export const TaskItem = forwardRef(({ task, onUpdate, showTags, style, dragHandl
     const [isEditingTitle, setIsEditingTitle] = useState(false);
     const [editedTitle, setEditedTitle] = useState(task.title);
     const [localLabels, setLocalLabels] = useState(task.labels || []);
+    const [deletingUpdateId, setDeletingUpdateId] = useState(null);
     const localRef = useRef(null); // Local ref to track the DOM element
 
     // Sync refs
@@ -220,12 +221,17 @@ export const TaskItem = forwardRef(({ task, onUpdate, showTags, style, dragHandl
     };
 
     const handleDeleteUpdate = async (updateId) => {
-        if (!confirm('Delete this update?')) return;
+        setDeletingUpdateId(updateId);
+    };
+
+    const confirmDeleteUpdate = async (updateId) => {
         try {
             await api.deleteUpdate(task._id, updateId);
             onUpdate();
         } catch (err) {
             console.error(err);
+        } finally {
+            setDeletingUpdateId(null);
         }
     };
 
@@ -365,14 +371,32 @@ export const TaskItem = forwardRef(({ task, onUpdate, showTags, style, dragHandl
                                         <div className="relative border-l-2 border-white/5 pl-4 pb-1 flex-1">
                                             <div className="absolute -left-[5px] top-1.5 w-2 h-2 rounded-full bg-gray-700 ring-4 ring-[#13161c]" />
                                             {editingId === update.id ? (
-                                                <div className="flex gap-2">
+                                                <div className="flex items-center gap-2 w-full">
                                                     <input
+                                                        type="text"
                                                         value={editContent}
                                                         onChange={(e) => setEditContent(e.target.value)}
-                                                        className="flex-1 bg-black/40 border border-white/10 rounded px-2 py-1 text-gray-300 focus:outline-none focus:border-blue-500/50"
+                                                        className="flex-1 bg-gray-900 border border-gray-800 rounded px-3 py-1.5 text-sm text-gray-200 focus:outline-none focus:border-blue-500 transition-all placeholder:text-gray-600"
                                                         autoFocus
+                                                        onKeyDown={(e) => {
+                                                            if (e.key === 'Enter') handleSaveEdit(update.id);
+                                                            if (e.key === 'Escape') setEditingId(null);
+                                                        }}
                                                     />
-                                                    <button onClick={() => handleSaveEdit(update.id)} className="text-green-400"><Check size={14} /></button>
+                                                    <button
+                                                        className="text-green-400 hover:text-green-300 p-1 bg-green-400/10 rounded"
+                                                        onClick={() => handleSaveEdit(update.id)}
+                                                        title="Save (Enter)"
+                                                    >
+                                                        <Check size={14} />
+                                                    </button>
+                                                    <button
+                                                        className="text-gray-500 hover:text-gray-300 p-1 hover:bg-white/5 rounded"
+                                                        onClick={() => setEditingId(null)}
+                                                        title="Cancel (Esc)"
+                                                    >
+                                                        <X size={14} />
+                                                    </button>
                                                 </div>
                                             ) : (
                                                 update.type === 'ai_analysis' ? (
@@ -393,25 +417,46 @@ export const TaskItem = forwardRef(({ task, onUpdate, showTags, style, dragHandl
                                                     </div>
                                                 ) : (
                                                     <div className="group/content flex items-start gap-2">
-                                                        <p className={`text-gray-400 ${['creation', 'status_change', 'property_change', 'deletion'].includes(update.type) ? 'italic opacity-60' : ''}`}>
+                                                        <p className={`text-gray-300 ${['creation', 'status_change', 'property_change', 'deletion'].includes(update.type) ? 'italic opacity-60' : ''}`}>
                                                             {update.content}
                                                         </p>
                                                         {!['status_change', 'creation', 'property_change', 'deletion'].includes(update.type) && (
-                                                            <div className="opacity-0 group-hover/content:opacity-100 flex gap-1 pt-0.5">
-                                                                <button
-                                                                    className="text-gray-600 hover:text-blue-400 transition-all"
-                                                                    onClick={() => { setEditingId(update.id); setEditContent(update.content); }}
-                                                                    title="Edit"
-                                                                >
-                                                                    <Pencil size={10} />
-                                                                </button>
-                                                                <button
-                                                                    className="text-gray-600 hover:text-red-400 transition-all"
-                                                                    onClick={() => handleDeleteUpdate(update.id)}
-                                                                    title="Delete Update"
-                                                                >
-                                                                    <X size={10} />
-                                                                </button>
+                                                            <div className={`flex gap-1 pt-0.5 ${deletingUpdateId === update.id ? 'opacity-100' : 'opacity-0 group-hover/content:opacity-100'}`}>
+                                                                {deletingUpdateId === update.id ? (
+                                                                    <div className="flex items-center gap-1">
+                                                                        <button
+                                                                            className="text-green-400 hover:text-green-300 transition-all bg-green-400/10 rounded p-0.5"
+                                                                            onClick={() => confirmDeleteUpdate(update.id)}
+                                                                            title="Confirm Delete"
+                                                                        >
+                                                                            <Check size={14} />
+                                                                        </button>
+                                                                        <button
+                                                                            className="text-gray-500 hover:text-gray-300 transition-all p-0.5"
+                                                                            onClick={() => setDeletingUpdateId(null)}
+                                                                            title="Cancel"
+                                                                        >
+                                                                            <X size={14} />
+                                                                        </button>
+                                                                    </div>
+                                                                ) : (
+                                                                    <>
+                                                                        <button
+                                                                            className="text-gray-600 hover:text-blue-400 transition-all"
+                                                                            onClick={() => { setEditingId(update.id); setEditContent(update.content); }}
+                                                                            title="Edit"
+                                                                        >
+                                                                            <Pencil size={14} />
+                                                                        </button>
+                                                                        <button
+                                                                            className="text-gray-600 hover:text-red-400 transition-all"
+                                                                            onClick={() => handleDeleteUpdate(update.id)}
+                                                                            title="Delete Update"
+                                                                        >
+                                                                            <X size={14} />
+                                                                        </button>
+                                                                    </>
+                                                                )}
                                                             </div>
                                                         )}
                                                     </div>
@@ -431,7 +476,7 @@ export const TaskItem = forwardRef(({ task, onUpdate, showTags, style, dragHandl
                                                 placeholder="Add update..."
                                                 value={newDetail}
                                                 onChange={(e) => setNewDetail(e.target.value)}
-                                                className="w-full bg-transparent border-none text-gray-300 placeholder-gray-600 focus:ring-0 p-0 py-1 text-sm"
+                                                className="w-full bg-gray-900 border border-gray-800 rounded-xl px-4 py-3 text-sm text-gray-200 focus:outline-none focus:border-blue-500 focus:ring-0 transition-all placeholder:text-gray-600"
                                             />
                                         </form>
                                     </div>
