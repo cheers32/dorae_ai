@@ -483,6 +483,32 @@ def create_label():
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
+@app.route('/api/labels/<label_id>', methods=['PUT'])
+def update_label(label_id):
+    try:
+        data = request.json
+        update_fields = {}
+        
+        if 'name' in data:
+            update_fields['name'] = data['name']
+        if 'color' in data:
+            update_fields['color'] = data['color']
+            
+        if not update_fields:
+            return jsonify({"error": "No fields to update"}), 400
+        
+        result = labels_collection.update_one(
+            {"_id": ObjectId(label_id)},
+            {"$set": update_fields}
+        )
+        
+        if result.matched_count == 0:
+            return jsonify({"error": "Label not found"}), 404
+            
+        return jsonify({"message": "Label updated"}), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
 @app.route('/api/labels/<label_id>', methods=['DELETE'])
 def delete_label(label_id):
     try:

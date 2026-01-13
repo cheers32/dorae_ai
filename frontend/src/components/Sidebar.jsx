@@ -10,7 +10,8 @@ import {
     Tag as TagIcon,
     X,
     LogOut,
-    MessageSquare
+    MessageSquare,
+    Palette
 } from 'lucide-react';
 import { api } from '../api';
 import { useDroppable } from '@dnd-kit/core';
@@ -44,6 +45,7 @@ const DroppableNavButton = ({ id, icon: Icon, label, isActive, onClick, isOverSt
 export function Sidebar({ activeTab, onNavigate, labels = [], onLabelsChange, selectedLabel }) {
     const [isAddingLabel, setIsAddingLabel] = useState(false);
     const [newLabelName, setNewLabelName] = useState('');
+    const [editingLabelId, setEditingLabelId] = useState(null);
 
     const menuItems = [
         { id: 'active', label: 'Active Tasks', icon: Layout },
@@ -78,6 +80,17 @@ export function Sidebar({ activeTab, onNavigate, labels = [], onLabelsChange, se
             if (selectedLabel === id) onNavigate(activeTab, null);
         } catch (err) {
             console.error("Failed to delete label:", err);
+        }
+    };
+
+    const handleColorChange = async (e, labelId) => {
+        e.stopPropagation();
+        const newColor = e.target.value;
+        try {
+            await api.updateLabel(labelId, { color: newColor });
+            if (onLabelsChange) onLabelsChange();
+        } catch (err) {
+            console.error("Failed to update label color:", err);
         }
     };
 
@@ -173,12 +186,24 @@ export function Sidebar({ activeTab, onNavigate, labels = [], onLabelsChange, se
                                     onClick={() => onNavigate(activeTab, label.name)}
                                     data={{ type: 'sidebar-label', target: label.name, color: label.color }}
                                 />
-                                <button
-                                    onClick={(e) => handleDeleteLabel(e, label._id)}
-                                    className="absolute right-3 top-1/2 -translate-y-1/2 p-1 text-gray-600 hover:text-red-400 opacity-0 group-hover:opacity-100 transition-all"
-                                >
-                                    <Trash2 size={12} />
-                                </button>
+                                <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-all">
+                                    <label className="relative cursor-pointer p-1 text-gray-600 hover:text-blue-400 transition-colors">
+                                        <Palette size={12} />
+                                        <input
+                                            type="color"
+                                            value={label.color || '#3B82F6'}
+                                            onChange={(e) => handleColorChange(e, label._id)}
+                                            className="absolute inset-0 opacity-0 cursor-pointer"
+                                            onClick={(e) => e.stopPropagation()}
+                                        />
+                                    </label>
+                                    <button
+                                        onClick={(e) => handleDeleteLabel(e, label._id)}
+                                        className="p-1 text-gray-600 hover:text-red-400 transition-all"
+                                    >
+                                        <Trash2 size={12} />
+                                    </button>
+                                </div>
                             </div>
                         ))}
 

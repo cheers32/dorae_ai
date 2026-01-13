@@ -30,6 +30,15 @@ export const api = {
         return res.json();
     },
 
+    updateLabel: async (labelId, updates) => {
+        const res = await fetch(`${API_BASE}/labels/${labelId}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(updates),
+        });
+        return res.json();
+    },
+
     createTask: async (title, labels = []) => {
         const res = await fetch(`${API_BASE}/tasks`, {
             method: 'POST',
