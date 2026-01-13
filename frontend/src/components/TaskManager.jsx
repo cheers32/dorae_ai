@@ -135,6 +135,18 @@ export const TaskManager = () => {
         fetchTasks();
     }, [activeTab, selectedLabel, selectedFolder]);
 
+    const [dropAnimation, setDropAnimation] = useState(null); // null by default, or undefined
+
+    const handleDragOver = (event) => {
+        const { over } = event;
+        // If over a sidebar item (folder, label, trash, etc.), disable drop animation (snap-back)
+        if (over && over.id.toString().startsWith('sidebar-')) {
+            setDropAnimation(null);
+        } else {
+            setDropAnimation(undefined); // undefined triggers default animation
+        }
+    };
+
     const customCollisionDetection = (args) => {
         // If dragging a sidebar label, prioritize tasks
         if (args.active.id.toString().startsWith('sidebar-label-')) {
@@ -178,9 +190,7 @@ export const TaskManager = () => {
         }
     };
 
-    const handleDragStart = (event) => {
-        setActiveId(event.active.id);
-    };
+
 
     const handleDragEnd = async (event) => {
         const { active, over } = event;
@@ -286,6 +296,14 @@ export const TaskManager = () => {
         setActiveId(null);
     };
 
+    const handleDragStart = (event) => {
+        setActiveId(event.active.id);
+        const task = tasks.find(t => t._id === event.active.id);
+        if (task) {
+            setDropAnimation(undefined);
+        }
+    };
+
     const getHeaderTitle = () => {
         if (selectedLabel) return `Label: ${selectedLabel}`;
         if (selectedFolder) return `Folder: ${folders.find(f => f._id === selectedFolder)?.name || 'Unknown'}`;
@@ -306,6 +324,7 @@ export const TaskManager = () => {
             collisionDetection={customCollisionDetection}
             onDragStart={handleDragStart}
             onDragEnd={handleDragEnd}
+            onDragOver={handleDragOver}
         >
             <div className="flex h-screen bg-[#0f1014] text-gray-200 font-sans overflow-hidden">
                 <Sidebar
@@ -442,7 +461,7 @@ export const TaskManager = () => {
             </div>
 
             {createPortal(
-                <DragOverlay>
+                <DragOverlay dropAnimation={dropAnimation}>
                     {activeId && activeId.toString().startsWith('sidebar-label-') ? (
                         <div className="px-3 py-1.5 rounded-full text-sm font-semibold shadow-lg flex items-center gap-2"
                             style={{
