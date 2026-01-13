@@ -107,9 +107,15 @@ export const TaskManager = () => {
             let status = 'active';
             if (activeTab === 'closed') status = 'completed';
             if (activeTab === 'trash') status = 'deleted';
-            if (activeTab === 'folder') status = null; // Folders can have any status, usually active. 
+            if (activeTab === 'folder') status = null;
 
-            const data = await api.getTasks(status, selectedLabel, selectedFolder);
+            let queryFolderId = selectedFolder;
+            // Exclusive visibility: If in 'Active' tab and no folder selected, only show unfiled tasks
+            if (activeTab === 'active' && !selectedLabel && !selectedFolder) {
+                queryFolderId = 'null';
+            }
+
+            const data = await api.getTasks(status, selectedLabel, queryFolderId);
             if (data.error) throw new Error(data.error);
             setTasks(data);
         } catch (err) {

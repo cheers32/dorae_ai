@@ -140,7 +140,9 @@ def get_tasks():
             query['labels'] = label
 
         folder_id = request.args.get('folderId')
-        if folder_id:
+        if folder_id == 'null':
+             query['$or'] = [{'folderId': None}, {'folderId': {'$exists': False}}]
+        elif folder_id:
             query['folderId'] = folder_id
         
         # Sort by order ascending, then created_at desc
