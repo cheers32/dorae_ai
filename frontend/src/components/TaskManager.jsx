@@ -38,6 +38,8 @@ export const TaskManager = () => {
     const [showTags, setShowTags] = useState(false);
     const [activeId, setActiveId] = useState(null);
     const [history, setHistory] = useState([]);
+    // Sidebar Order State
+    const [sidebarItems, setSidebarItems] = useState([]);
 
     const navigate = useNavigate();
 
@@ -130,6 +132,41 @@ export const TaskManager = () => {
         fetchLabels();
         fetchFolders();
     }, []);
+
+    // Sync folders with sidebarItems
+    useEffect(() => {
+        const systemItems = ['active', 'closed', 'assistant', 'trash'];
+        const folderIds = folders.map(f => `folder-${f._id}`);
+
+        // Load saved order
+        const savedOrder = JSON.parse(localStorage.getItem('sidebarOrder') || '[]');
+
+        // Filter out items that no longer exist (deleted folders) and ensure system items exist
+        const validSavedItems = savedOrder.filter(id =>
+            systemItems.includes(id) || folderIds.includes(id)
+        );
+
+        // Find items that are missing from saved order (new folders or system items)
+        const missingItems = [
+            ...systemItems.filter(id => !validSavedItems.includes(id)),
+            ...folderIds.filter(id => !validSavedItems.includes(id))
+        ];
+
+        // Combine valid saved items + missing items (appended to end)
+        const newOrder = [...validSavedItems, ...missingItems];
+
+        // Only update if order changed
+        if (JSON.stringify(newOrder) !== JSON.stringify(sidebarItems)) {
+            setSidebarItems(newOrder);
+        }
+    }, [folders]);
+
+    // Save order whenever it changes
+    useEffect(() => {
+        if (sidebarItems.length > 0) {
+            localStorage.setItem('sidebarOrder', JSON.stringify(sidebarItems));
+        }
+    }, [sidebarItems]);
 
     useEffect(() => {
         fetchTasks();
@@ -267,7 +304,12 @@ export const TaskManager = () => {
                     if (newStatus === 'deleted') {
                         await api.deleteTask(taskId);
                     } else {
-                        await api.updateTask(taskId, { status: newStatus });
+                        // If moving to 'active', also clear folderId
+                        const updates = { status: newStatus };
+                        if (newStatus === 'pending') {
+                            updates.folderId = null;
+                        }
+                        await api.updateTask(taskId, updates);
                     }
                     fetchTasks();
                 } catch (err) {
@@ -292,17 +334,28 @@ export const TaskManager = () => {
         }
 
         if (active.id !== over.id) {
-            setTasks((items) => {
-                const oldIndex = items.findIndex((item) => item._id === active.id);
-                const newIndex = items.findIndex((item) => item._id === over.id);
-                const newItems = arrayMove(items, oldIndex, newIndex);
+            // Check if reordering sidebar items
+            if (activeId.startsWith('sidebar-') && overId.startsWith('sidebar-')) {
+                const oldIndex = sidebarItems.indexOf(activeId.replace('sidebar-', ''));
+                const newIndex = sidebarItems.indexOf(overId.replace('sidebar-', ''));
 
-                // Persist order to backend
-                const taskIds = newItems.map(t => t._id);
-                api.reorderTasks(taskIds).catch(err => console.error("Failed to save order", err));
+                if (oldIndex !== -1 && newIndex !== -1) {
+                    setSidebarItems(items => arrayMove(items, oldIndex, newIndex));
+                }
+            } else {
+                // Reordering tasks
+                setTasks((items) => {
+                    const oldIndex = items.findIndex((item) => item._id === active.id);
+                    const newIndex = items.findIndex((item) => item._id === over.id);
+                    const newItems = arrayMove(items, oldIndex, newIndex);
 
-                return newItems;
-            });
+                    // Persist order to backend
+                    const taskIds = newItems.map(t => t._id);
+                    api.reorderTasks(taskIds).catch(err => console.error("Failed to save order", err));
+
+                    return newItems;
+                });
+            }
         }
         setActiveId(null);
     };
@@ -347,6 +400,7 @@ export const TaskManager = () => {
                     onFoldersChange={fetchFolders}
                     selectedLabel={selectedLabel}
                     selectedFolder={selectedFolder}
+                    sidebarItems={sidebarItems}
                 />
 
                 <main className="flex-1 flex flex-col min-w-0 bg-[#0f1014] h-full relative">

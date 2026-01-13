@@ -16,31 +16,56 @@ import {
 } from 'lucide-react';
 import { api } from '../api';
 import { useDroppable, useDraggable } from '@dnd-kit/core';
+import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
+import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable';
 
-const DroppableNavButton = ({ id, icon: Icon, label, isActive, onClick, isOverStyle, data }) => {
-    const { isOver, setNodeRef } = useDroppable({
-        id: id,
-        data: data || { type: 'sidebar', target: id }
-    });
+const SortableSidebarItem = ({ id, icon: Icon, label, isActive, onClick, data, isFolder, onDelete }) => {
+    const {
+        attributes,
+        listeners,
+        setNodeRef,
+        transform,
+        transition,
+        isDragging,
+        isOver
+    } = useSortable({ id, data });
+
+    const style = {
+        transform: CSS.Transform.toString(transform),
+        transition,
+        opacity: isDragging ? 0.5 : 1,
+    };
 
     return (
-        <button
-            ref={setNodeRef}
-            className={`nav-item w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all ${isActive ? 'bg-blue-500/10 text-blue-400' : 'text-gray-400 hover:text-gray-200 hover:bg-white/5'
-                } ${isOver ? 'bg-blue-500/20 border-blue-400 shadow-[0_0_15px_rgba(59,130,246,0.3)]' : ''}`}
-            onClick={onClick}
-        >
-            {Icon && <Icon size={18} className={isOver ? 'text-blue-400' : ''} />}
-            {!Icon && <div className="w-2 h-2 rounded-full" style={{ backgroundColor: data?.color || '#3B82F6' }} />}
-            <span className={`text-sm font-medium ${isOver ? 'text-blue-400' : ''}`}>{label}</span>
-            {isActive && !isOver && (
-                <motion.div
-                    className="absolute left-0 w-1 h-6 bg-blue-500 rounded-r-full"
-                    layoutId="activeIndicator"
-                />
+        <div ref={setNodeRef} style={style} {...attributes} {...listeners} className="relative group">
+            <button
+                className={`nav-item w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all ${isActive ? 'bg-blue-500/10 text-blue-400' : 'text-gray-400 hover:text-gray-200 hover:bg-white/5'
+                    } ${isOver && !isDragging ? 'bg-blue-500/20 border-blue-400 shadow-[0_0_15px_rgba(59,130,246,0.3)]' : ''}`}
+                onClick={onClick}
+            >
+                {Icon && <Icon size={18} className={isOver ? 'text-blue-400' : ''} />}
+                {!Icon && <div className="w-2 h-2 rounded-full" style={{ backgroundColor: data?.color || '#3B82F6' }} />}
+                <span className={`text-sm font-medium ${isOver ? 'text-blue-400' : ''}`}>{label}</span>
+                {isActive && !isOver && (
+                    <motion.div
+                        className="absolute left-0 w-1 h-6 bg-blue-500 rounded-r-full"
+                        layoutId="activeIndicator"
+                    />
+                )}
+            </button>
+            {isFolder && onDelete && (
+                <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-all">
+                    <button
+                        onPointerDown={(e) => e.stopPropagation()}
+                        onClick={onDelete}
+                        className="p-1.5 text-gray-600 hover:text-red-400 transition-all rounded hover:bg-white/5"
+                    >
+                        <Trash2 size={12} />
+                    </button>
+                </div>
             )}
-        </button>
+        </div>
     );
 };
 
@@ -96,19 +121,19 @@ const DraggableSidebarLabel = ({ id, label, isActive, onClick, color, data }) =>
     );
 };
 
-export function Sidebar({ activeTab, onNavigate, labels = [], onLabelsChange, selectedLabel, folders = [], onFoldersChange, selectedFolder }) {
+export function Sidebar({ activeTab, onNavigate, labels = [], onLabelsChange, selectedLabel, folders = [], onFoldersChange, selectedFolder, sidebarItems = [] }) {
     const [isAddingLabel, setIsAddingLabel] = useState(false);
     const [newLabelName, setNewLabelName] = useState('');
     const [isAddingFolder, setIsAddingFolder] = useState(false);
     const [newFolderName, setNewFolderName] = useState('');
     const [editingLabelId, setEditingLabelId] = useState(null);
 
-    const menuItems = [
-        { id: 'active', label: 'Active Tasks', icon: Layout },
-        { id: 'closed', label: 'Closed Tasks', icon: CheckSquare },
-        { id: 'assistant', label: 'Assistant', icon: MessageSquare },
-        { id: 'trash', label: 'Trash', icon: Trash2 },
-    ];
+    const systemItems = {
+        'active': { label: 'Active Tasks', icon: Layout },
+        'closed': { label: 'Closed Tasks', icon: CheckSquare },
+        'assistant': { label: 'Assistant', icon: MessageSquare },
+        'trash': { label: 'Trash', icon: Trash2 },
+    };
 
     const handleAddLabel = async (e) => {
         if (e) e.preventDefault();
@@ -220,18 +245,43 @@ export function Sidebar({ activeTab, onNavigate, labels = [], onLabelsChange, se
                             <Plus size={14} />
                         </button>
                     </div>
-                    {menuItems.map((item) => (
-                        <DroppableNavButton
-                            key={item.id}
-                            id={`sidebar-${item.id}`}
-                            icon={item.icon}
-                            label={item.label}
-                            isActive={activeTab === item.id && !selectedLabel}
-                            onClick={() => onNavigate(item.id, null)}
-                        />
-                    ))}
-
-
+                    {/* Unified Sortable List */}
+                    <SortableContext items={sidebarItems.map(id => `sidebar-${id}`)} strategy={verticalListSortingStrategy}>
+                        {sidebarItems.map(itemId => {
+                            if (itemId.startsWith('folder-')) {
+                                const folderId = itemId.replace('folder-', '');
+                                const folder = folders.find(f => f._id === folderId);
+                                if (!folder) return null;
+                                return (
+                                    <SortableSidebarItem
+                                        key={itemId}
+                                        id={`sidebar-${itemId}`}
+                                        icon={Folder}
+                                        label={folder.name}
+                                        isActive={activeTab === 'folder' && selectedFolder === folder._id}
+                                        onClick={() => onNavigate('folder', null, folder._id)}
+                                        data={{ type: 'folder', target: folder._id, folderId: folder._id }}
+                                        isFolder={true}
+                                        onDelete={(e) => handleDeleteFolder(e, folder._id)}
+                                    />
+                                );
+                            } else {
+                                const item = systemItems[itemId];
+                                if (!item) return null;
+                                return (
+                                    <SortableSidebarItem
+                                        key={itemId}
+                                        id={`sidebar-${itemId}`}
+                                        icon={item.icon}
+                                        label={item.label}
+                                        isActive={activeTab === itemId && !selectedLabel}
+                                        onClick={() => onNavigate(itemId, null)}
+                                        data={{ type: 'sidebar', target: itemId }}
+                                    />
+                                );
+                            }
+                        })}
+                    </SortableContext>
 
                     <div className="space-y-1 pt-2 border-t border-white/5 mt-2">
                         <AnimatePresence>
@@ -259,27 +309,6 @@ export function Sidebar({ activeTab, onNavigate, labels = [], onLabelsChange, se
                                 </motion.form>
                             )}
                         </AnimatePresence>
-
-                        {folders.map(folder => (
-                            <div key={folder._id} className="relative group">
-                                <DroppableNavButton
-                                    id={`sidebar-folder-${folder._id}`}
-                                    icon={Folder}
-                                    label={folder.name}
-                                    isActive={activeTab === 'folder' && selectedFolder === folder._id}
-                                    onClick={() => onNavigate('folder', null, folder._id)}
-                                    data={{ type: 'folder', target: folder._id, folderId: folder._id }}
-                                />
-                                <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-all">
-                                    <button
-                                        onClick={(e) => handleDeleteFolder(e, folder._id)}
-                                        className="p-1.5 text-gray-600 hover:text-red-400 transition-all rounded hover:bg-white/5"
-                                    >
-                                        <Trash2 size={12} />
-                                    </button>
-                                </div>
-                            </div>
-                        ))}
                     </div>
 
                 </nav>
