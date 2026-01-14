@@ -11,6 +11,7 @@ load_dotenv()
 
 app = Flask(__name__, static_folder='static', static_url_path='')
 from flask_cors import CORS
+from flask_apscheduler import APScheduler
 CORS(app)
 
 @app.route('/')
@@ -492,12 +493,35 @@ def close_task(task_id):
 
 
 # ... existing imports
+# ... existing imports
+# ... existing imports
 from ai_service import AIService
+from skills import TimerSkill
 
 # ... existing code
 
 # Initialize AI Service
+# Initialize AI Service
 ai_service = AIService()
+
+# Initialize Scheduler
+scheduler = APScheduler()
+scheduler.init_app(app)
+
+# Only start scheduler in the reloader child process or if not in debug mode
+if os.environ.get('WERKZEUG_RUN_MAIN') == 'true' or not app.debug:
+    scheduler.start()
+
+# Initialize Skills
+timer_skill = TimerSkill(scheduler, ai_service, db)
+
+# ... existing endpoints
+
+@app.route('/api/tasks/<task_id>/analyze', methods=['POST'])
+# ... (existing code handles this, but I need to make sure I don't break the file structure)
+# I will only touch the Skill Endpoints part in a separate ReplaceChunk if I could, but replace_file_content is single block.
+# Wait, the instruction says 500-ish for init and 864-ish for routes. I should use multi_replace.
+
 
 # ... existing endpoints
 
@@ -867,5 +891,57 @@ def delete_agent(agent_id):
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+# --- Skill Endpoints ---
+
+@app.route('/api/agents/<agent_id>/skills/timer', methods=['POST'])
+def start_timer_skill(agent_id):
+    try:
+        data = request.json
+        # Expect: interval (int), instruction (str), taskIds (list)
+        if not data or 'interval' not in data or 'instruction' not in data:
+            return jsonify({"error": "interval and instruction are required"}), 400
+            
+        interval = int(data['interval'])
+        instruction = data['instruction']
+        task_ids = data.get('taskIds', [])
+        
+        # If no task IDs provided, maybe try to find active tasks for this agent?
+        # For now, require taskIds or defaults to empty (which does nothing but run the timer loop)
+        
+        job_id = timer_skill.start_timer(agent_id, interval, instruction, task_ids)
+        
+        return jsonify({
+            "message": "Timer started",
+            "job_id": job_id,
+            "config": {
+                "interval": interval,
+                "instruction": instruction
+            }
+        }), 201
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+@app.route('/api/agents/<agent_id>/skills/timer', methods=['GET'])
+def get_active_timers(agent_id):
+    try:
+        timers = timer_skill.get_agent_timers(agent_id)
+        return jsonify(timers), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+@app.route('/api/agents/<agent_id>/skills/timer/<job_id>', methods=['DELETE'])
+def stop_timer_skill(agent_id, job_id):
+    try:
+        success = timer_skill.stop_timer(job_id)
+        if success:
+            return jsonify({"message": "Timer stopped"}), 200
+        else:
+            return jsonify({"error": "Timer job not found"}), 404
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
 if __name__ == '__main__':
-    app.run(debug=True, port=5001)
+    app.run(debug=True, port=5001, use_reloader=False)

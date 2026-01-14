@@ -93,3 +93,47 @@ class AIService:
             print(f"Chat Error: {e}")
             return "I encountered an error trying to process your request."
 
+    def execute_instruction(self, instruction, task_context, current_time):
+        if not self.client:
+            print("AI Service: Missing API Key")
+            return None
+
+        prompt = f"""
+        You are an AI Agent executing a timed instruction.
+        
+        Instruction: "{instruction}"
+        Current Time: {current_time}
+        
+        Task Context:
+        Title: {task_context.get('title')}
+        Status: {task_context.get('status')}
+        Latest Update: {task_context.get('last_update', 'None')}
+        
+        Based on the instruction, determine the action to take.
+        Supported actions:
+        1. "add_update": Add a text update to the task.
+        
+        Return a VALID JSON object (no markdown formatting):
+        {{
+            "action": "add_update",
+            "content": "The text content to add to the task updates"
+        }}
+        """
+        
+        try:
+            response = self.client.models.generate_content(
+                model='gemini-2.0-flash-exp', 
+                contents=prompt,
+                config={
+                    'response_mime_type': 'application/json'
+                }
+            )
+            
+            if hasattr(response, 'parsed') and response.parsed:
+                return response.parsed
+                
+            return json.loads(response.text)
+        except Exception as e:
+            print(f"Instruction Error: {e}")
+            return None
+

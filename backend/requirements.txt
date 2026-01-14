@@ -5,3 +5,5 @@ python-dotenv
 google-genai
 gunicorn
 certifi
+Flask-APScheduler
+Flask-APScheduler
