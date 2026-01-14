@@ -308,7 +308,7 @@ export const TaskItem = forwardRef(({ task, onUpdate, showTags, style, dragHandl
             initial={isOverlay ? false : { opacity: 0 }}
             animate={isOverlay ? false : { opacity: baseStyle.opacity }}
             exit={isOverlay ? false : { opacity: 0 }}
-            className={`group hover:bg-white/[0.04] transition-colors border-b border-white/5 bg-transparent ${expanded || globalExpanded ? 'bg-white/[0.02]' : ''}`}
+            className={`group hover:bg-white/[0.03] transition-colors border-b border-white/5 bg-transparent ${expanded || globalExpanded ? 'bg-white/[0.015]' : ''}`}
         >
             <div
                 className="flex items-center gap-4 cursor-pointer pr-4"
@@ -379,7 +379,7 @@ export const TaskItem = forwardRef(({ task, onUpdate, showTags, style, dragHandl
                     ) : (
                         <div className="flex-1 min-w-0 flex items-center gap-2 group/title">
                             <h3
-                                className={`font-medium text-gray-200 text-left ${expanded || globalExpanded || showFullTitles ? 'break-words whitespace-pre-wrap cursor-text' : 'truncate'} ${(task.status === 'Deleted' || task.status === 'deleted') ? 'line-through opacity-50' : ''}`}
+                                className={`font-medium text-gray-400 text-left ${expanded || globalExpanded || showFullTitles ? 'break-words whitespace-pre-wrap cursor-text' : 'truncate'} ${(task.status === 'Deleted' || task.status === 'deleted') ? 'line-through opacity-50' : ''}`}
                                 style={{ fontSize: `${fontSize}px`, lineHeight: '1.4' }}
                                 onClick={(e) => {
                                     if (expanded || globalExpanded || showFullTitles) {
@@ -393,8 +393,8 @@ export const TaskItem = forwardRef(({ task, onUpdate, showTags, style, dragHandl
                             >
                                 {task.title}
                                 {showPreview && !(expanded || globalExpanded) && task.updates && task.updates.length > 0 && (
-                                    <span className="text-gray-500 font-normal ml-2" style={{ fontSize: `${Math.max(11, fontSize - 1)}px` }}>
-                                        <span className="text-gray-600 mr-1">—</span>
+                                    <span className="text-gray-600 font-normal ml-2" style={{ fontSize: `${Math.max(11, fontSize - 1)}px` }}>
+                                        <span className="text-gray-700 mr-1">—</span>
                                         {task.updates[task.updates.length - 1].content}
                                     </span>
                                 )}
@@ -438,7 +438,7 @@ export const TaskItem = forwardRef(({ task, onUpdate, showTags, style, dragHandl
 
                 <div className="flex items-center gap-4">
                     <span
-                        className="text-[10px] text-gray-500 font-mono whitespace-nowrap"
+                        className="text-[10px] text-gray-600 font-mono whitespace-nowrap"
                     >
                         {(() => {
                             const lastUpdate = task.updates && task.updates.length > 0
