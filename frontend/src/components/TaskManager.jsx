@@ -915,7 +915,7 @@ export const TaskManager = () => {
                             )}
                             <button
                                 onClick={() => setShowTags(!showTags)}
-                                className={`px-1.5 py-1.5 rounded-lg transition-colors flex items-center ${showTags ? 'text-blue-400 bg-blue-400/10' : 'text-gray-500 hover:text-gray-300'}`}
+                                className={`px-1.5 py-1.5 rounded-lg transition-colors flex items-center gap-1.5 ${showTags ? 'text-blue-400 bg-blue-400/10' : 'text-gray-500 hover:text-gray-300'}`}
                                 title="Toggle Tags Visibility"
                             >
                                 <TagIcon size={16} />
@@ -928,7 +928,6 @@ export const TaskManager = () => {
                                     className={`px-1.5 py-1.5 rounded-lg transition-colors flex items-center ${globalExpanded ? 'text-blue-400 bg-blue-400/10' : 'text-gray-500 hover:text-gray-300'}`}
                                     title={globalExpanded ? 'Collapse All' : 'Expand All'}
                                 >
-                                    {globalExpanded ? <ChevronsDownUp size={16} /> : <ChevronsUpDown size={16} />}
                                     <span className="text-xs font-medium">{globalExpanded ? 'Collapse All' : 'Expand All'}</span>
                                 </button>
                             )}
