@@ -36,6 +36,7 @@ export const TaskManager = () => {
     const [selectedLabel, setSelectedLabel] = useState(null);
     const [selectedFolder, setSelectedFolder] = useState(null);
     const [newTaskTitle, setNewTaskTitle] = useState('');
+    const newTaskTextareaRef = useRef(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
     const [showTags, setShowTags] = useState(false);
@@ -183,6 +184,14 @@ export const TaskManager = () => {
     };
 
     const fetchRequestId = useRef(0);
+    // [NEW] Auto-resize new task title textarea
+    useEffect(() => {
+        if (newTaskTextareaRef.current) {
+            newTaskTextareaRef.current.style.height = 'auto';
+            newTaskTextareaRef.current.style.height = `${newTaskTextareaRef.current.scrollHeight}px`;
+        }
+    }, [newTaskTitle, isCreating]);
+
     const fetchTasks = async (useLoading = true) => {
         const requestId = ++fetchRequestId.current;
         if (activeTab === 'assistant') {
@@ -1039,16 +1048,21 @@ export const TaskManager = () => {
                                                     handleCreateTask(e);
                                                 }}
                                             >
-                                                <input
-                                                    type="text"
+                                                <textarea
+                                                    ref={newTaskTextareaRef}
                                                     autoFocus
-                                                    className="flex-1 bg-gray-900 border border-gray-800 rounded-xl px-5 py-4 text-base focus:outline-none focus:border-blue-500 focus:ring-0 transition-all placeholder:text-gray-600"
+                                                    className="flex-1 bg-gray-900 border border-gray-800 rounded-xl px-5 py-4 text-base focus:outline-none focus:border-blue-500 focus:ring-0 transition-all placeholder:text-gray-600 resize-none overflow-hidden"
                                                     placeholder={selectedFolder ? `Add task to ${stats.folders[selectedFolder] ? folders.find(f => f._id === selectedFolder)?.name : 'folder'}...` : selectedLabel ? `Add task to ${selectedLabel}...` : "What needs to be done?"}
                                                     value={newTaskTitle}
                                                     onChange={(e) => setNewTaskTitle(e.target.value)}
                                                     onKeyDown={(e) => {
                                                         if (e.key === 'Escape') setIsCreating(false);
+                                                        if (e.key === 'Enter' && !e.shiftKey) {
+                                                            e.preventDefault();
+                                                            handleCreateTask(e);
+                                                        }
                                                     }}
+                                                    rows={1}
                                                 />
                                                 <button
                                                     type="submit"
