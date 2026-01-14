@@ -950,6 +950,26 @@ export const TaskManager = () => {
                         </div>
 
                         <div className="flex items-center gap-4">
+                            {((activeTab === 'active' || activeTab === 'folder' || activeTab === 'label') || (selectedLabel)) && (
+                                <button
+                                    onClick={() => {
+                                        setIsCreating(!isCreating);
+                                    }}
+                                    className={`px-1.5 py-1.5 rounded-lg transition-colors flex items-center ${isCreating ? 'bg-blue-500 text-white shadow-lg shadow-blue-500/20' : 'bg-blue-500/10 text-blue-400 hover:bg-blue-500/20'}`}
+                                >
+                                    <span className="text-xs font-medium">{isCreating ? 'Cancel' : 'New Task'}</span>
+                                </button>
+                            )}
+
+                            {activeTab === 'assistant' && (
+                                <button
+                                    onClick={() => setIsCreatingAgent(true)}
+                                    className="px-1.5 py-1.5 rounded-lg transition-colors flex items-center text-blue-400 bg-blue-400/10 hover:bg-blue-400/20"
+                                    title="Hire Agent"
+                                >
+                                    <span className="text-xs font-medium">Hire Agent</span>
+                                </button>
+                            )}
                             {activeTab === 'trash' && tasks.length > 0 && (
                                 <button
                                     onClick={handleEmptyTrash}
@@ -1017,26 +1037,9 @@ export const TaskManager = () => {
                                 </div>
                             )}
 
-                            {activeTab === 'assistant' && (
-                                <button
-                                    onClick={() => setIsCreatingAgent(true)}
-                                    className="px-1.5 py-1.5 rounded-lg transition-colors flex items-center text-blue-400 bg-blue-400/10 hover:bg-blue-400/20"
-                                    title="Hire Agent"
-                                >
-                                    <span className="text-xs font-medium">Hire Agent</span>
-                                </button>
-                            )}
 
-                            {((activeTab === 'active' || activeTab === 'folder' || activeTab === 'label') || (selectedLabel)) && (
-                                <button
-                                    onClick={() => {
-                                        setIsCreating(!isCreating);
-                                    }}
-                                    className={`px-1.5 py-1.5 rounded-lg transition-colors flex items-center ${isCreating ? 'bg-blue-500 text-white shadow-lg shadow-blue-500/20' : 'bg-blue-500/10 text-blue-400 hover:bg-blue-500/20'}`}
-                                >
-                                    <span className="text-xs font-medium">{isCreating ? 'Cancel' : 'New Task'}</span>
-                                </button>
-                            )}
+
+
 
                             {localStorage.getItem('userProfile') && (
                                 <div className="flex items-center gap-3 bg-gray-900/50 px-4 py-2 rounded-full border border-gray-800">
