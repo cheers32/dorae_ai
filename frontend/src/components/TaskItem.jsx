@@ -61,6 +61,55 @@ const SortableLabel = ({ labelName, color, onDelete }) => {
     );
 };
 
+const SortableAttachment = ({ attachment, onDelete, availableLabels, onClick }) => {
+    const {
+        attributes,
+        listeners,
+        setNodeRef,
+        transform,
+        transition,
+        isDragging,
+    } = useSortable({ id: attachment._id });
+
+    // Determine dot color
+    let dotColor = '#3B82F6'; // Default blue
+    if (attachment.labels && attachment.labels.length > 0) {
+        const labelColor = availableLabels.find(l => l.name === attachment.labels[0])?.color;
+        if (labelColor) dotColor = labelColor;
+    } else if (attachment.status === 'completed' || attachment.status === 'Closed') {
+        dotColor = '#22c55e'; // Green
+    }
+
+    const style = {
+        transform: CSS.Transform.toString(transform),
+        transition,
+        opacity: isDragging ? 0.3 : 1,
+    };
+
+    return (
+        <div
+            ref={setNodeRef}
+            style={style}
+            {...attributes}
+            {...listeners}
+            className="flex items-center gap-2 bg-white/5 border border-white/10 rounded-lg px-3 py-1.5 text-xs text-gray-300 group/chip hover:bg-white/10 transition-colors cursor-pointer active:cursor-grabbing"
+            onClick={(e) => {
+                // Prevent drag from triggering click immediately if needed, 
+                // but usually standard click works fine unless dragging
+                if (!isDragging && onClick) {
+                    onClick(attachment);
+                }
+            }}
+        >
+            <div
+                className="w-2 h-2 rounded-full shrink-0"
+                style={{ backgroundColor: dotColor }}
+            />
+            <span>{attachment.title}</span>
+        </div>
+    );
+};
+
 const parseUTCDate = (dateString) => {
     if (!dateString) return new Date();
     // Ensure the date string ends with Z to trigger UTC parsing
@@ -68,7 +117,7 @@ const parseUTCDate = (dateString) => {
     return new Date(normalized);
 };
 
-export const TaskItem = forwardRef(({ task, onUpdate, showTags, style, dragHandleProps, isOverlay, availableLabels = [], onSendToWorkarea, onRemoveFromWorkarea, isWorkarea, defaultExpanded }, ref) => {
+export const TaskItem = forwardRef(({ task, onUpdate, showTags, style, dragHandleProps, isOverlay, availableLabels = [], onSendToWorkarea, onRemoveFromWorkarea, isWorkarea, defaultExpanded, onAttachmentClick, onTaskClick }, ref) => {
     const [expanded, setExpanded] = useState(defaultExpanded || false);
     const [newDetail, setNewDetail] = useState('');
     const [isSubmitting, setIsSubmitting] = useState(false);
@@ -94,6 +143,13 @@ export const TaskItem = forwardRef(({ task, onUpdate, showTags, style, dragHandl
     useEffect(() => {
         setLocalLabels(task.labels || []);
     }, [task.labels]);
+
+    // Auto-expand when defaultExpanded changes to true
+    useEffect(() => {
+        if (defaultExpanded === true) {
+            setExpanded(true);
+        }
+    }, [defaultExpanded]);
 
     useEffect(() => {
         if (isEditingTitle && textareaRef.current) {
@@ -280,6 +336,23 @@ export const TaskItem = forwardRef(({ task, onUpdate, showTags, style, dragHandl
         }
     };
 
+    const handleAttachmentDragEnd = async (event) => {
+        const { active, over } = event;
+
+        // If dropped outside, remove the attachment
+        if (!over) {
+            const currentAttachments = task.attachments || [];
+            const newAttachments = currentAttachments.filter(a => a._id !== active.id);
+
+            try {
+                await api.updateTask(task._id, { attachments: newAttachments });
+                onUpdate();
+            } catch (err) {
+                console.error("Failed to unlink attachment", err);
+            }
+        }
+    };
+
 
 
     return (
@@ -351,7 +424,15 @@ export const TaskItem = forwardRef(({ task, onUpdate, showTags, style, dragHandl
                         <div className="flex-1 min-w-0 flex items-start gap-2 group/title">
                             <h3
                                 className={`font-medium text-gray-200 text-left ${expanded ? 'break-words whitespace-pre-wrap cursor-text' : 'truncate'} ${(task.status === 'Deleted' || task.status === 'deleted') ? 'line-through opacity-50' : ''}`}
-                                onClick={(e) => expanded && e.stopPropagation()}
+                                onClick={(e) => {
+                                    if (expanded) {
+                                        e.stopPropagation();
+                                        // If in workarea and onTaskClick is provided, navigate to the task
+                                        if (isWorkarea && onTaskClick) {
+                                            onTaskClick();
+                                        }
+                                    }
+                                }}
                             >
                                 {task.title}
                             </h3>
@@ -446,21 +527,27 @@ export const TaskItem = forwardRef(({ task, onUpdate, showTags, style, dragHandl
                                 {/* Attachments Chips */}
                                 {task.attachments && task.attachments.length > 0 && (
                                     <div className="mb-4 pl-28 pr-4">
-                                        <h4 className="text-[10px] uppercase tracking-wider text-gray-500 font-bold mb-2">Attached Tasks</h4>
+
                                         <div className="flex flex-wrap gap-2">
-                                            {task.attachments.map(att => (
-                                                <div key={att._id} className="flex items-center gap-2 bg-white/5 border border-white/10 rounded-lg px-3 py-1.5 text-xs text-gray-300 group/chip hover:bg-white/10 transition-colors">
-                                                    <Paperclip size={12} className="text-blue-400" />
-                                                    <span>{att.title}</span>
-                                                    <button
-                                                        onClick={() => handleUnlinkAttachment(att._id)}
-                                                        className="ml-1 p-0.5 text-gray-500 hover:text-red-400 opacity-0 group-hover/chip:opacity-100 transition-opacity"
-                                                        title="Unlink Attachment"
-                                                    >
-                                                        <X size={12} />
-                                                    </button>
-                                                </div>
-                                            ))}
+                                            <DndContext
+                                                sensors={sensors}
+                                                collisionDetection={pointerWithinTaskItem} // Use custom strategy to detect drag out of item
+                                                onDragEnd={handleAttachmentDragEnd}
+                                            >
+                                                <SortableContext
+                                                    items={task.attachments.map(a => a._id)}
+                                                    strategy={horizontalListSortingStrategy}
+                                                >
+                                                    {task.attachments.map(att => (
+                                                        <SortableAttachment
+                                                            key={att._id}
+                                                            attachment={att}
+                                                            availableLabels={availableLabels}
+                                                            onClick={onAttachmentClick}
+                                                        />
+                                                    ))}
+                                                </SortableContext>
+                                            </DndContext>
                                         </div>
                                     </div>
                                 )}
@@ -512,13 +599,6 @@ export const TaskItem = forwardRef(({ task, onUpdate, showTags, style, dragHandl
                                                                 {update.content.replace('AI Plan: ', '')}
                                                             </p>
                                                         </div>
-                                                        <button
-                                                            className="absolute top-2 right-2 p-1 text-blue-400/50 hover:text-red-400 opacity-0 group-hover/ai:opacity-100 transition-all"
-                                                            onClick={() => handleDeleteUpdate(update.id)}
-                                                            title="Delete Analysis"
-                                                        >
-                                                            <X size={12} />
-                                                        </button>
                                                     </div>
                                                 ) : (
                                                     <div className="group/content flex items-start gap-2">

@@ -41,6 +41,7 @@ export const TaskManager = () => {
     const [activeId, setActiveId] = useState(null);
     const [history, setHistory] = useState([]);
     const [workareaTasks, setWorkareaTasks] = useState([]); // [NEW] Workarea logic
+    const [autoExpandTaskId, setAutoExpandTaskId] = useState(null); // ID of task to auto-expand after navigation
 
     // Filter out workarea tasks from main list
     const visibleTasks = tasks.filter(t => !workareaTasks.find(wt => wt._id === t._id));
@@ -235,6 +236,17 @@ export const TaskManager = () => {
         fetchTasks(true);
         fetchStats();
     }, [activeTab, selectedLabel, selectedFolder]);
+
+    // Reset autoExpandTaskId after tasks are rendered
+    useEffect(() => {
+        if (autoExpandTaskId && tasks.some(t => t._id === autoExpandTaskId)) {
+            // Clear after a short delay to allow the expansion to take effect
+            const timer = setTimeout(() => {
+                setAutoExpandTaskId(null);
+            }, 100);
+            return () => clearTimeout(timer);
+        }
+    }, [tasks, autoExpandTaskId]);
 
     const [dropAnimation, setDropAnimation] = useState(null); // null by default, or undefined
 
@@ -557,7 +569,8 @@ export const TaskManager = () => {
                                 _id: task._id,
                                 title: task.title,
                                 folderId: task.folderId,
-                                status: task.status
+                                status: task.status,
+                                labels: task.labels
                             };
 
                             const currentAttachments = focusedTask.attachments || [];
@@ -622,6 +635,33 @@ export const TaskManager = () => {
     }
 
     const activeTask = activeId ? tasks.find(t => t._id === activeId) : null;
+
+    const handleNavigateToTask = (attachment) => {
+        // Check if the task is already visible in the current list
+        const isTaskCurrentlyVisible = tasks.some(t => t._id === attachment._id);
+
+        if (isTaskCurrentlyVisible) {
+            // If task is already in current list, reset then expand it
+            // This ensures the expansion works even when clicking multiple chips in the same folder
+            setAutoExpandTaskId(null);
+            setTimeout(() => {
+                setAutoExpandTaskId(attachment._id);
+            }, 50);
+            return;
+        }
+
+        // If not currently visible, navigate to the appropriate view
+        if (attachment.folderId) {
+            // If it has a folderId, navigate to that folder
+            changeView('folder', null, attachment.folderId);
+        } else {
+            // If no folderId, assume it's an 'active' task (unfiled)
+            changeView('active', null, null);
+        }
+
+        // Set the task to auto-expand after navigation and fetch
+        setAutoExpandTaskId(attachment._id);
+    };
 
     return (
         <DndContext
@@ -776,6 +816,8 @@ export const TaskManager = () => {
                                                                 isWorkarea={true}
                                                                 defaultExpanded={task._forceExpanded}
                                                                 onRemoveFromWorkarea={() => handleRemoveFromWorkarea(task._id)}
+                                                                onAttachmentClick={handleNavigateToTask}
+                                                                onTaskClick={() => handleNavigateToTask(task)}
                                                             />
                                                         ))}
                                                     </div>
@@ -842,6 +884,9 @@ export const TaskManager = () => {
                                                             showTags={showTags}
                                                             availableLabels={labels}
                                                             onSendToWorkarea={() => handleSendToWorkarea(task)}
+                                                            isWorkarea={false}
+                                                            defaultExpanded={autoExpandTaskId === task._id}
+                                                            onAttachmentClick={handleNavigateToTask}
                                                         />
                                                     ))}
                                                 </div>
