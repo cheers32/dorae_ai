@@ -309,6 +309,16 @@ def delete_task_update(task_id, update_id):
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
+@app.route('/api/tasks/<task_id>', methods=['GET'])
+def get_task(task_id):
+    try:
+        task = tasks_collection.find_one({"_id": ObjectId(task_id)})
+        if not task:
+            return jsonify({"error": "Task not found"}), 404
+        return jsonify(serialize_doc(task)), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
 @app.route('/api/tasks/<task_id>', methods=['PUT'])
 def update_task(task_id):
     try:

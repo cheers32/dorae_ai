@@ -24,6 +24,12 @@ export const api = {
         return res.json();
     },
 
+    getTask: async (taskId) => {
+        const res = await fetch(`${API_BASE}/tasks/${taskId}`);
+        if (!res.ok) throw new Error('Task not found');
+        return res.json();
+    },
+
     getFolders: async () => {
         const query = new URLSearchParams();
         const userEmail = getUserEmail();

@@ -61,6 +61,7 @@ const SortableLabel = ({ labelName, color, onDelete }) => {
     );
 };
 
+
 const SortableAttachment = ({ attachment, onDelete, availableLabels, onClick }) => {
     const {
         attributes,
@@ -94,8 +95,6 @@ const SortableAttachment = ({ attachment, onDelete, availableLabels, onClick }) 
             {...listeners}
             className="flex items-center gap-2 bg-white/5 border border-white/10 rounded-lg px-3 py-1.5 text-xs text-gray-300 group/chip hover:bg-white/10 transition-colors cursor-pointer active:cursor-grabbing"
             onClick={(e) => {
-                // Prevent drag from triggering click immediately if needed, 
-                // but usually standard click works fine unless dragging
                 if (!isDragging && onClick) {
                     onClick(attachment);
                 }
@@ -534,19 +533,14 @@ export const TaskItem = forwardRef(({ task, onUpdate, showTags, style, dragHandl
                                                 collisionDetection={pointerWithinTaskItem} // Use custom strategy to detect drag out of item
                                                 onDragEnd={handleAttachmentDragEnd}
                                             >
-                                                <SortableContext
-                                                    items={task.attachments.map(a => a._id)}
-                                                    strategy={horizontalListSortingStrategy}
-                                                >
-                                                    {task.attachments.map(att => (
-                                                        <SortableAttachment
-                                                            key={att._id}
-                                                            attachment={att}
-                                                            availableLabels={availableLabels}
-                                                            onClick={onAttachmentClick}
-                                                        />
-                                                    ))}
-                                                </SortableContext>
+                                                {task.attachments.map(att => (
+                                                    <SortableAttachment
+                                                        key={att._id}
+                                                        attachment={att}
+                                                        availableLabels={availableLabels}
+                                                        onClick={onAttachmentClick}
+                                                    />
+                                                ))}
                                             </DndContext>
                                         </div>
                                     </div>

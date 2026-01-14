@@ -40,7 +40,19 @@ export const TaskManager = () => {
     const [isCreating, setIsCreating] = useState(false);
     const [activeId, setActiveId] = useState(null);
     const [history, setHistory] = useState([]);
-    const [workareaTasks, setWorkareaTasks] = useState([]); // [NEW] Workarea logic
+    const [workareaTasks, setWorkareaTasks] = useState(() => {
+        // Initialize from localStorage
+        const saved = localStorage.getItem('workareaTasks');
+        if (saved) {
+            try {
+                return JSON.parse(saved);
+            } catch (e) {
+                console.error('Failed to parse workarea tasks from localStorage', e);
+                return [];
+            }
+        }
+        return [];
+    }); // [NEW] Workarea logic
     const [autoExpandTaskId, setAutoExpandTaskId] = useState(null); // ID of task to auto-expand after navigation
 
     // Filter out workarea tasks from main list
@@ -237,6 +249,35 @@ export const TaskManager = () => {
         fetchStats();
     }, [activeTab, selectedLabel, selectedFolder]);
 
+    // Save workarea tasks to localStorage whenever they change
+    useEffect(() => {
+        localStorage.setItem('workareaTasks', JSON.stringify(workareaTasks));
+    }, [workareaTasks]);
+
+    // Refresh workarea tasks from database on mount to get latest data including attachments
+    useEffect(() => {
+        const refreshWorkareaFromDB = async () => {
+            const savedTaskIds = workareaTasks.map(t => t._id);
+            if (savedTaskIds.length > 0) {
+                try {
+                    // Fetch fresh data for workarea tasks from the database
+                    const freshTasks = await Promise.all(
+                        savedTaskIds.map(id => api.getTask(id).catch(() => null))
+                    );
+                    const validTasks = freshTasks.filter(t => t !== null);
+                    if (validTasks.length > 0) {
+                        setWorkareaTasks(validTasks.map(t => ({ ...t, _forceExpanded: true })));
+                    } else {
+                        setWorkareaTasks([]);
+                    }
+                } catch (err) {
+                    console.error('Failed to refresh workarea tasks', err);
+                }
+            }
+        };
+        refreshWorkareaFromDB();
+    }, []); // Run once on mount
+
     // Reset autoExpandTaskId after tasks are rendered
     useEffect(() => {
         if (autoExpandTaskId && tasks.some(t => t._id === autoExpandTaskId)) {
@@ -365,6 +406,8 @@ export const TaskManager = () => {
 
     const handleRemoveFromWorkarea = (taskId) => {
         setWorkareaTasks(prev => prev.filter(t => t._id !== taskId));
+        // Refresh tasks to show updated attachments in main list
+        fetchTasks(false);
     };
 
     const handleDragEnd = async (event) => {
