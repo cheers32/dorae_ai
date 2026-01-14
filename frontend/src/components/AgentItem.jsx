@@ -2,10 +2,48 @@ import React, { useState } from 'react';
 import { api } from '../api';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Brain, Cpu, MessageSquare, Zap, Target, Layers, Pencil, Trash2, Check, X } from 'lucide-react';
-import { useDroppable } from '@dnd-kit/core';
+import { useDroppable, useDraggable, DndContext, PointerSensor, useSensor, useSensors } from '@dnd-kit/core';
 
 
 
+
+// Draggable Task Chip Component
+const DraggableTaskChip = ({ task, labelColor, onUnassign }) => {
+    const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
+        id: `agent-task-${task._id}`,
+        data: { task, type: 'agent-task-chip' }
+    });
+
+    const style = {
+        transform: transform ? `translate3d(${transform.x}px, ${transform.y}px, 0)` : undefined,
+        opacity: isDragging ? 0.5 : 1,
+        cursor: 'grab'
+    };
+
+    return (
+        <div
+            ref={setNodeRef}
+            {...attributes}
+            {...listeners}
+            className="border px-2.5 py-1 rounded-lg text-xs font-medium flex items-center gap-1.5 shadow-sm transition-colors"
+            style={{
+                ...style,
+                backgroundColor: `${labelColor}1a`,
+                borderColor: `${labelColor}33`,
+                color: labelColor
+            }}
+        >
+            <span
+                className="w-1.5 h-1.5 rounded-full shadow-sm"
+                style={{
+                    backgroundColor: labelColor,
+                    boxShadow: `0 0 8px ${labelColor}80`
+                }}
+            ></span>
+            <span className="truncate max-w-[150px] text-gray-300">{task.title}</span>
+        </div>
+    );
+};
 
 export const AgentItem = ({ agent, onFocus, onEdit, onDelete, isFocused, availableLabels }) => {
     const { setNodeRef, isOver } = useDroppable({
@@ -47,8 +85,8 @@ export const AgentItem = ({ agent, onFocus, onEdit, onDelete, isFocused, availab
         setIsChatLoading(true);
 
         try {
-            // Using the global chat API for now
-            const data = await api.chatWithAI(userMsg);
+            // Pass agent ID to get agent-specific context
+            const data = await api.chatWithAI(userMsg, agent._id);
             setChatMessages(prev => [...prev, { role: 'ai', text: data.reply }]);
         } catch (err) {
             console.error(err);
@@ -80,6 +118,29 @@ export const AgentItem = ({ agent, onFocus, onEdit, onDelete, isFocused, availab
             await onDelete();
         } finally {
             setIsDeleting(false);
+        }
+    };
+
+    const sensors = useSensors(
+        useSensor(PointerSensor, {
+            activationConstraint: { distance: 5 }
+        })
+    );
+
+    const handleTaskChipDragEnd = async (event) => {
+        const { active, over } = event;
+
+        // If dropped outside (no over target), unassign the task
+        if (!over && active.data.current?.type === 'agent-task-chip') {
+            const task = active.data.current.task;
+            try {
+                await api.updateTask(task._id, { assigned_agent_id: null });
+                await api.addUpdate(task._id, `Unassigned from agent: ${agent.name}`, 'execution');
+                // Trigger refresh
+                window.dispatchEvent(new CustomEvent('agent-updated'));
+            } catch (err) {
+                console.error('Failed to unassign task:', err);
+            }
         }
     };
 
@@ -200,31 +261,20 @@ export const AgentItem = ({ agent, onFocus, onEdit, onDelete, isFocused, availab
 
             {/* Assigned Tasks Chips */}
             {agent.active_tasks && agent.active_tasks.length > 0 && (
-                <div className="flex flex-wrap gap-2 mb-4">
-                    {agent.active_tasks.map(task => {
-                        const labelColor = availableLabels?.find(l => l.name === task.labels?.[0])?.color || '#3B82F6';
-                        return (
-                            <div
-                                key={task._id}
-                                className="border px-2.5 py-1 rounded-lg text-xs font-medium flex items-center gap-1.5 shadow-sm transition-colors"
-                                style={{
-                                    backgroundColor: `${labelColor}1a`, // 10% opacity
-                                    borderColor: `${labelColor}33`, // 20% opacity
-                                    color: labelColor // or maybe keep text specific? Let's try matching color.
-                                }}
-                            >
-                                <span
-                                    className="w-1.5 h-1.5 rounded-full shadow-sm"
-                                    style={{
-                                        backgroundColor: labelColor,
-                                        boxShadow: `0 0 8px ${labelColor}80`
-                                    }}
-                                ></span>
-                                <span className="truncate max-w-[150px] text-gray-300">{task.title}</span>
-                            </div>
-                        );
-                    })}
-                </div>
+                <DndContext sensors={sensors} onDragEnd={handleTaskChipDragEnd}>
+                    <div className="flex flex-wrap gap-2 mb-4">
+                        {agent.active_tasks.map(task => {
+                            const labelColor = availableLabels?.find(l => l.name === task.labels?.[0])?.color || '#3B82F6';
+                            return (
+                                <DraggableTaskChip
+                                    key={task._id}
+                                    task={task}
+                                    labelColor={labelColor}
+                                />
+                            );
+                        })}
+                    </div>
+                </DndContext>
             )}
 
             <div className="space-y-3">

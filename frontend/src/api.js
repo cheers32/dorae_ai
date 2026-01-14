@@ -228,11 +228,15 @@ export const api = {
         return res.json();
     },
 
-    chatWithAI: async (message) => {
+    chatWithAI: async (message, agentId = null) => {
+        const body = { message, user_email: getUserEmail() };
+        if (agentId) {
+            body.agent_id = agentId;
+        }
         const res = await fetch(`${API_BASE}/chat`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ message, user_email: getUserEmail() })
+            body: JSON.stringify(body)
         });
         if (!res.ok) throw new Error('Failed to send message');
         return res.json();

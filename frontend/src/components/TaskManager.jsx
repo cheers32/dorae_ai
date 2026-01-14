@@ -622,6 +622,13 @@ export const TaskManager = () => {
             const { task, realId } = getTaskAndList(activeId);
 
             if (task) {
+                // Check if task is already assigned to this agent
+                if (task.assigned_agent_id === agentId) {
+                    console.log(`Task ${realId} is already assigned to agent ${agentId}`);
+                    setActiveId(null);
+                    return;
+                }
+
                 try {
                     // Update assigneeId (backend)
                     await api.updateTask(realId, { assigned_agent_id: agentId });

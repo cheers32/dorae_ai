@@ -548,17 +548,21 @@ def chat():
     try:
         data = request.json
         message = data.get('message')
+        agent_id = data.get('agent_id')  # Optional: filter tasks by agent
+        
         if not message:
             return jsonify({"error": "Message is required"}), 400
             
-        # Fetch all tasks for context (RAG-lite)
-        # In a real app, you might only fetch active ones or limit the number
-        # Fetch all tasks for context (RAG-lite)
+        # Fetch tasks for context (RAG-lite)
         query = {}
         if 'user_email' in data:
             query['user_email'] = data['user_email']
         else:
             query['$or'] = [{'user_email': None}, {'user_email': {'$exists': False}}]
+        
+        # If agent_id is provided, only fetch tasks assigned to this agent
+        if agent_id:
+            query['assigned_agent_id'] = agent_id
             
         cursor = tasks_collection.find(query).sort('created_at', -1)
         tasks = list(cursor)
