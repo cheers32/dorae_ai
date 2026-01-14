@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from 'react';
 import { Send, Sparkles, User } from 'lucide-react';
 import { api } from '../api';
 import { motion, AnimatePresence } from 'framer-motion';
+import ReactMarkdown from 'react-markdown';
 
 export function ChatInterface() {
     const [messages, setMessages] = useState([
@@ -52,8 +53,8 @@ export function ChatInterface() {
                         <div className="message-avatar">
                             {msg.role === 'ai' ? <Sparkles size={16} /> : <User size={16} />}
                         </div>
-                        <div className="message-bubble">
-                            {msg.text}
+                        <div className="message-bubble prose prose-invert prose-sm max-w-none">
+                            <ReactMarkdown>{msg.text}</ReactMarkdown>
                         </div>
                     </motion.div>
                 ))}

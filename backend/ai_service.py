@@ -59,7 +59,7 @@ class AIService:
             print(f"AI Error: {e}")
             return None
 
-    def chat_with_task_context(self, user_message, tasks_context):
+    def chat_with_task_context(self, user_message, tasks_context, agent_context=None):
         if not self.client:
             return "I can't help you with that right now because the API key is missing."
 
@@ -71,15 +71,39 @@ class AIService:
             priority = task.get('priority', 'medium')
             task_list_str += f"- [{status.upper()}] {title} (Priority: {priority})\n"
 
+        # Default Persona
+        agent_name = "Dorae"
+        agent_role = "AI Task Assistant"
+        agent_instruction = "You are Dorae, an AI Task Assistant. Be helpful, concise, and encouraging."
+        agent_notes_str = ""
+
+        # Apply Agent Context if available
+        if agent_context:
+            agent_name = agent_context.get('name', agent_name)
+            agent_role = agent_context.get('role', agent_role)
+            # If description is empty, fallback to default instruction
+            if agent_context.get('description'):
+                agent_instruction = agent_context.get('description')
+            
+            # Format Notes
+            notes = agent_context.get('notes', [])
+            if notes:
+                agent_notes_str = "\nActive Memories/Notes:\n" + "\n".join([f"- {n['content']}" for n in notes])
+
         system_instruction = f"""
-        You are Dorae, an AI Task Assistant.
-        You have access to the user's current tasks:
+        Name: {agent_name}
+        Role: {agent_role}
         
+        System Instructions:
+        {agent_instruction}
+        
+        {agent_notes_str}
+
+        Context (User's Current Tasks):
         {task_list_str}
         
-        Answer the user's questions based on these tasks. 
-        Be helpful, concise, and encouraging. 
-        If asked to summarize, use the provided list.
+        Task: Answer the user's questions based on your persona and the task context.
+        If asked to summarize, use the provided task list.
         """
 
         try:

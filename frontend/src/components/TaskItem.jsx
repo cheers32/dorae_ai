@@ -11,6 +11,7 @@ import {
     Paperclip
 } from 'lucide-react';
 import { api } from '../api';
+import { UpdatesTimeline } from './UpdatesTimeline';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useSortable, SortableContext, horizontalListSortingStrategy, arrayMove } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
@@ -118,19 +119,13 @@ const parseUTCDate = (dateString) => {
 
 export const TaskItem = forwardRef(({ task, onUpdate, showTags, style, dragHandleProps, isOverlay, availableLabels = [], onSendToWorkarea, onRemoveFromWorkarea, isWorkarea, defaultExpanded, onAttachmentClick, onTaskClick }, ref) => {
     const [expanded, setExpanded] = useState(defaultExpanded || false);
-    const [newDetail, setNewDetail] = useState('');
     const [isSubmitting, setIsSubmitting] = useState(false);
-    const [editingId, setEditingId] = useState(null);
-    const [editContent, setEditContent] = useState('');
     const [isEditingTitle, setIsEditingTitle] = useState(false);
     const [editedTitle, setEditedTitle] = useState(task.title);
     const [localLabels, setLocalLabels] = useState(task.labels || []);
     const [localAttachments, setLocalAttachments] = useState(task.attachments || []);
-    const [deletingUpdateId, setDeletingUpdateId] = useState(null);
     const localRef = useRef(null); // Local ref to track the DOM element
     const textareaRef = useRef(null);
-    const updateTextareaRef = useRef(null);
-    const newUpdateTextareaRef = useRef(null);
 
     // Sync refs
     useEffect(() => {
@@ -162,19 +157,7 @@ export const TaskItem = forwardRef(({ task, onUpdate, showTags, style, dragHandl
         }
     }, [isEditingTitle, editedTitle]);
 
-    useEffect(() => {
-        if (editingId && updateTextareaRef.current) {
-            updateTextareaRef.current.style.height = 'auto';
-            updateTextareaRef.current.style.height = `${updateTextareaRef.current.scrollHeight}px`;
-        }
-    }, [editingId, editContent]);
 
-    useEffect(() => {
-        if (newUpdateTextareaRef.current) {
-            newUpdateTextareaRef.current.style.height = 'auto';
-            newUpdateTextareaRef.current.style.height = `${newUpdateTextareaRef.current.scrollHeight}px`;
-        }
-    }, [newDetail]);
 
     const sensors = useSensors(
         useSensor(PointerSensor, {
@@ -251,31 +234,9 @@ export const TaskItem = forwardRef(({ task, onUpdate, showTags, style, dragHandl
         }
     };
 
-    const handleAddDetail = async (e) => {
-        e.preventDefault();
-        if (!newDetail.trim()) return;
 
-        setIsSubmitting(true);
-        try {
-            await api.addUpdate(task._id, newDetail);
-            onUpdate();
-            setNewDetail('');
-        } catch (err) {
-            console.error(err);
-        } finally {
-            setIsSubmitting(false);
-        }
-    };
 
-    const handleSaveEdit = async (updateId) => {
-        try {
-            await api.editUpdate(task._id, updateId, editContent);
-            setEditingId(null);
-            onUpdate();
-        } catch (err) {
-            console.error(err);
-        }
-    };
+
 
     const handleAnalyzeTask = async () => {
         setIsSubmitting(true);
@@ -304,29 +265,6 @@ export const TaskItem = forwardRef(({ task, onUpdate, showTags, style, dragHandl
             setIsDeleting(false);
         }
     };
-
-    // Deprecated in favor of inline isDeleting state
-    // Kept if needed for other contexts, but UI now uses setIsDeleting(true)
-    const handleDeleteTask = (e) => {
-        e.stopPropagation();
-        setIsDeleting(true);
-    };
-
-    const handleDeleteUpdate = async (updateId) => {
-        setDeletingUpdateId(updateId);
-    };
-
-    const confirmDeleteUpdate = async (updateId) => {
-        try {
-            await api.deleteUpdate(task._id, updateId);
-            onUpdate();
-        } catch (err) {
-            console.error(err);
-        } finally {
-            setDeletingUpdateId(null);
-        }
-    };
-
 
     const handleUnlinkAttachment = async (attachmentId) => {
         const currentAttachments = task.attachments || [];
@@ -553,128 +491,23 @@ export const TaskItem = forwardRef(({ task, onUpdate, showTags, style, dragHandl
                                         </div>
                                     </div>
                                 )}
-                                {task.updates.map((update) => (
-                                    <div key={update.id} className="flex gap-4 group/item text-sm">
-                                        <div className="w-24 text-xs text-gray-400 text-right pt-0.5 font-mono shrink-0">
-                                            {format(parseUTCDate(update.timestamp), 'MMM d, HH:mm')}
-                                        </div>
-                                        <div className="relative border-l-2 border-white/5 pl-4 pb-1 flex-1">
-                                            <div className="absolute -left-[5px] top-1.5 w-2 h-2 rounded-full bg-gray-700 ring-4 ring-[#13161c]" />
-                                            {editingId === update.id ? (
-                                                <div className="flex items-center gap-2 w-full">
-                                                    <textarea
-                                                        ref={updateTextareaRef}
-                                                        value={editContent}
-                                                        onChange={(e) => setEditContent(e.target.value)}
-                                                        className="flex-1 bg-gray-900 border border-gray-800 rounded px-3 py-1.5 text-sm text-gray-200 focus:outline-none focus:border-blue-500 transition-all placeholder:text-gray-600 resize-none overflow-hidden"
-                                                        autoFocus
-                                                        onKeyDown={(e) => {
-                                                            if (e.key === 'Enter' && !e.shiftKey) {
-                                                                e.preventDefault();
-                                                                handleSaveEdit(update.id);
-                                                            }
-                                                            if (e.key === 'Escape') setEditingId(null);
-                                                        }}
-                                                        rows={1}
-                                                    />
-                                                    <button
-                                                        className="text-green-400 hover:text-green-300 p-1 bg-green-400/10 rounded"
-                                                        onClick={() => handleSaveEdit(update.id)}
-                                                        title="Save (Enter)"
-                                                    >
-                                                        <Check size={14} />
-                                                    </button>
-                                                    <button
-                                                        className="text-gray-500 hover:text-gray-300 p-1 hover:bg-white/5 rounded"
-                                                        onClick={() => setEditingId(null)}
-                                                        title="Cancel (Esc)"
-                                                    >
-                                                        <X size={14} />
-                                                    </button>
-                                                </div>
-                                            ) : (
-                                                update.type === 'ai_analysis' ? (
-                                                    <div className="mt-1 mb-2 p-3 rounded-lg bg-indigo-500/10 border border-indigo-500/20 w-full relative group/ai shadow-sm">
-                                                        <div className="flex items-start gap-2">
-                                                            <Sparkles size={14} className="text-blue-400 mt-0.5 shrink-0" />
-                                                            <p className="text-sm text-blue-200/80 italic leading-relaxed">
-                                                                {update.content.replace('AI Plan: ', '')}
-                                                            </p>
-                                                        </div>
-                                                    </div>
-                                                ) : (
-                                                    <div className="group/content flex items-start gap-2">
-                                                        <p className={`text-left whitespace-pre-wrap ${['creation', 'status_change', 'property_change', 'deletion'].includes(update.type) ? 'text-gray-400 italic' : 'text-gray-300'}`}>
-                                                            {update.content}
-                                                        </p>
-                                                        {!['status_change', 'creation', 'property_change', 'deletion'].includes(update.type) && (
-                                                            <div className={`flex gap-1 pt-0.5 ${deletingUpdateId === update.id ? 'opacity-100' : 'opacity-0 group-hover/content:opacity-100'}`}>
-                                                                {deletingUpdateId === update.id ? (
-                                                                    <div className="flex items-center gap-1">
-                                                                        <button
-                                                                            className="text-green-400 hover:text-green-300 transition-all bg-green-400/10 rounded p-0.5"
-                                                                            onClick={() => confirmDeleteUpdate(update.id)}
-                                                                            title="Confirm Delete"
-                                                                        >
-                                                                            <Check size={14} />
-                                                                        </button>
-                                                                        <button
-                                                                            className="text-gray-500 hover:text-gray-300 transition-all p-0.5"
-                                                                            onClick={() => setDeletingUpdateId(null)}
-                                                                            title="Cancel"
-                                                                        >
-                                                                            <X size={14} />
-                                                                        </button>
-                                                                    </div>
-                                                                ) : (
-                                                                    <>
-                                                                        <button
-                                                                            className="text-gray-600 hover:text-blue-400 transition-all"
-                                                                            onClick={() => { setEditingId(update.id); setEditContent(update.content); }}
-                                                                            title="Edit"
-                                                                        >
-                                                                            <Pencil size={14} />
-                                                                        </button>
-                                                                        <button
-                                                                            className="text-gray-600 hover:text-red-400 transition-all"
-                                                                            onClick={() => handleDeleteUpdate(update.id)}
-                                                                            title="Delete Update"
-                                                                        >
-                                                                            <X size={14} />
-                                                                        </button>
-                                                                    </>
-                                                                )}
-                                                            </div>
-                                                        )}
-                                                    </div>
-                                                )
-                                            )}
-                                        </div>
-                                    </div>
-                                ))}
 
-                                <div className="flex gap-4 group/add mt-2">
-                                    <div className="w-24 text-xs text-gray-400 text-right pt-2 font-mono shrink-0">Now</div>
-                                    <div className="relative border-l-2 border-white/5 pl-4 pb-2 flex-1">
-                                        <div className="absolute -left-[5px] top-2.5 w-2 h-2 rounded-full border border-gray-600 bg-[#13161c]" />
-                                        <form onSubmit={handleAddDetail} className="relative">
-                                            <textarea
-                                                ref={newUpdateTextareaRef}
-                                                placeholder="Add update..."
-                                                value={newDetail}
-                                                onChange={(e) => setNewDetail(e.target.value)}
-                                                className="w-full bg-gray-900 border border-gray-800 rounded-xl px-4 py-3 text-sm text-gray-200 focus:outline-none focus:border-blue-500 focus:ring-0 transition-all placeholder:text-gray-600 resize-none overflow-hidden"
-                                                rows={1}
-                                                onKeyDown={(e) => {
-                                                    if (e.key === 'Enter' && !e.shiftKey) {
-                                                        e.preventDefault();
-                                                        handleAddDetail(e);
-                                                    }
-                                                }}
-                                            />
-                                        </form>
-                                    </div>
-                                </div>
+                                <UpdatesTimeline
+                                    items={task.updates}
+                                    onAdd={async (content) => {
+                                        await api.addUpdate(task._id, content);
+                                        onUpdate();
+                                    }}
+                                    onEdit={async (id, content) => {
+                                        await api.editUpdate(task._id, id, content);
+                                        onUpdate();
+                                    }}
+                                    onDelete={async (id) => {
+                                        await api.deleteUpdate(task._id, id);
+                                        onUpdate();
+                                    }}
+                                    placeholder="Add update..."
+                                />
                             </div>
 
                             <div className="flex justify-between items-center gap-2 pt-2 border-t border-white/5 mx-[-16px] px-4 bg-black/40 pb-2 mb-[-16px]">
@@ -729,8 +562,8 @@ export const TaskItem = forwardRef(({ task, onUpdate, showTags, style, dragHandl
                         </div>
                     </motion.div>
                 )}
-            </AnimatePresence>
-        </motion.div>
+            </AnimatePresence >
+        </motion.div >
     );
 });
 

@@ -601,7 +601,19 @@ def chat():
                 "category": t.get('category')
             })
             
-        response_text = ai_service.chat_with_task_context(message, tasks_context)
+        # Fetch Agent Context if agent_id is provided
+        agent_context = None
+        if agent_id:
+            agent = agents_collection.find_one({"_id": ObjectId(agent_id)})
+            if agent:
+                agent_context = {
+                    "name": agent.get('name'),
+                    "role": agent.get('role'),
+                    "description": agent.get('description'),
+                    "notes": agent.get('notes', [])
+                }
+
+        response_text = ai_service.chat_with_task_context(message, tasks_context, agent_context)
         
         return jsonify({"reply": response_text}), 200
     except Exception as e:
@@ -848,7 +860,8 @@ def create_agent():
             "user_email": data.get('user_email'),
             "created_at": datetime.utcnow().isoformat(),
             "skills": data.get('skills', []), # Placeholder for skills
-            "status": "idle" # idle, busy, focused
+            "status": "idle", # idle, busy, focused
+            "notes": [] # [NEW] Initialize empty notes
         }
         
         result = agents_collection.insert_one(new_agent)
@@ -891,6 +904,63 @@ def delete_agent(agent_id):
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
+@app.route('/api/agents/<agent_id>/notes', methods=['POST'])
+def add_agent_note(agent_id):
+    try:
+        data = request.json
+        if not data or 'content' not in data:
+            return jsonify({"error": "Content is required"}), 400
+            
+        note_item = {
+            "id": str(uuid.uuid4()),
+            "content": data['content'],
+            "type": "note",
+            "timestamp": datetime.utcnow().isoformat()
+        }
+        
+        result = agents_collection.update_one(
+            {"_id": ObjectId(agent_id)},
+            {"$push": {"notes": note_item}}
+        )
+        
+        if result.matched_count == 0:
+            return jsonify({"error": "Agent not found"}), 404
+            
+        return jsonify(note_item), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+@app.route('/api/agents/<agent_id>/notes/<note_id>', methods=['DELETE'])
+def delete_agent_note(agent_id, note_id):
+    try:
+        result = agents_collection.update_one(
+            {"_id": ObjectId(agent_id)},
+            {"$pull": {"notes": {"id": note_id}}}
+        )
+        
+        if result.matched_count == 0:
+            return jsonify({"error": "Agent not found"}), 404
+            
+        return jsonify({"message": "Note deleted"}), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+@app.route('/api/agents/<agent_id>/notes/<note_id>', methods=['PUT'])
+def update_agent_note(agent_id, note_id):
+    try:
+        data = request.json
+        if not data or 'content' not in data:
+            return jsonify({"error": "Content is required"}), 400
+            
+        result = agents_collection.update_one(
+            {"_id": ObjectId(agent_id), "notes.id": note_id},
+            {"$set": {"notes.$.content": data['content']}}
+        )
+        
+        if result.matched_count == 0:
+            return jsonify({"error": "Agent or note not found"}), 404
+            
+        return jsonify({"message": "Note updated"}), 200
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 

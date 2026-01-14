@@ -276,9 +276,34 @@ export const api = {
         return res.json();
     },
 
+    deleteAgentNote: async (agentId, noteId) => {
+        const res = await fetch(`${API_BASE}/agents/${agentId}/notes/${noteId}`, {
+            method: 'DELETE',
+        });
+        return res.json();
+    },
+
+    updateAgentNote: async (agentId, noteId, content) => {
+        const res = await fetch(`${API_BASE}/agents/${agentId}/notes/${noteId}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ content }),
+        });
+        return res.json();
+    },
+
     deleteAgent: async (agentId) => {
         const res = await fetch(`${API_BASE}/agents/${agentId}`, {
             method: 'DELETE',
+        });
+        return res.json();
+    },
+
+    addAgentNote: async (agentId, content) => {
+        const res = await fetch(`${API_BASE}/agents/${agentId}/notes`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ content }),
         });
         return res.json();
     }

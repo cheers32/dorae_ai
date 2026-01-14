@@ -3,6 +3,9 @@ import { api } from '../api';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Brain, Cpu, MessageSquare, Zap, Target, Layers, Pencil, Trash2, Check, X } from 'lucide-react';
 import { useDroppable, useDraggable, DndContext, PointerSensor, useSensor, useSensors } from '@dnd-kit/core';
+import { UpdatesTimeline } from './UpdatesTimeline';
+import ReactMarkdown from 'react-markdown';
+
 
 
 
@@ -57,17 +60,23 @@ export const AgentItem = ({ agent, onFocus, onEdit, onDelete, isFocused, availab
         { role: 'ai', text: `Hi! I'm ${agent.name}. How can I help with your tasks?` }
     ]);
     const [isChatLoading, setIsChatLoading] = useState(false);
-    const [isEditingName, setIsEditingName] = useState(false);
+    const [isEditing, setIsEditing] = useState(false);
     const [editedName, setEditedName] = useState(agent.name);
+    const [editedRole, setEditedRole] = useState(agent.role);
+    const [editedDescription, setEditedDescription] = useState(agent.description || '');
     const [localName, setLocalName] = useState(agent.name);
     const [isDeleting, setIsDeleting] = useState(false);
+
+    const [showNotes, setShowNotes] = useState(false); // [NEW]
     const chatEndRef = React.useRef(null);
 
-    // Sync local name when agent prop changes
+    // Sync local state when agent prop changes
     React.useEffect(() => {
         setLocalName(agent.name);
         setEditedName(agent.name);
-    }, [agent.name]);
+        setEditedRole(agent.role);
+        setEditedDescription(agent.description || '');
+    }, [agent.name, agent.role, agent.description]);
 
     React.useEffect(() => {
         if (showChat && chatEndRef.current) {
@@ -96,15 +105,15 @@ export const AgentItem = ({ agent, onFocus, onEdit, onDelete, isFocused, availab
         }
     };
 
-    const handleSaveName = async () => {
-        if (!editedName.trim() || editedName === localName) {
-            setIsEditingName(false);
-            return;
-        }
+    const handleSaveProfile = async () => {
         try {
-            await api.updateAgent(agent._id, { name: editedName });
+            await api.updateAgent(agent._id, {
+                name: editedName,
+                role: editedRole,
+                description: editedDescription
+            });
             setLocalName(editedName);
-            setIsEditingName(false);
+            setIsEditing(false);
             // Trigger refresh in parent
             window.dispatchEvent(new CustomEvent('agent-updated'));
         } catch (err) {
@@ -144,6 +153,8 @@ export const AgentItem = ({ agent, onFocus, onEdit, onDelete, isFocused, availab
         }
     };
 
+
+
     return (
         <motion.div
             layout
@@ -171,23 +182,31 @@ export const AgentItem = ({ agent, onFocus, onEdit, onDelete, isFocused, availab
                         <Brain size={24} />
                     </div>
                     <div>
-                        {isEditingName ? (
-                            <input
-                                autoFocus
-                                type="text"
-                                value={editedName}
-                                onChange={(e) => setEditedName(e.target.value)}
-                                onBlur={handleSaveName}
-                                onKeyDown={(e) => {
-                                    if (e.key === 'Enter') handleSaveName();
-                                    if (e.key === 'Escape') { setEditedName(localName); setIsEditingName(false); }
-                                }}
-                                className="text-lg font-bold text-white tracking-tight bg-white/5 border border-blue-500/50 rounded px-2 py-1 focus:outline-none focus:border-blue-500"
-                            />
-                        ) : (
-                            <h3 className="text-lg font-bold text-white tracking-tight">{localName}</h3>
-                        )}
-                        <p className="text-sm text-gray-400 font-medium">{agent.role}</p>
+                        <div>
+                            {isEditing ? (
+                                <div className="flex flex-col gap-2 min-w-[200px]">
+                                    <input
+                                        type="text"
+                                        value={editedName}
+                                        onChange={(e) => setEditedName(e.target.value)}
+                                        className="text-lg font-bold text-white tracking-tight bg-white/5 border border-blue-500/50 rounded px-2 py-1 focus:outline-none focus:border-blue-500 w-full"
+                                        placeholder="Agent Name"
+                                    />
+                                    <input
+                                        type="text"
+                                        value={editedRole}
+                                        onChange={(e) => setEditedRole(e.target.value)}
+                                        className="text-sm font-medium text-gray-400 bg-white/5 border border-blue-500/50 rounded px-2 py-1 focus:outline-none focus:border-blue-500 w-full"
+                                        placeholder="Agent Role"
+                                    />
+                                </div>
+                            ) : (
+                                <>
+                                    <h3 className="text-lg font-bold text-white tracking-tight">{localName}</h3>
+                                    <p className="text-sm text-gray-400 font-medium">{agent.role}</p>
+                                </>
+                            )}
+                        </div>
                     </div>
                 </div>
 
@@ -211,22 +230,41 @@ export const AgentItem = ({ agent, onFocus, onEdit, onDelete, isFocused, availab
                                 </button>
                             </div>
                         ) : (
-                            <>
-                                <button
-                                    onClick={() => setIsEditingName(true)}
-                                    className="p-1.5 text-gray-500 hover:text-blue-400 transition-colors"
-                                    title="Edit Name"
-                                >
-                                    <Pencil size={14} />
-                                </button>
-                                <button
-                                    onClick={(e) => { e.stopPropagation(); setIsDeleting(true); }}
-                                    className="p-1.5 text-gray-500 hover:text-red-400 transition-colors"
-                                    title="Delete Agent"
-                                >
-                                    <Trash2 size={14} />
-                                </button>
-                            </>
+                            isEditing ? (
+                                <div className="flex items-center gap-1">
+                                    <button
+                                        className="p-1.5 text-gray-500 hover:text-gray-300 transition-colors"
+                                        onClick={() => { setIsEditing(false); setEditedName(localName); }}
+                                        title="Cancel"
+                                    >
+                                        <X size={14} />
+                                    </button>
+                                    <button
+                                        className="p-1.5 text-green-400 hover:text-green-300 transition-colors bg-green-400/10 rounded"
+                                        onClick={handleSaveProfile}
+                                        title="Save Profile"
+                                    >
+                                        <Check size={14} />
+                                    </button>
+                                </div>
+                            ) : (
+                                <>
+                                    <button
+                                        onClick={() => setIsEditing(true)}
+                                        className="p-1.5 text-gray-500 hover:text-blue-400 transition-colors"
+                                        title="Edit Profile"
+                                    >
+                                        <Pencil size={14} />
+                                    </button>
+                                    <button
+                                        onClick={(e) => { e.stopPropagation(); setIsDeleting(true); }}
+                                        className="p-1.5 text-gray-500 hover:text-red-400 transition-colors"
+                                        title="Delete Agent"
+                                    >
+                                        <Trash2 size={14} />
+                                    </button>
+                                </>
+                            )
                         )}
                         <button
                             onClick={() => onFocus(agent)}
@@ -253,10 +291,22 @@ export const AgentItem = ({ agent, onFocus, onEdit, onDelete, isFocused, availab
                 </div>
             </div>
 
-            {(!agent.active_tasks || agent.active_tasks.length === 0) && (
-                <p className="text-sm text-gray-400 mb-6 leading-relaxed">
-                    {agent.description || "Ready to assist with your tasks. Drag tasks here to assign."}
-                </p>
+            {isEditing ? (
+                <div className="mb-6">
+                    <textarea
+                        value={editedDescription}
+                        onChange={(e) => setEditedDescription(e.target.value)}
+                        placeholder="Enter system instructions / description for this agent..."
+                        rows={3}
+                        className="w-full bg-white/5 border border-blue-500/50 rounded-lg px-3 py-2 text-sm text-gray-300 focus:outline-none focus:border-blue-500 leading-relaxed custom-scrollbar"
+                    />
+                </div>
+            ) : (
+                (!agent.active_tasks || agent.active_tasks.length === 0) && (
+                    <p className="text-sm text-gray-400 mb-6 leading-relaxed">
+                        {agent.description || "Ready to assist with your tasks. Drag tasks here to assign."}
+                    </p>
+                )
             )}
 
             {/* Assigned Tasks Chips */}
@@ -295,13 +345,58 @@ export const AgentItem = ({ agent, onFocus, onEdit, onDelete, isFocused, availab
                         <span className="text-xs">Context Chat</span>
                     </button>
 
-                    {/* "Add Skill" Placeholder (Spans remaining) */}
-                    <div className="col-span-1 border border-dashed border-white/10 rounded-lg p-2 flex items-center justify-center gap-2 text-gray-600 hover:text-gray-400 hover:border-white/20 transition-colors cursor-pointer group/skill">
+                    {/* Notes Toggle */}
+                    <button
+                        onClick={() => setShowNotes(!showNotes)}
+                        className={`
+                            p-2 rounded-lg border flex items-center gap-2 transition-all
+                            ${showNotes
+                                ? 'bg-yellow-500/20 border-yellow-500/50 text-yellow-300'
+                                : 'bg-black/20 border-white/5 text-gray-300 hover:bg-white/5 hover:border-white/10'
+                            }
+                        `}
+                    >
+                        <Pencil size={14} className={showNotes ? "text-yellow-300" : "text-yellow-400"} />
+                        <span className="text-xs">Notes ({agent.notes?.length || 0})</span>
+                    </button>
+
+                    <div className="col-span-2 border border-dashed border-white/10 rounded-lg p-2 flex items-center justify-center gap-2 text-gray-600 hover:text-gray-400 hover:border-white/20 transition-colors cursor-pointer group/skill">
                         <Cpu size={14} />
                         <span className="text-xs">Add Skill Pack</span>
                     </div>
                 </div>
             </div>
+
+            {/* Inline Notes Window */}
+            <AnimatePresence>
+                {showNotes && (
+                    <motion.div
+                        initial={{ height: 0, opacity: 0, marginTop: 0 }}
+                        animate={{ height: 'auto', opacity: 1, marginTop: 16 }}
+                        exit={{ height: 0, opacity: 0, marginTop: 0 }}
+                        className="bg-black/40 rounded-xl border border-white/10 overflow-hidden"
+                    >
+                        <div className="p-4 custom-scrollbar">
+                            <UpdatesTimeline
+                                items={agent.notes || []}
+                                onAdd={async (content) => {
+                                    await api.addAgentNote(agent._id, content);
+                                    window.dispatchEvent(new CustomEvent('agent-updated'));
+                                }}
+                                onEdit={async (id, content) => {
+                                    await api.updateAgentNote(agent._id, id, content);
+                                    window.dispatchEvent(new CustomEvent('agent-updated'));
+                                }}
+                                onDelete={async (id) => {
+                                    await api.deleteAgentNote(agent._id, id);
+                                    window.dispatchEvent(new CustomEvent('agent-updated'));
+                                }}
+                                placeholder="Add a persistent instruction or memory..."
+                            />
+                        </div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
 
             {/* Inline Chat Window */}
             <AnimatePresence>
@@ -321,8 +416,14 @@ export const AgentItem = ({ agent, onFocus, onEdit, onDelete, isFocused, availab
                                             ? 'bg-blue-500/20 text-blue-100 border border-blue-500/20'
                                             : 'bg-white/5 text-gray-300 border border-white/5'
                                         }
+                                        prose prose-invert prose-xs max-w-none
+                                        [&_p]:mb-1 [&_p:last-child]:mb-0
+                                        [&_ul]:list-disc [&_ul]:ml-4 [&_ul]:mb-1
+                                        [&_ol]:list-decimal [&_ol]:ml-4 [&_ol]:mb-1
+                                        [&_code]:bg-white/10 [&_code]:px-1 [&_code]:rounded
+                                        [&_strong]:text-white [&_strong]:font-bold
                                     `}>
-                                        {msg.text}
+                                        <ReactMarkdown>{msg.text}</ReactMarkdown>
                                     </div>
                                 </div>
                             ))}
