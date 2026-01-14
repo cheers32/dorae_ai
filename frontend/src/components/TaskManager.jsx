@@ -854,7 +854,7 @@ export const TaskManager = () => {
             onDragEnd={handleDragEnd}
             onDragOver={handleDragOver}
         >
-            <div className="flex h-screen bg-[#0f1014] text-gray-200 font-sans overflow-hidden gap-8">
+            <div className="flex h-screen bg-[#0f1014] text-gray-200 font-sans overflow-hidden">
                 <Sidebar
                     activeTab={activeTab}
                     onNavigate={changeView}
@@ -869,7 +869,7 @@ export const TaskManager = () => {
                 />
 
                 <main className="flex-1 flex flex-col min-w-0 bg-[#0f1014] h-full relative">
-                    <header className="px-8 py-4 flex justify-between items-center bg-[#0f1014]/80 backdrop-blur-md sticky top-0 z-10 border-b border-white/5">
+                    <header className="px-6 py-4 flex justify-between items-center bg-[#0f1014]/80 backdrop-blur-md sticky top-0 z-10 border-b border-white/5">
                         <div className="flex items-center gap-4">
                             <AnimatePresence>
                                 {history.length > 0 && (
@@ -907,16 +907,15 @@ export const TaskManager = () => {
                             {activeTab === 'trash' && tasks.length > 0 && (
                                 <button
                                     onClick={handleEmptyTrash}
-                                    className="px-2 py-1.5 rounded-lg transition-colors flex items-center gap-2 text-red-400 bg-red-400/10 hover:bg-red-400/20"
+                                    className="px-1.5 py-1.5 rounded-lg transition-colors flex items-center text-red-400 bg-red-400/10 hover:bg-red-400/20"
                                     title="Empty Trash"
                                 >
-                                    <Trash2 size={16} />
-                                    <span className="text-sm font-medium">Empty Trash</span>
+                                    <span className="text-xs font-medium">Empty Trash</span>
                                 </button>
                             )}
                             <button
                                 onClick={() => setShowTags(!showTags)}
-                                className={`px-2 py-1.5 rounded-lg transition-colors flex items-center gap-1.5 ${showTags ? 'text-blue-400 bg-blue-400/10' : 'text-gray-500 hover:text-gray-300'}`}
+                                className={`px-1.5 py-1.5 rounded-lg transition-colors flex items-center ${showTags ? 'text-blue-400 bg-blue-400/10' : 'text-gray-500 hover:text-gray-300'}`}
                                 title="Toggle Tags Visibility"
                             >
                                 <TagIcon size={16} />
@@ -926,7 +925,7 @@ export const TaskManager = () => {
                             {activeTab !== 'assistant' && tasks.length > 0 && (
                                 <button
                                     onClick={() => setGlobalExpanded(!globalExpanded)}
-                                    className={`px-2 py-1.5 rounded-lg transition-colors flex items-center gap-1.5 ${globalExpanded ? 'text-blue-400 bg-blue-400/10' : 'text-gray-500 hover:text-gray-300'}`}
+                                    className={`px-1.5 py-1.5 rounded-lg transition-colors flex items-center ${globalExpanded ? 'text-blue-400 bg-blue-400/10' : 'text-gray-500 hover:text-gray-300'}`}
                                     title={globalExpanded ? 'Collapse All' : 'Expand All'}
                                 >
                                     {globalExpanded ? <ChevronsDownUp size={16} /> : <ChevronsUpDown size={16} />}
@@ -937,10 +936,9 @@ export const TaskManager = () => {
                             {activeTab !== 'assistant' && tasks.length > 0 && (
                                 <button
                                     onClick={() => setShowFullTitles(!showFullTitles)}
-                                    className={`px-2 py-1.5 rounded-lg transition-colors flex items-center gap-1.5 ${showFullTitles ? 'text-blue-400 bg-blue-400/10' : 'text-gray-500 hover:text-gray-300'}`}
+                                    className={`px-1.5 py-1.5 rounded-lg transition-colors flex items-center ${showFullTitles ? 'text-blue-400 bg-blue-400/10' : 'text-gray-500 hover:text-gray-300'}`}
                                     title={showFullTitles ? 'Truncate Titles' : 'Full Titles'}
                                 >
-                                    <Type size={16} />
                                     <span className="text-xs font-medium">{showFullTitles ? 'Truncate Titles' : 'Full Titles'}</span>
                                 </button>
                             )}
@@ -948,10 +946,9 @@ export const TaskManager = () => {
                             {activeTab !== 'assistant' && tasks.length > 0 && (
                                 <button
                                     onClick={() => setShowPreview(!showPreview)}
-                                    className={`px-2 py-1.5 rounded-lg transition-colors flex items-center gap-1.5 ${showPreview ? 'text-blue-400 bg-blue-400/10' : 'text-gray-500 hover:text-gray-300'}`}
+                                    className={`px-1.5 py-1.5 rounded-lg transition-colors flex items-center ${showPreview ? 'text-blue-400 bg-blue-400/10' : 'text-gray-500 hover:text-gray-300'}`}
                                     title={showPreview ? 'Hide Preview' : 'Show Preview'}
                                 >
-                                    <MessageSquare size={16} />
                                     <span className="text-xs font-medium">{showPreview ? 'Hide Preview' : 'Show Preview'}</span>
                                 </button>
                             )}
@@ -960,14 +957,14 @@ export const TaskManager = () => {
                                 <div className="flex items-center bg-gray-900 border border-gray-800 rounded-lg overflow-hidden">
                                     <button
                                         onClick={() => setFontSize(prev => Math.max(9, prev - 1))}
-                                        className="p-1 hover:bg-white/10 transition-colors text-gray-400 hover:text-white border-r border-gray-800 w-7 h-7 flex justify-center items-center"
+                                        className="p-1 hover:bg-white/10 transition-colors text-gray-400 hover:text-white border-r border-gray-800 w-10 h-7 flex justify-center items-center"
                                         title="Decrease font size"
                                     >
                                         <ZoomOut size={12} />
                                     </button>
                                     <button
                                         onClick={() => setFontSize(prev => Math.min(24, prev + 1))}
-                                        className="p-1 hover:bg-white/10 transition-colors text-gray-400 hover:text-white w-7 h-7 flex justify-center items-center"
+                                        className="p-1 hover:bg-white/10 transition-colors text-gray-400 hover:text-white w-10 h-7 flex justify-center items-center"
                                         title="Increase font size"
                                     >
                                         <ZoomIn size={12} />
@@ -978,11 +975,10 @@ export const TaskManager = () => {
                             {activeTab === 'assistant' && (
                                 <button
                                     onClick={() => setIsCreatingAgent(true)}
-                                    className="px-3 py-2 rounded-lg transition-colors flex items-center gap-2 text-blue-400 bg-blue-400/10 hover:bg-blue-400/20"
+                                    className="px-1.5 py-1.5 rounded-lg transition-colors flex items-center text-blue-400 bg-blue-400/10 hover:bg-blue-400/20"
                                     title="Hire Agent"
                                 >
-                                    <Plus size={18} />
-                                    <span className="text-sm font-medium">Hire Agent</span>
+                                    <span className="text-xs font-medium">Hire Agent</span>
                                 </button>
                             )}
 
@@ -991,10 +987,9 @@ export const TaskManager = () => {
                                     onClick={() => {
                                         setIsCreating(!isCreating);
                                     }}
-                                    className={`px-3 py-2 rounded-lg transition-colors flex items-center gap-2 ${isCreating ? 'bg-blue-500 text-white shadow-lg shadow-blue-500/20' : 'bg-blue-500/10 text-blue-400 hover:bg-blue-500/20'}`}
+                                    className={`px-1.5 py-1.5 rounded-lg transition-colors flex items-center ${isCreating ? 'bg-blue-500 text-white shadow-lg shadow-blue-500/20' : 'bg-blue-500/10 text-blue-400 hover:bg-blue-500/20'}`}
                                 >
-                                    {isCreating ? <X size={18} /> : <Plus size={18} />}
-                                    <span className="text-sm font-medium">{isCreating ? 'Cancel' : 'New Task'}</span>
+                                    <span className="text-xs font-medium">{isCreating ? 'Cancel' : 'New Task'}</span>
                                 </button>
                             )}
 
@@ -1023,10 +1018,10 @@ export const TaskManager = () => {
                                     exit={{ height: 0, opacity: 0 }}
                                     className="bg-white/[0.03] border-b border-white/5 relative flex flex-col shrink-0"
                                 >
-                                    <div className="px-8 py-3 bg-white/[0.02] backdrop-blur border-white/5 flex items-center justify-between sticky top-0 z-10">
+                                    <div className="px-6 py-3 bg-white/[0.02] backdrop-blur border-white/5 flex items-center justify-between sticky top-0 z-10">
                                         <h2 className="text-sm font-bold uppercase tracking-widest text-blue-400">Current Focus</h2>
                                     </div>
-                                    <div className="px-8 py-4">
+                                    <div className="px-6 py-4">
                                         {workareaTasks.map(item => {
                                             if (item.type === 'agent') {
                                                 return (
@@ -1068,7 +1063,7 @@ export const TaskManager = () => {
                                     </div>
                                 </motion.div>
 
-                                <div className="h-px bg-white/5 my-6 mx-8"></div>
+                                <div className="h-px bg-white/5 my-6 mx-6"></div>
                             </>
                         )}
                     </AnimatePresence>
@@ -1084,7 +1079,7 @@ export const TaskManager = () => {
                             />
                         </div>
                     ) : (
-                        <div className="flex-1 flex flex-col px-8 pb-8 overflow-hidden">
+                        <div className="flex-1 flex flex-col px-6 pb-8 overflow-hidden">
                             {error ? (
                                 <div className="flex-1 flex flex-col items-center justify-center text-center">
                                     <div className="bg-red-500/10 text-red-400 p-6 rounded-2xl border border-red-500/20 max-w-md">
@@ -1130,9 +1125,9 @@ export const TaskManager = () => {
                                                 <button
                                                     type="submit"
                                                     disabled={!newTaskTitle.trim()}
-                                                    className="bg-gradient-to-r from-blue-600 to-blue-400 hover:from-blue-500 hover:to-blue-300 text-white px-6 rounded-lg text-sm font-medium transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                                                    className="bg-gradient-to-r from-blue-600 to-blue-400 hover:from-blue-500 hover:to-blue-300 text-white px-4 rounded-lg text-xs font-medium transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center whitespace-nowrap"
                                                 >
-                                                    <Plus size={16} /> Create
+                                                    Create
                                                 </button>
                                             </motion.form>
                                         )}
