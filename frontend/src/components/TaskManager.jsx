@@ -70,7 +70,19 @@ export const TaskManager = () => {
         labels: {}
     });
 
-    const [focusedAgentId, setFocusedAgentId] = useState(null);
+    const [focusedAgentId, setFocusedAgentId] = useState(() => {
+        try {
+            const saved = localStorage.getItem('workareaTasks');
+            if (saved) {
+                const items = JSON.parse(saved);
+                const agent = items.find(i => i.type === 'agent');
+                return agent ? agent._id : null;
+            }
+        } catch (e) {
+            console.error('Failed to parse workareaTasks for initial focus', e);
+        }
+        return null;
+    });
 
     const handleFocusAgent = (agent) => {
         // Toggle focus logic for single agent
@@ -281,17 +293,28 @@ export const TaskManager = () => {
     // Refresh workarea tasks from database on mount to get latest data including attachments
     useEffect(() => {
         const refreshWorkareaFromDB = async () => {
-            const savedTaskIds = workareaTasks.map(t => t._id);
-            if (savedTaskIds.length > 0) {
+            if (workareaTasks.length > 0) {
                 try {
                     // Fetch fresh data for workarea tasks from the database
-                    const freshTasks = await Promise.all(
-                        savedTaskIds.map(id => api.getTask(id).catch(() => null))
+                    const freshItems = await Promise.all(
+                        workareaTasks.map(async (item) => {
+                            if (item.type === 'agent') {
+                                // For agents, we just return the item from local storage 
+                                // (or we could fetch from api.getAgents if we wanted fresh status, but single fetch isn't there)
+                                return item;
+                            }
+                            // Default to task fetch
+                            return api.getTask(item._id).catch(() => null);
+                        })
                     );
-                    const validTasks = freshTasks.filter(t => t !== null);
-                    if (validTasks.length > 0) {
-                        setWorkareaTasks(validTasks.map(t => ({ ...t, _forceExpanded: true })));
+
+                    const validItems = freshItems.filter(t => t !== null);
+                    if (validItems.length > 0) {
+                        setWorkareaTasks(validItems.map(t => ({ ...t, _forceExpanded: true })));
                     } else {
+                        // Only clear if we really got back empty valid items (and had some to start)
+                        // But if API completely failed for tasks, this might clear them. 
+                        // The catch block below handles API errors, this handles "Deleted" items returning null.
                         setWorkareaTasks([]);
                     }
                 } catch (err) {

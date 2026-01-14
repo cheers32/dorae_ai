@@ -22,6 +22,14 @@ export const AgentItem = ({ agent, onFocus, onEdit, onDelete, isFocused }) => {
                 ${isOver ? 'ring-2 ring-blue-400 bg-blue-500/20 scale-[1.02]' : ''}
             `}
         >
+            {/* Chromo Hover Effect for Focused Agent */}
+            {isFocused && (
+                <>
+                    <div className="absolute -inset-[1px] rounded-2xl bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 opacity-0 group-hover:opacity-100 transition-opacity duration-500 -z-10" />
+                    <div className="absolute -inset-[2px] rounded-2xl bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 opacity-0 group-hover:opacity-50 blur-sm transition-opacity duration-500 -z-10" />
+                </>
+            )}
+
             <div className="flex items-start justify-between mb-4">
                 <div className="flex items-center gap-4">
                     <div className={`
@@ -40,14 +48,14 @@ export const AgentItem = ({ agent, onFocus, onEdit, onDelete, isFocused }) => {
                     <button
                         onClick={() => onFocus(agent)}
                         className={`
-                            px-3 py-1.5 rounded-lg text-xs font-bold uppercase tracking-wider transition-all
+                            px-3 py-1.5 rounded-lg text-xs font-bold uppercase tracking-wider transition-all border
                             ${isFocused
-                                ? 'bg-blue-500 text-white shadow-lg'
-                                : 'bg-white/5 text-gray-400 hover:bg-blue-500 hover:text-white'
+                                ? 'bg-red-500/10 text-red-400 hover:bg-red-500/20 border-red-500/20'
+                                : 'bg-white/5 text-gray-400 hover:bg-blue-500 hover:text-white border-transparent'
                             }
                         `}
                     >
-                        {isFocused ? 'Focused' : 'Focus'}
+                        {isFocused ? 'Unfocus' : 'Focus'}
                     </button>
                     {/* Placeholder for future actions */}
                 </div>
