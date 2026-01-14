@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { api } from '../api';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Brain, Cpu, MessageSquare, Zap, Target, Layers } from 'lucide-react';
+import { Brain, Cpu, MessageSquare, Zap, Target, Layers, Pencil, Trash2, Check, X } from 'lucide-react';
 import { useDroppable } from '@dnd-kit/core';
 
 
@@ -19,7 +19,17 @@ export const AgentItem = ({ agent, onFocus, onEdit, onDelete, isFocused, availab
         { role: 'ai', text: `Hi! I'm ${agent.name}. How can I help with your tasks?` }
     ]);
     const [isChatLoading, setIsChatLoading] = useState(false);
+    const [isEditingName, setIsEditingName] = useState(false);
+    const [editedName, setEditedName] = useState(agent.name);
+    const [localName, setLocalName] = useState(agent.name);
+    const [isDeleting, setIsDeleting] = useState(false);
     const chatEndRef = React.useRef(null);
+
+    // Sync local name when agent prop changes
+    React.useEffect(() => {
+        setLocalName(agent.name);
+        setEditedName(agent.name);
+    }, [agent.name]);
 
     React.useEffect(() => {
         if (showChat && chatEndRef.current) {
@@ -45,6 +55,31 @@ export const AgentItem = ({ agent, onFocus, onEdit, onDelete, isFocused, availab
             setChatMessages(prev => [...prev, { role: 'ai', text: "I'm having trouble connecting right now." }]);
         } finally {
             setIsChatLoading(false);
+        }
+    };
+
+    const handleSaveName = async () => {
+        if (!editedName.trim() || editedName === localName) {
+            setIsEditingName(false);
+            return;
+        }
+        try {
+            await api.updateAgent(agent._id, { name: editedName });
+            setLocalName(editedName);
+            setIsEditingName(false);
+            // Trigger refresh in parent
+            window.dispatchEvent(new CustomEvent('agent-updated'));
+        } catch (err) {
+            console.error(err);
+        }
+    };
+
+    const confirmDelete = async (e) => {
+        e.stopPropagation();
+        try {
+            await onDelete();
+        } finally {
+            setIsDeleting(false);
         }
     };
 
@@ -75,24 +110,76 @@ export const AgentItem = ({ agent, onFocus, onEdit, onDelete, isFocused, availab
                         <Brain size={24} />
                     </div>
                     <div>
-                        <h3 className="text-lg font-bold text-white tracking-tight">{agent.name}</h3>
+                        {isEditingName ? (
+                            <input
+                                autoFocus
+                                type="text"
+                                value={editedName}
+                                onChange={(e) => setEditedName(e.target.value)}
+                                onBlur={handleSaveName}
+                                onKeyDown={(e) => {
+                                    if (e.key === 'Enter') handleSaveName();
+                                    if (e.key === 'Escape') { setEditedName(localName); setIsEditingName(false); }
+                                }}
+                                className="text-lg font-bold text-white tracking-tight bg-white/5 border border-blue-500/50 rounded px-2 py-1 focus:outline-none focus:border-blue-500"
+                            />
+                        ) : (
+                            <h3 className="text-lg font-bold text-white tracking-tight">{localName}</h3>
+                        )}
                         <p className="text-sm text-gray-400 font-medium">{agent.role}</p>
                     </div>
                 </div>
 
                 <div className="flex items-center gap-3">
-                    <button
-                        onClick={() => onFocus(agent)}
-                        className={`
-                            px-3 py-1.5 rounded-lg text-xs font-bold uppercase tracking-wider transition-all border
-                            ${isFocused
-                                ? 'bg-red-500/10 text-red-400 hover:bg-red-500/20 border-red-500/20'
-                                : 'bg-white/5 text-gray-400 hover:bg-blue-500 hover:text-white border-transparent'
-                            }
-                        `}
-                    >
-                        {isFocused ? 'Unfocus' : 'Focus'}
-                    </button>
+                    <div className="opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-3">
+                        {isDeleting ? (
+                            <div className="flex items-center gap-1">
+                                <button
+                                    className="p-1.5 text-gray-500 hover:text-gray-300 transition-colors"
+                                    onClick={(e) => { e.stopPropagation(); setIsDeleting(false); }}
+                                    title="Cancel"
+                                >
+                                    <X size={14} />
+                                </button>
+                                <button
+                                    className="p-1.5 text-green-400 hover:text-green-300 transition-colors bg-green-400/10 rounded"
+                                    onClick={confirmDelete}
+                                    title="Confirm Delete"
+                                >
+                                    <Check size={14} />
+                                </button>
+                            </div>
+                        ) : (
+                            <>
+                                <button
+                                    onClick={() => setIsEditingName(true)}
+                                    className="p-1.5 text-gray-500 hover:text-blue-400 transition-colors"
+                                    title="Edit Name"
+                                >
+                                    <Pencil size={14} />
+                                </button>
+                                <button
+                                    onClick={(e) => { e.stopPropagation(); setIsDeleting(true); }}
+                                    className="p-1.5 text-gray-500 hover:text-red-400 transition-colors"
+                                    title="Delete Agent"
+                                >
+                                    <Trash2 size={14} />
+                                </button>
+                            </>
+                        )}
+                        <button
+                            onClick={() => onFocus(agent)}
+                            className={`
+                                px-3 py-1.5 rounded-lg text-xs font-bold uppercase tracking-wider transition-all border
+                                ${isFocused
+                                    ? 'bg-red-500/10 text-red-400 hover:bg-red-500/20 border-red-500/20'
+                                    : 'bg-white/5 text-gray-400 hover:bg-blue-500 hover:text-white border-transparent'
+                                }
+                            `}
+                        >
+                            {isFocused ? 'Unfocus' : 'Focus'}
+                        </button>
+                    </div>
 
                     <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-white/5 border border-white/10 text-[10px] font-medium uppercase tracking-widest text-gray-400">
                         <span>Active Skills</span>
