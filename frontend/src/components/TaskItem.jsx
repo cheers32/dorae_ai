@@ -318,8 +318,8 @@ export const TaskItem = forwardRef(({ task, onUpdate, showTags, style, dragHandl
                 <div
                     className="px-4 flex items-center gap-4 flex-1 min-w-0"
                     style={{
-                        paddingTop: `${Math.max(2, fontSize - 7)}px`,
-                        paddingBottom: `${Math.max(2, fontSize - 7)}px`
+                        paddingTop: `${Math.max(1, fontSize - 11)}px`,
+                        paddingBottom: `${Math.max(1, fontSize - 11)}px`
                     }}
                 >
                     <div
