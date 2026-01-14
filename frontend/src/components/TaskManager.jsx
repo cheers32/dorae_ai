@@ -5,7 +5,7 @@ import { Sidebar } from './Sidebar';
 import { ChatInterface } from './ChatInterface';
 import { AgentList } from './AgentList';
 import { AgentItem } from './AgentItem';
-import { Plus, Home as HomeIcon, Tag as TagIcon, ArrowLeft, Trash2, X } from 'lucide-react';
+import { Plus, Home as HomeIcon, Tag as TagIcon, ArrowLeft, Trash2, X, ChevronsUpDown, ChevronsDownUp, Type, MessageSquare } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import {
@@ -43,6 +43,9 @@ export const TaskManager = () => {
     const [isCreating, setIsCreating] = useState(false);
     const [isCreatingAgent, setIsCreatingAgent] = useState(false);
     const [activeId, setActiveId] = useState(null);
+    const [globalExpanded, setGlobalExpanded] = useState(false);
+    const [showFullTitles, setShowFullTitles] = useState(false);
+    const [showPreview, setShowPreview] = useState(false);
     const [history, setHistory] = useState([]);
     const [workareaTasks, setWorkareaTasks] = useState(() => {
         // Initialize from localStorage
@@ -916,6 +919,39 @@ export const TaskManager = () => {
                                 <span className="text-sm font-medium">{showTags ? 'Hide Tags' : 'Show Tags'}</span>
                             </button>
 
+                            {activeTab !== 'assistant' && tasks.length > 0 && (
+                                <button
+                                    onClick={() => setGlobalExpanded(!globalExpanded)}
+                                    className={`px-3 py-2 rounded-lg transition-colors flex items-center gap-2 ${globalExpanded ? 'text-blue-400 bg-blue-400/10' : 'text-gray-500 hover:text-gray-300'}`}
+                                    title={globalExpanded ? 'Collapse All' : 'Expand All'}
+                                >
+                                    {globalExpanded ? <ChevronsDownUp size={18} /> : <ChevronsUpDown size={18} />}
+                                    <span className="text-sm font-medium">{globalExpanded ? 'Collapse All' : 'Expand All'}</span>
+                                </button>
+                            )}
+
+                            {activeTab !== 'assistant' && tasks.length > 0 && (
+                                <button
+                                    onClick={() => setShowFullTitles(!showFullTitles)}
+                                    className={`px-3 py-2 rounded-lg transition-colors flex items-center gap-2 ${showFullTitles ? 'text-blue-400 bg-blue-400/10' : 'text-gray-500 hover:text-gray-300'}`}
+                                    title={showFullTitles ? 'Truncate Titles' : 'Full Titles'}
+                                >
+                                    <Type size={18} />
+                                    <span className="text-sm font-medium">{showFullTitles ? 'Truncate Titles' : 'Full Titles'}</span>
+                                </button>
+                            )}
+
+                            {activeTab !== 'assistant' && tasks.length > 0 && (
+                                <button
+                                    onClick={() => setShowPreview(!showPreview)}
+                                    className={`px-3 py-2 rounded-lg transition-colors flex items-center gap-2 ${showPreview ? 'text-blue-400 bg-blue-400/10' : 'text-gray-500 hover:text-gray-300'}`}
+                                    title={showPreview ? 'Hide Preview' : 'Show Preview'}
+                                >
+                                    <MessageSquare size={18} />
+                                    <span className="text-sm font-medium">{showPreview ? 'Hide Preview' : 'Show Preview'}</span>
+                                </button>
+                            )}
+
                             {activeTab === 'assistant' && (
                                 <button
                                     onClick={() => setIsCreatingAgent(true)}
@@ -999,6 +1035,9 @@ export const TaskManager = () => {
                                                     onRemoveFromWorkarea={() => handleRemoveFromWorkarea(item._id)}
                                                     onAttachmentClick={handleNavigateToTask}
                                                     onTaskClick={() => handleNavigateToTask(item)}
+                                                    globalExpanded={globalExpanded}
+                                                    showFullTitles={showFullTitles}
+                                                    showPreview={showPreview}
                                                 />
                                             );
                                         })}
@@ -1100,6 +1139,9 @@ export const TaskManager = () => {
                                                             isWorkarea={false}
                                                             defaultExpanded={autoExpandTaskId === task._id}
                                                             onAttachmentClick={handleNavigateToTask}
+                                                            globalExpanded={globalExpanded}
+                                                            showFullTitles={showFullTitles}
+                                                            showPreview={showPreview}
                                                         />
                                                     ))}
                                                 </div>

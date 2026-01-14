@@ -117,7 +117,7 @@ const parseUTCDate = (dateString) => {
     return new Date(normalized);
 };
 
-export const TaskItem = forwardRef(({ task, onUpdate, showTags, style, dragHandleProps, isOverlay, availableLabels = [], onSendToWorkarea, onRemoveFromWorkarea, isWorkarea, defaultExpanded, onAttachmentClick, onTaskClick }, ref) => {
+export const TaskItem = forwardRef(({ task, onUpdate, showTags, style, dragHandleProps, isOverlay, availableLabels = [], onSendToWorkarea, onRemoveFromWorkarea, isWorkarea, defaultExpanded, onAttachmentClick, onTaskClick, globalExpanded, showFullTitles, showPreview }, ref) => {
     const [expanded, setExpanded] = useState(defaultExpanded || false);
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [isEditingTitle, setIsEditingTitle] = useState(false);
@@ -308,24 +308,29 @@ export const TaskItem = forwardRef(({ task, onUpdate, showTags, style, dragHandl
             initial={isOverlay ? false : { opacity: 0 }}
             animate={isOverlay ? false : { opacity: baseStyle.opacity }}
             exit={isOverlay ? false : { opacity: 0 }}
-            className={`group hover:bg-white/[0.04] transition-colors border-b border-white/5 bg-transparent ${expanded ? 'bg-white/[0.02]' : ''}`}
+            className={`group hover:bg-white/[0.04] transition-colors border-b border-white/5 bg-transparent ${expanded || globalExpanded ? 'bg-white/[0.02]' : ''}`}
         >
             <div
                 className="flex items-start gap-4 cursor-pointer pr-4"
                 onClick={() => setExpanded(!expanded)}
-                {...(expanded ? {} : dragHandleProps)}
+                {...(expanded || globalExpanded ? {} : dragHandleProps)}
             >
                 <div className="py-2 px-4 flex items-start gap-4 flex-1 min-w-0">
                     <div
                         className={`p-1 mt-0.5 text-gray-600 hover:text-gray-400 transition-colors ${expanded ? 'cursor-pointer' : 'cursor-grab active:cursor-grabbing'}`}
                         onClick={(e) => {
-                            if (expanded) {
+                            if (expanded || globalExpanded) {
                                 e.stopPropagation();
+                                if (globalExpanded) {
+                                    // If global is on, individual collapse toggle works on local state
+                                    // but UI might stay expanded. 
+                                    // Actually, if global is on, we should probably just allow local toggle to change local state.
+                                }
                                 setExpanded(false);
                             }
                         }}
                     >
-                        {expanded ? <ChevronUp size={16} /> : <GripVertical size={16} />}
+                        {expanded || globalExpanded ? <ChevronUp size={16} /> : <GripVertical size={16} />}
                     </div>
                     <div
                         className={`w-3 h-3 mt-1.5 rounded-full shrink-0 transition-colors ${localLabels.length > 0 && availableLabels.find(l => l.name === localLabels[0])?.color
@@ -368,9 +373,9 @@ export const TaskItem = forwardRef(({ task, onUpdate, showTags, style, dragHandl
                     ) : (
                         <div className="flex-1 min-w-0 flex items-start gap-2 group/title">
                             <h3
-                                className={`font-medium text-gray-200 text-left ${expanded ? 'break-words whitespace-pre-wrap cursor-text' : 'truncate'} ${(task.status === 'Deleted' || task.status === 'deleted') ? 'line-through opacity-50' : ''}`}
+                                className={`font-medium text-gray-200 text-left ${expanded || globalExpanded || showFullTitles ? 'break-words whitespace-pre-wrap cursor-text' : 'truncate'} ${(task.status === 'Deleted' || task.status === 'deleted') ? 'line-through opacity-50' : ''}`}
                                 onClick={(e) => {
-                                    if (expanded) {
+                                    if (expanded || globalExpanded || showFullTitles) {
                                         e.stopPropagation();
                                         // If in workarea and onTaskClick is provided, navigate to the task
                                         if (isWorkarea && onTaskClick) {
@@ -380,6 +385,12 @@ export const TaskItem = forwardRef(({ task, onUpdate, showTags, style, dragHandl
                                 }}
                             >
                                 {task.title}
+                                {showPreview && !(expanded || globalExpanded) && task.updates && task.updates.length > 0 && (
+                                    <span className="text-gray-500 font-normal ml-2">
+                                        <span className="text-gray-600 mr-1">—</span>
+                                        {task.updates[task.updates.length - 1].content}
+                                    </span>
+                                )}
                             </h3>
 
                             {/* Labels Display */}
@@ -429,7 +440,7 @@ export const TaskItem = forwardRef(({ task, onUpdate, showTags, style, dragHandl
                     </span>
 
                     {/* [NEW] Send/Remove Workarea Button */}
-                    {!isOverlay && expanded && (
+                    {!isOverlay && (expanded || globalExpanded) && (
                         <div className="mt-2.5">
                             {isWorkarea ? (
                                 <button
@@ -460,7 +471,7 @@ export const TaskItem = forwardRef(({ task, onUpdate, showTags, style, dragHandl
             </div>
 
             <AnimatePresence>
-                {expanded && (
+                {(expanded || globalExpanded) && (
                     <motion.div
                         initial={{ height: 0, opacity: 0 }}
                         animate={{ height: 'auto', opacity: 1 }}
