@@ -5,7 +5,7 @@ import { Sidebar } from './Sidebar';
 import { ChatInterface } from './ChatInterface';
 import { AgentList } from './AgentList';
 import { AgentItem } from './AgentItem';
-import { Plus, Home as HomeIcon, Tag as TagIcon, ArrowLeft, ArrowRight, Trash2, X, ChevronsUpDown, ChevronsDownUp, Type, MessageSquare, ZoomIn, ZoomOut } from 'lucide-react';
+import { Search, Plus, Home as HomeIcon, Tag as TagIcon, ArrowLeft, ArrowRight, Trash2, X, ChevronsUpDown, ChevronsDownUp, Type, MessageSquare, ZoomIn, ZoomOut } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import {
@@ -29,6 +29,7 @@ import { createPortal } from 'react-dom';
 
 export const TaskManager = () => {
     const [tasks, setTasks] = useState([]);
+    const [searchQuery, setSearchQuery] = useState('');
 
     const [labels, setLabels] = useState([]);
     const [folders, setFolders] = useState([]);
@@ -68,8 +69,17 @@ export const TaskManager = () => {
     }); // [NEW] Workarea logic
     const [autoExpandTaskId, setAutoExpandTaskId] = useState(null); // ID of task to auto-expand after navigation
 
-    // Filter out workarea tasks from main list
-    const visibleTasks = tasks.filter(t => !workareaTasks.find(wt => wt._id === t._id));
+    // Filter out workarea tasks from main list and apply search
+    const visibleTasks = tasks
+        .filter(t => !workareaTasks.find(wt => wt._id === t._id))
+        .filter(t => {
+            if (!searchQuery.trim()) return true;
+            const query = searchQuery.toLowerCase();
+            return (
+                (t.title && t.title.toLowerCase().includes(query)) ||
+                (t.labels && t.labels.some(l => l.toLowerCase().includes(query)))
+            );
+        });
 
     // Sidebar Order State
     const [sidebarItems, setSidebarItems] = useState([]);
@@ -901,7 +911,7 @@ export const TaskManager = () => {
 
                 <main className="flex-1 flex flex-col min-w-0 bg-[#0f1014] h-full relative">
                     <header className="px-6 py-4 flex justify-between items-center bg-[#0f1014]/80 backdrop-blur-md sticky top-0 z-10 border-b border-white/5">
-                        <div className="flex items-center gap-4">
+                        <div className="flex items-center gap-4 shrink-0">
                             <AnimatePresence mode="popLayout">
                                 <div className="flex items-center gap-1.5">
                                     {history.length > 0 && (
@@ -944,12 +954,34 @@ export const TaskManager = () => {
                                                             tasks.length})
                                     </span>
                                 </h1>
-                                <p className="text-gray-500 text-base border-l border-gray-800 pl-4 py-0.5 leading-none">
-                                </p>
                             </div>
                         </div>
 
-                        <div className="flex items-center gap-4">
+                        {/* Gmail-like Search Bar */}
+                        <div className="flex-[3] flex justify-center mx-6 min-w-[400px]">
+                            <div className="w-full max-w-3xl group relative transition-all duration-300 focus-within:max-w-4xl">
+                                <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                                    <Search size={18} className="text-gray-400 group-focus-within:text-blue-400 transition-colors" />
+                                </div>
+                                <input
+                                    type="text"
+                                    placeholder="Search tasks..."
+                                    value={searchQuery}
+                                    onChange={(e) => setSearchQuery(e.target.value)}
+                                    className="w-full bg-white/5 border border-white/5 rounded-xl py-2 pl-12 pr-10 text-sm text-gray-200 placeholder:text-gray-500 focus:outline-none focus:bg-white/10 focus:border-blue-500/50 focus:ring-4 focus:ring-blue-500/10 transition-all shadow-inner"
+                                />
+                                {searchQuery && (
+                                    <button
+                                        onClick={() => setSearchQuery('')}
+                                        className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-500 hover:text-gray-300 transition-colors"
+                                    >
+                                        <X size={16} />
+                                    </button>
+                                )}
+                            </div>
+                        </div>
+
+                        <div className="flex items-center gap-4 shrink-0">
                             {((activeTab === 'active' || activeTab === 'folder' || activeTab === 'label') || (selectedLabel)) && (
                                 <button
                                     onClick={() => {
