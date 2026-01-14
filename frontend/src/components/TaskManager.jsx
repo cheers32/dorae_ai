@@ -40,6 +40,7 @@ export const TaskManager = () => {
     const [error, setError] = useState(null);
     const [showTags, setShowTags] = useState(false);
     const [isCreating, setIsCreating] = useState(false);
+    const [isCreatingAgent, setIsCreatingAgent] = useState(false);
     const [activeId, setActiveId] = useState(null);
     const [history, setHistory] = useState([]);
     const [workareaTasks, setWorkareaTasks] = useState(() => {
@@ -899,6 +900,17 @@ export const TaskManager = () => {
                                 <span className="text-sm font-medium">{showTags ? 'Hide Tags' : 'Show Tags'}</span>
                             </button>
 
+                            {activeTab === 'assistant' && (
+                                <button
+                                    onClick={() => setIsCreatingAgent(true)}
+                                    className="px-3 py-2 rounded-lg transition-colors flex items-center gap-2 text-blue-400 bg-blue-400/10 hover:bg-blue-400/20"
+                                    title="Hire Agent"
+                                >
+                                    <Plus size={18} />
+                                    <span className="text-sm font-medium">Hire Agent</span>
+                                </button>
+                            )}
+
                             {((activeTab === 'active' || activeTab === 'folder' || activeTab === 'label') || (selectedLabel)) && (
                                 <button
                                     onClick={() => {
@@ -948,6 +960,7 @@ export const TaskManager = () => {
                                                             agent={item}
                                                             isFocused={true}
                                                             onFocus={() => handleFocusAgent(item)}
+                                                            availableLabels={labels}
                                                         // Add compact prop if needed
                                                         />
                                                     </div>
@@ -986,6 +999,9 @@ export const TaskManager = () => {
                             <AgentList
                                 onFocusAgent={handleFocusAgent}
                                 focusedAgentId={focusedAgentId}
+                                availableLabels={labels}
+                                isCreating={isCreatingAgent}
+                                setIsCreating={setIsCreatingAgent}
                             />
                         </div>
                     ) : (

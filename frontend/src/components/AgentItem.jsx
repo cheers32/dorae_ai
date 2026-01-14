@@ -7,7 +7,7 @@ import { useDroppable } from '@dnd-kit/core';
 
 
 
-export const AgentItem = ({ agent, onFocus, onEdit, onDelete, isFocused }) => {
+export const AgentItem = ({ agent, onFocus, onEdit, onDelete, isFocused, availableLabels }) => {
     const { setNodeRef, isOver } = useDroppable({
         id: `agent-${agent._id}`,
         data: { type: 'agent', agent }
@@ -57,17 +57,14 @@ export const AgentItem = ({ agent, onFocus, onEdit, onDelete, isFocused }) => {
             exit={{ opacity: 0, scale: 0.95 }}
             className={`
                 relative p-5 rounded-2xl border transition-all duration-300 group
-                bg-white/5 border-white/10 hover:border-white/20 hover:bg-white/10
+                ${isFocused
+                    ? 'bg-white/[0.03] border-white/5 shadow-inner'
+                    : 'bg-white/5 border-white/10 hover:border-white/20 hover:bg-white/10'
+                }
                 ${isOver ? 'ring-2 ring-blue-400 bg-blue-500/20 scale-[1.02]' : ''}
             `}
         >
-            {/* Chromo Hover Effect for Focused Agent */}
-            {isFocused && (
-                <>
-                    <div className="absolute -inset-[1px] rounded-2xl bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 opacity-0 group-hover:opacity-100 transition-opacity duration-500 -z-10" />
-                    <div className="absolute -inset-[2px] rounded-2xl bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 opacity-0 group-hover:opacity-50 blur-sm transition-opacity duration-500 -z-10" />
-                </>
-            )}
+
 
             <div className="flex items-start justify-between mb-4">
                 <div className="flex items-center gap-4">
@@ -83,7 +80,7 @@ export const AgentItem = ({ agent, onFocus, onEdit, onDelete, isFocused }) => {
                     </div>
                 </div>
 
-                <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                <div className="flex items-center gap-3">
                     <button
                         onClick={() => onFocus(agent)}
                         className={`
@@ -96,7 +93,15 @@ export const AgentItem = ({ agent, onFocus, onEdit, onDelete, isFocused }) => {
                     >
                         {isFocused ? 'Unfocus' : 'Focus'}
                     </button>
-                    {/* Placeholder for future actions */}
+
+                    <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-white/5 border border-white/10 text-[10px] font-medium uppercase tracking-widest text-gray-400">
+                        <span>Active Skills</span>
+                        <span className="w-px h-3 bg-white/10 mx-0.5"></span>
+                        <span className="flex items-center gap-1 text-blue-400">
+                            <Zap size={10} />
+                            {agent.skills?.length || 0}
+                        </span>
+                    </div>
                 </div>
             </div>
 
@@ -109,23 +114,33 @@ export const AgentItem = ({ agent, onFocus, onEdit, onDelete, isFocused }) => {
             {/* Assigned Tasks Chips */}
             {agent.active_tasks && agent.active_tasks.length > 0 && (
                 <div className="flex flex-wrap gap-2 mb-4">
-                    {agent.active_tasks.map(task => (
-                        <div key={task._id} className="bg-blue-500/10 border border-blue-500/20 text-blue-300 px-2.5 py-1 rounded-lg text-xs font-medium flex items-center gap-1.5 shadow-sm">
-                            <span className="w-1.5 h-1.5 rounded-full bg-blue-400 shadow-[0_0_8px_rgba(96,165,250,0.5)]"></span>
-                            <span className="truncate max-w-[150px]">{task.title}</span>
-                        </div>
-                    ))}
+                    {agent.active_tasks.map(task => {
+                        const labelColor = availableLabels?.find(l => l.name === task.labels?.[0])?.color || '#3B82F6';
+                        return (
+                            <div
+                                key={task._id}
+                                className="border px-2.5 py-1 rounded-lg text-xs font-medium flex items-center gap-1.5 shadow-sm transition-colors"
+                                style={{
+                                    backgroundColor: `${labelColor}1a`, // 10% opacity
+                                    borderColor: `${labelColor}33`, // 20% opacity
+                                    color: labelColor // or maybe keep text specific? Let's try matching color.
+                                }}
+                            >
+                                <span
+                                    className="w-1.5 h-1.5 rounded-full shadow-sm"
+                                    style={{
+                                        backgroundColor: labelColor,
+                                        boxShadow: `0 0 8px ${labelColor}80`
+                                    }}
+                                ></span>
+                                <span className="truncate max-w-[150px] text-gray-300">{task.title}</span>
+                            </div>
+                        );
+                    })}
                 </div>
             )}
 
             <div className="space-y-3">
-                <div className="flex items-center justify-between text-xs text-gray-500 font-medium uppercase tracking-widest">
-                    <span>Active Skills</span>
-                    <span className="flex items-center gap-1 text-blue-400">
-                        <Zap size={12} />
-                        {agent.skills?.length || 0} Enabled
-                    </span>
-                </div>
 
                 <div className="grid grid-cols-2 gap-2">
                     {/* Context Chat Toggle */}

@@ -326,7 +326,7 @@ def update_task(task_id):
         data = request.json
         update_fields = {}
         update_fields = {}
-        allowed_fields = ['title', 'priority', 'category', 'status', 'importance', 'labels', 'folderId', 'attachments']
+        allowed_fields = ['title', 'priority', 'category', 'status', 'importance', 'labels', 'folderId', 'attachments', 'assigned_agent_id']
         
         for field in allowed_fields:
             if field in data:
@@ -799,7 +799,7 @@ def get_agents():
             tasks = list(tasks_collection.find({
                 'assigned_agent_id': agent_id,
                 'status': {'$nin': ['Closed', 'completed', 'Deleted', 'deleted']}
-            }, {'title': 1, 'status': 1}))
+            }, {'title': 1, 'status': 1, 'labels': 1}))
             agent['active_tasks'] = [serialize_doc(t) for t in tasks]
 
         return jsonify([serialize_doc(a) for a in agents]), 200
