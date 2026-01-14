@@ -13,7 +13,9 @@ import {
     MessageSquare,
     Palette,
     Folder,
-    Check
+    Check,
+    ChevronLeft,
+    ChevronRight
 } from 'lucide-react';
 import { api } from '../api';
 import { useDroppable, useDraggable } from '@dnd-kit/core';
@@ -285,7 +287,7 @@ export function Sidebar({ activeTab, onNavigate, labels = [], onLabelsChange, se
             <div className={`px-6 mb-10 flex items-center justify-between ${isCollapsed ? 'px-0 justify-center' : ''}`}>
                 <div
                     className="flex items-center gap-3 cursor-pointer group"
-                    onClick={() => onToggle()}
+                    onClick={() => onNavigate('active', null)}
                 >
                     <div className="p-2.5 bg-blue-500/10 rounded-xl group-hover:bg-blue-500/20 transition-colors">
                         <Sparkles size={24} className="text-blue-400" />
@@ -301,15 +303,27 @@ export function Sidebar({ activeTab, onNavigate, labels = [], onLabelsChange, se
                         </div>
                     )}
                 </div>
-                {!isCollapsed && (
+                <div className="flex items-center gap-1">
+                    {!isCollapsed && (
+                        <button
+                            onClick={() => window.location.href = '/'}
+                            className="p-2 rounded-xl hover:bg-white/5 border border-transparent hover:border-white/10 text-gray-500 hover:text-white transition-all flex items-center justify-center group"
+                            title="Back to Home"
+                        >
+                            <Home size={18} className="group-hover:scale-110 transition-transform" />
+                        </button>
+                    )}
                     <button
-                        onClick={() => window.location.href = '/'}
-                        className="p-2 rounded-xl hover:bg-white/5 border border-transparent hover:border-white/10 text-gray-500 hover:text-white transition-all flex items-center justify-center group"
-                        title="Back to Home"
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            onToggle();
+                        }}
+                        className={`p-2 rounded-xl hover:bg-white/5 border border-transparent hover:border-white/10 text-gray-500 hover:text-white transition-all flex items-center justify-center group ${isCollapsed ? 'mx-auto' : ''}`}
+                        title={isCollapsed ? "Expand Sidebar" : "Collapse Sidebar"}
                     >
-                        <Home size={18} className="group-hover:scale-110 transition-transform" />
+                        {isCollapsed ? <ChevronRight size={18} /> : <ChevronLeft size={18} />}
                     </button>
-                )}
+                </div>
             </div>
 
             <div className="flex-1 px-4 overflow-y-auto space-y-8 scrollbar-hide">

@@ -5,7 +5,7 @@ import { Sidebar } from './Sidebar';
 import { ChatInterface } from './ChatInterface';
 import { AgentList } from './AgentList';
 import { AgentItem } from './AgentItem';
-import { Plus, Home as HomeIcon, Tag as TagIcon, ArrowLeft, Trash2, X, ChevronsUpDown, ChevronsDownUp, Type, MessageSquare, ZoomIn, ZoomOut } from 'lucide-react';
+import { Plus, Home as HomeIcon, Tag as TagIcon, ArrowLeft, ArrowRight, Trash2, X, ChevronsUpDown, ChevronsDownUp, Type, MessageSquare, ZoomIn, ZoomOut } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import {
@@ -51,6 +51,7 @@ export const TaskManager = () => {
         return saved ? parseInt(saved, 10) : 15;
     });
     const [history, setHistory] = useState([]);
+    const [forwardHistory, setForwardHistory] = useState([]);
     const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
     const [workareaTasks, setWorkareaTasks] = useState(() => {
         // Initialize from localStorage
@@ -136,6 +137,7 @@ export const TaskManager = () => {
 
         if (pushToHistory) {
             setHistory(prev => [...prev, { tab: activeTab, label: selectedLabel, folder: selectedFolder }]);
+            setForwardHistory([]); // Clear forward history when a new navigation is triggered
         }
         // Immediate UI reset to prevent jitter
         setLoading(true);
@@ -148,6 +150,9 @@ export const TaskManager = () => {
     const handleBack = () => {
         if (history.length === 0) return;
         const lastView = history[history.length - 1];
+
+        // Push current view to forward history
+        setForwardHistory(prev => [...prev, { tab: activeTab, label: selectedLabel, folder: selectedFolder }]);
         setHistory(prev => prev.slice(0, -1));
 
         // Immediate UI reset
@@ -156,6 +161,22 @@ export const TaskManager = () => {
         setActiveTab(lastView.tab);
         setSelectedLabel(lastView.label);
         setSelectedFolder(lastView.folder);
+    };
+
+    const handleForward = () => {
+        if (forwardHistory.length === 0) return;
+        const nextView = forwardHistory[forwardHistory.length - 1];
+
+        // Push current view back to history
+        setHistory(prev => [...prev, { tab: activeTab, label: selectedLabel, folder: selectedFolder }]);
+        setForwardHistory(prev => prev.slice(0, -1));
+
+        // Immediate UI reset
+        setLoading(true);
+        setTasks([]);
+        setActiveTab(nextView.tab);
+        setSelectedLabel(nextView.label);
+        setSelectedFolder(nextView.folder);
     };
 
     const fetchFolders = async () => {
@@ -292,11 +313,18 @@ export const TaskManager = () => {
                     handleBack();
                 }
             }
+            // Command + ] for forward navigation
+            if ((event.metaKey || event.ctrlKey) && event.key === ']') {
+                if (forwardHistory.length > 0) {
+                    event.preventDefault();
+                    handleForward();
+                }
+            }
         };
 
         window.addEventListener('keydown', handleKeyDown);
         return () => window.removeEventListener('keydown', handleKeyDown);
-    }, [history, handleBack]);
+    }, [history, forwardHistory, handleBack, handleForward]);
 
     useEffect(() => {
         fetchTasks(true);
@@ -874,19 +902,34 @@ export const TaskManager = () => {
                 <main className="flex-1 flex flex-col min-w-0 bg-[#0f1014] h-full relative">
                     <header className="px-6 py-4 flex justify-between items-center bg-[#0f1014]/80 backdrop-blur-md sticky top-0 z-10 border-b border-white/5">
                         <div className="flex items-center gap-4">
-                            <AnimatePresence>
-                                {history.length > 0 && (
-                                    <motion.button
-                                        initial={{ opacity: 0, x: -10 }}
-                                        animate={{ opacity: 1, x: 0 }}
-                                        exit={{ opacity: 0, x: -10 }}
-                                        onClick={handleBack}
-                                        className="p-1.5 bg-white/5 border border-white/10 rounded-lg text-gray-400 hover:text-white hover:bg-white/10 transition-all flex items-center justify-center group"
-                                        title="Go Back"
-                                    >
-                                        <ArrowLeft size={16} className="group-hover:-translate-x-0.5 transition-transform" />
-                                    </motion.button>
-                                )}
+                            <AnimatePresence mode="popLayout">
+                                <div className="flex items-center gap-1.5">
+                                    {history.length > 0 && (
+                                        <motion.button
+                                            initial={{ opacity: 0, x: -10 }}
+                                            animate={{ opacity: 1, x: 0 }}
+                                            exit={{ opacity: 0, x: -10 }}
+                                            onClick={handleBack}
+                                            className="p-1.5 bg-white/5 border border-white/10 rounded-lg text-gray-400 hover:text-white hover:bg-white/10 transition-all flex items-center justify-center group"
+                                            title="Go Back (Cmd + [)"
+                                        >
+                                            <ArrowLeft size={16} className="group-hover:-translate-x-0.5 transition-transform" />
+                                        </motion.button>
+                                    )}
+
+                                    {forwardHistory.length > 0 && (
+                                        <motion.button
+                                            initial={{ opacity: 0, x: 10 }}
+                                            animate={{ opacity: 1, x: 0 }}
+                                            exit={{ opacity: 0, x: 10 }}
+                                            onClick={handleForward}
+                                            className="p-1.5 bg-white/5 border border-white/10 rounded-lg text-gray-400 hover:text-white hover:bg-white/10 transition-all flex items-center justify-center group"
+                                            title="Go Forward (Cmd + ])"
+                                        >
+                                            <ArrowRight size={16} className="group-hover:translate-x-0.5 transition-transform" />
+                                        </motion.button>
+                                    )}
+                                </div>
                             </AnimatePresence>
 
                             <div className="flex items-baseline gap-3">
