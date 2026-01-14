@@ -303,14 +303,7 @@ export const TaskManager = () => {
             if (activeTab === 'folder' && selectedFolder) {
                 folderId = selectedFolder;
 
-                // [NEW] Also add folder name as a label (Folder-as-Label feature)
-                const textFolder = folders.find(f => f._id === selectedFolder);
-                if (textFolder) {
-                    // Avoid duplicates if selectedLabel is somehow same (though UI prevents dual selection usually)
-                    if (!labelsToApply.includes(textFolder.name)) {
-                        labelsToApply.push(textFolder.name);
-                    }
-                }
+                // [REMOVED] Folder-as-Label feature logic was here
             } else if (activeTab === 'active' && !selectedLabel && !selectedFolder) {
                 // If strictly "Active" tab with no selection, maybe don't enforce folder unless UNFILED logic desires it
                 // But generally, api.createTask might need update to support folderId
@@ -485,13 +478,7 @@ export const TaskManager = () => {
                     status: 'Active'
                 };
 
-                // Add label if folder name exists and task doesn't already have it
-                if (folderName && task) {
-                    const currentLabels = task.labels || [];
-                    if (!currentLabels.includes(folderName)) {
-                        updates.labels = [...currentLabels, folderName];
-                    }
-                }
+                // [REMOVED] Auto-tagging with folder name logic
 
                 await api.updateTask(realId, updates);
 

@@ -22,6 +22,8 @@ import { CSS } from '@dnd-kit/utilities';
 import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable';
 
 const SortableSidebarItem = ({ id, icon: Icon, label, isActive, onClick, data, isFolder, onDelete, count, onColorChange, color }) => {
+    const [isDeleting, setIsDeleting] = useState(false);
+
     const {
         attributes,
         listeners,
@@ -60,14 +62,36 @@ const SortableSidebarItem = ({ id, icon: Icon, label, isActive, onClick, data, i
                 )}
             </button>
             {isFolder && onDelete && (
-                <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-all">
-                    <button
-                        onPointerDown={(e) => e.stopPropagation()}
-                        onClick={onDelete}
-                        className="p-1.5 text-gray-600 hover:text-red-400 transition-all rounded hover:bg-white/5"
-                    >
-                        <Trash2 size={12} />
-                    </button>
+                <div
+                    className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-all z-50"
+                    onPointerDown={(e) => e.stopPropagation()}
+                >
+                    {isDeleting ? (
+                        <div className="flex items-center gap-1">
+                            <button
+                                onClick={onDelete}
+                                className="p-1 text-green-400 hover:text-green-300 transition-colors bg-green-400/10 rounded"
+                                title="Confirm Delete"
+                            >
+                                <Check size={12} />
+                            </button>
+                            <button
+                                onClick={() => setIsDeleting(false)}
+                                className="p-1 text-gray-500 hover:text-gray-300 transition-colors"
+                                title="Cancel"
+                            >
+                                <X size={12} />
+                            </button>
+                        </div>
+                    ) : (
+                        <button
+                            onClick={() => setIsDeleting(true)}
+                            className="p-1.5 text-gray-600 hover:text-red-400 transition-all rounded hover:bg-white/5"
+                            title="Delete Folder"
+                        >
+                            <Trash2 size={12} />
+                        </button>
+                    )}
                 </div>
             )}
         </div>
