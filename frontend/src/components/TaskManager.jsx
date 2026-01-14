@@ -73,14 +73,22 @@ export const TaskManager = () => {
     const [focusedAgentId, setFocusedAgentId] = useState(null);
 
     const handleFocusAgent = (agent) => {
-        // Toggle focus: If already in workarea, remove it. If not, add it.
-        const isInWorkarea = workareaTasks.some(item => item._id === agent._id && item.type === 'agent');
+        // Toggle focus logic for single agent
+        const isCurrentFocused = focusedAgentId === agent._id;
 
-        if (isInWorkarea) {
+        if (isCurrentFocused) {
+            // Unfocus current
             setWorkareaTasks(prev => prev.filter(item => !(item._id === agent._id && item.type === 'agent')));
+            setFocusedAgentId(null);
         } else {
-            // Add to workarea with type 'agent'
-            setWorkareaTasks(prev => [{ ...agent, type: 'agent', _forceExpanded: true }, ...prev]);
+            // Focus new agent (replace any existing agent in workarea)
+            setWorkareaTasks(prev => {
+                // Remove existing agents from workarea
+                const withoutAgents = prev.filter(item => item.type !== 'agent');
+                // Add new agent to top
+                return [{ ...agent, type: 'agent', _forceExpanded: true }, ...withoutAgents];
+            });
+            setFocusedAgentId(agent._id);
         }
     };
 
@@ -867,6 +875,61 @@ export const TaskManager = () => {
                         </div>
                     </header>
 
+                    {/* [NEW] Workarea Section (Persistent across views) */}
+                    <AnimatePresence>
+                        {workareaTasks.length > 0 && (
+                            <>
+                                <motion.div
+                                    initial={{ height: 0, opacity: 0 }}
+                                    animate={{ height: 'auto', opacity: 1 }}
+                                    exit={{ height: 0, opacity: 0 }}
+                                    className="bg-white/[0.03] border-b border-white/5 relative flex flex-col shrink-0"
+                                >
+                                    <div className="px-8 py-3 bg-white/[0.02] backdrop-blur border-white/5 flex items-center justify-between sticky top-0 z-10">
+                                        <h2 className="text-sm font-bold uppercase tracking-widest text-blue-400">Current Focus</h2>
+                                    </div>
+                                    <div className="px-8 py-4">
+                                        {workareaTasks.map(item => {
+                                            if (item.type === 'agent') {
+                                                return (
+                                                    <div key={`workarea-agent-${item._id}`} className="mb-2">
+                                                        <AgentItem
+                                                            agent={item}
+                                                            isFocused={true}
+                                                            onFocus={() => handleFocusAgent(item)}
+                                                        // Add compact prop if needed
+                                                        />
+                                                    </div>
+                                                );
+                                            }
+                                            // Default to Task
+                                            return (
+                                                <SortableTaskItem
+                                                    key={`workarea-${item._id}`}
+                                                    id={`workarea-task-${item._id}`}
+                                                    task={item}
+                                                    onUpdate={() => {
+                                                        fetchTasks(false);
+                                                        refreshWorkareaTask(item._id);
+                                                    }}
+                                                    showTags={true}
+                                                    availableLabels={labels}
+                                                    isWorkarea={true}
+                                                    defaultExpanded={item._forceExpanded}
+                                                    onRemoveFromWorkarea={() => handleRemoveFromWorkarea(item._id)}
+                                                    onAttachmentClick={handleNavigateToTask}
+                                                    onTaskClick={() => handleNavigateToTask(item)}
+                                                />
+                                            );
+                                        })}
+                                    </div>
+                                </motion.div>
+
+                                <div className="h-px bg-white/5 my-6 mx-8"></div>
+                            </>
+                        )}
+                    </AnimatePresence>
+
                     {activeTab === 'assistant' ? (
                         <div className="flex-1 overflow-hidden">
                             <AgentList
@@ -891,62 +954,6 @@ export const TaskManager = () => {
                                 </div>
                             ) : (
                                 <>
-                                    {/* [NEW] Workarea Section (Pinned to Top) */}
-                                    <AnimatePresence>
-                                        {workareaTasks.length > 0 && (
-                                            <>
-                                                <motion.div
-                                                    initial={{ height: 0, opacity: 0 }}
-                                                    animate={{ height: 'auto', opacity: 1 }}
-                                                    exit={{ height: 0, opacity: 0 }}
-                                                    className="bg-white/[0.03] border-b border-white/5 relative flex flex-col shrink-0"
-                                                >
-                                                    <div className="px-8 py-3 bg-white/[0.02] backdrop-blur border-white/5 flex items-center justify-between sticky top-0 z-10">
-                                                        <h2 className="text-sm font-bold uppercase tracking-widest text-blue-400">Current Focus</h2>
-                                                    </div>
-                                                    <div className="px-8 py-4">
-                                                        {workareaTasks.map(item => {
-                                                            if (item.type === 'agent') {
-                                                                return (
-                                                                    <div key={`workarea-agent-${item._id}`} className="mb-2">
-                                                                        <AgentItem
-                                                                            agent={item}
-                                                                            isFocused={true}
-                                                                            onFocus={() => handleFocusAgent(item)}
-                                                                        // Add compact prop if needed
-                                                                        />
-                                                                    </div>
-                                                                );
-                                                            }
-                                                            // Default to Task
-                                                            return (
-                                                                <SortableTaskItem
-                                                                    key={`workarea-${item._id}`}
-                                                                    id={`workarea-task-${item._id}`}
-                                                                    task={item}
-                                                                    onUpdate={() => {
-                                                                        fetchTasks(false);
-                                                                        refreshWorkareaTask(item._id);
-                                                                    }}
-                                                                    showTags={true}
-                                                                    availableLabels={labels}
-                                                                    isWorkarea={true}
-                                                                    defaultExpanded={item._forceExpanded}
-                                                                    onRemoveFromWorkarea={() => handleRemoveFromWorkarea(item._id)}
-                                                                    onAttachmentClick={handleNavigateToTask}
-                                                                    onTaskClick={() => handleNavigateToTask(item)}
-                                                                />
-                                                            );
-                                                        })}
-                                                    </div>
-                                                </motion.div>
-
-                                                <div className="h-px bg-white/5 my-6 mx-8"></div>
-                                            </>
-                                        )}
-                                    </AnimatePresence>
-
-
                                     <AnimatePresence>
                                         {isCreating && (
                                             <motion.form
@@ -1019,6 +1026,7 @@ export const TaskManager = () => {
 
                 </main>
             </div >
+
 
             {
                 createPortal(
