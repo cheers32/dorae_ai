@@ -869,8 +869,8 @@ export const TaskManager = () => {
                 />
 
                 <main className="flex-1 flex flex-col min-w-0 bg-[#0f1014] h-full relative">
-                    <header className="px-8 py-8 flex justify-between items-center bg-[#0f1014]/80 backdrop-blur-md sticky top-0 z-10 border-b border-white/5">
-                        <div className="flex items-center gap-6">
+                    <header className="px-8 py-4 flex justify-between items-center bg-[#0f1014]/80 backdrop-blur-md sticky top-0 z-10 border-b border-white/5">
+                        <div className="flex items-center gap-4">
                             <AnimatePresence>
                                 {history.length > 0 && (
                                     <motion.button
@@ -878,18 +878,18 @@ export const TaskManager = () => {
                                         animate={{ opacity: 1, x: 0 }}
                                         exit={{ opacity: 0, x: -10 }}
                                         onClick={handleBack}
-                                        className="p-2.5 bg-white/5 border border-white/10 rounded-xl text-gray-400 hover:text-white hover:bg-white/10 transition-all flex items-center justify-center group"
+                                        className="p-1.5 bg-white/5 border border-white/10 rounded-lg text-gray-400 hover:text-white hover:bg-white/10 transition-all flex items-center justify-center group"
                                         title="Go Back"
                                     >
-                                        <ArrowLeft size={20} className="group-hover:-translate-x-0.5 transition-transform" />
+                                        <ArrowLeft size={16} className="group-hover:-translate-x-0.5 transition-transform" />
                                     </motion.button>
                                 )}
                             </AnimatePresence>
 
-                            <div className="flex items-baseline gap-4">
-                                <h1 className="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-blue-200 text-left leading-tight">
+                            <div className="flex items-baseline gap-3">
+                                <h1 className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-blue-200 text-left leading-tight">
                                     {getHeaderTitle()}
-                                    <span className="text-lg text-gray-500 font-normal ml-2">
+                                    <span className="text-base text-gray-500 font-normal ml-2">
                                         ({activeTab === 'active' && !selectedLabel && !selectedFolder ? stats.active :
                                             activeTab === 'closed' ? stats.closed :
                                                 activeTab === 'trash' ? stats.trash :
@@ -898,7 +898,7 @@ export const TaskManager = () => {
                                                             tasks.length})
                                     </span>
                                 </h1>
-                                <p className="text-gray-500 text-lg border-l border-gray-800 pl-4 py-0.5 leading-none">
+                                <p className="text-gray-500 text-base border-l border-gray-800 pl-4 py-0.5 leading-none">
                                 </p>
                             </div>
                         </div>
@@ -907,71 +907,70 @@ export const TaskManager = () => {
                             {activeTab === 'trash' && tasks.length > 0 && (
                                 <button
                                     onClick={handleEmptyTrash}
-                                    className="px-3 py-2 rounded-lg transition-colors flex items-center gap-2 text-red-400 bg-red-400/10 hover:bg-red-400/20"
+                                    className="px-2 py-1.5 rounded-lg transition-colors flex items-center gap-2 text-red-400 bg-red-400/10 hover:bg-red-400/20"
                                     title="Empty Trash"
                                 >
-                                    <Trash2 size={18} />
+                                    <Trash2 size={16} />
                                     <span className="text-sm font-medium">Empty Trash</span>
                                 </button>
                             )}
                             <button
                                 onClick={() => setShowTags(!showTags)}
-                                className={`px-3 py-2 rounded-lg transition-colors flex items-center gap-2 ${showTags ? 'text-blue-400 bg-blue-400/10' : 'text-gray-500 hover:text-gray-300'}`}
+                                className={`px-2 py-1.5 rounded-lg transition-colors flex items-center gap-1.5 ${showTags ? 'text-blue-400 bg-blue-400/10' : 'text-gray-500 hover:text-gray-300'}`}
                                 title="Toggle Tags Visibility"
                             >
-                                <TagIcon size={18} />
-                                <span className="text-sm font-medium">{showTags ? 'Hide Tags' : 'Show Tags'}</span>
+                                <TagIcon size={16} />
+                                <span className="text-xs font-medium">{showTags ? 'Hide Tags' : 'Show Tags'}</span>
                             </button>
 
                             {activeTab !== 'assistant' && tasks.length > 0 && (
                                 <button
                                     onClick={() => setGlobalExpanded(!globalExpanded)}
-                                    className={`px-3 py-2 rounded-lg transition-colors flex items-center gap-2 ${globalExpanded ? 'text-blue-400 bg-blue-400/10' : 'text-gray-500 hover:text-gray-300'}`}
+                                    className={`px-2 py-1.5 rounded-lg transition-colors flex items-center gap-1.5 ${globalExpanded ? 'text-blue-400 bg-blue-400/10' : 'text-gray-500 hover:text-gray-300'}`}
                                     title={globalExpanded ? 'Collapse All' : 'Expand All'}
                                 >
-                                    {globalExpanded ? <ChevronsDownUp size={18} /> : <ChevronsUpDown size={18} />}
-                                    <span className="text-sm font-medium">{globalExpanded ? 'Collapse All' : 'Expand All'}</span>
+                                    {globalExpanded ? <ChevronsDownUp size={16} /> : <ChevronsUpDown size={16} />}
+                                    <span className="text-xs font-medium">{globalExpanded ? 'Collapse All' : 'Expand All'}</span>
                                 </button>
                             )}
 
                             {activeTab !== 'assistant' && tasks.length > 0 && (
                                 <button
                                     onClick={() => setShowFullTitles(!showFullTitles)}
-                                    className={`px-3 py-2 rounded-lg transition-colors flex items-center gap-2 ${showFullTitles ? 'text-blue-400 bg-blue-400/10' : 'text-gray-500 hover:text-gray-300'}`}
+                                    className={`px-2 py-1.5 rounded-lg transition-colors flex items-center gap-1.5 ${showFullTitles ? 'text-blue-400 bg-blue-400/10' : 'text-gray-500 hover:text-gray-300'}`}
                                     title={showFullTitles ? 'Truncate Titles' : 'Full Titles'}
                                 >
-                                    <Type size={18} />
-                                    <span className="text-sm font-medium">{showFullTitles ? 'Truncate Titles' : 'Full Titles'}</span>
+                                    <Type size={16} />
+                                    <span className="text-xs font-medium">{showFullTitles ? 'Truncate Titles' : 'Full Titles'}</span>
                                 </button>
                             )}
 
                             {activeTab !== 'assistant' && tasks.length > 0 && (
                                 <button
                                     onClick={() => setShowPreview(!showPreview)}
-                                    className={`px-3 py-2 rounded-lg transition-colors flex items-center gap-2 ${showPreview ? 'text-blue-400 bg-blue-400/10' : 'text-gray-500 hover:text-gray-300'}`}
+                                    className={`px-2 py-1.5 rounded-lg transition-colors flex items-center gap-1.5 ${showPreview ? 'text-blue-400 bg-blue-400/10' : 'text-gray-500 hover:text-gray-300'}`}
                                     title={showPreview ? 'Hide Preview' : 'Show Preview'}
                                 >
-                                    <MessageSquare size={18} />
-                                    <span className="text-sm font-medium">{showPreview ? 'Hide Preview' : 'Show Preview'}</span>
+                                    <MessageSquare size={16} />
+                                    <span className="text-xs font-medium">{showPreview ? 'Hide Preview' : 'Show Preview'}</span>
                                 </button>
                             )}
 
                             {activeTab !== 'assistant' && tasks.length > 0 && (
-                                <div className="flex items-center gap-1 bg-gray-900 border border-gray-800 rounded-lg p-1">
+                                <div className="flex items-center bg-gray-900 border border-gray-800 rounded-lg overflow-hidden">
                                     <button
                                         onClick={() => setFontSize(prev => Math.max(9, prev - 1))}
-                                        className="p-1.5 hover:bg-white/10 rounded transition-colors text-gray-400 hover:text-white"
+                                        className="p-1 hover:bg-white/10 transition-colors text-gray-400 hover:text-white border-r border-gray-800 w-7 h-7 flex justify-center items-center"
                                         title="Decrease font size"
                                     >
-                                        <ZoomOut size={16} />
+                                        <ZoomOut size={12} />
                                     </button>
-                                    <span className="text-[10px] font-medium text-gray-500 w-6 text-center">{fontSize}</span>
                                     <button
                                         onClick={() => setFontSize(prev => Math.min(24, prev + 1))}
-                                        className="p-1.5 hover:bg-white/10 rounded transition-colors text-gray-400 hover:text-white"
+                                        className="p-1 hover:bg-white/10 transition-colors text-gray-400 hover:text-white w-7 h-7 flex justify-center items-center"
                                         title="Increase font size"
                                     >
-                                        <ZoomIn size={16} />
+                                        <ZoomIn size={12} />
                                     </button>
                                 </div>
                             )}
@@ -1105,7 +1104,7 @@ export const TaskManager = () => {
                                         {isCreating && (
                                             <motion.form
                                                 initial={{ height: 0, opacity: 0, marginBottom: 0 }}
-                                                animate={{ height: 'auto', opacity: 1, marginBottom: 32 }}
+                                                animate={{ height: 'auto', opacity: 1, marginBottom: 24 }}
                                                 exit={{ height: 0, opacity: 0, marginBottom: 0 }}
                                                 className="flex gap-4 overflow-hidden"
                                                 onSubmit={(e) => {
@@ -1115,7 +1114,7 @@ export const TaskManager = () => {
                                                 <textarea
                                                     ref={newTaskTextareaRef}
                                                     autoFocus
-                                                    className="flex-1 bg-gray-900 border border-gray-800 rounded-xl px-5 py-4 text-base focus:outline-none focus:border-blue-500 focus:ring-0 transition-all placeholder:text-gray-600 resize-none overflow-hidden"
+                                                    className="flex-1 bg-gray-900 border border-gray-800 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:border-blue-500 focus:ring-0 transition-all placeholder:text-gray-600 resize-none overflow-hidden"
                                                     placeholder={selectedFolder ? `Add task to ${stats.folders[selectedFolder] ? folders.find(f => f._id === selectedFolder)?.name : 'folder'}...` : selectedLabel ? `Add task to ${selectedLabel}...` : "What needs to be done?"}
                                                     value={newTaskTitle}
                                                     onChange={(e) => setNewTaskTitle(e.target.value)}
@@ -1131,15 +1130,15 @@ export const TaskManager = () => {
                                                 <button
                                                     type="submit"
                                                     disabled={!newTaskTitle.trim()}
-                                                    className="bg-gradient-to-r from-blue-600 to-blue-400 hover:from-blue-500 hover:to-blue-300 text-white px-8 rounded-xl font-medium transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                                                    className="bg-gradient-to-r from-blue-600 to-blue-400 hover:from-blue-500 hover:to-blue-300 text-white px-6 rounded-lg text-sm font-medium transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
                                                 >
-                                                    <Plus size={20} /> Create
+                                                    <Plus size={16} /> Create
                                                 </button>
                                             </motion.form>
                                         )}
                                     </AnimatePresence>
 
-                                    <div className="flex-1 overflow-y-auto pr-2 space-y-4 scrollbar-thin scrollbar-thumb-gray-800 scrollbar-track-transparent">
+                                    <div className="flex-1 overflow-y-auto pr-2 scrollbar-thin scrollbar-thumb-gray-800 scrollbar-track-transparent">
                                         {loading ? (
                                             null
                                         ) : tasks.length === 0 ? (
@@ -1151,7 +1150,7 @@ export const TaskManager = () => {
                                                 items={visibleTasks.map(t => t._id)}
                                                 strategy={verticalListSortingStrategy}
                                             >
-                                                <div className="space-y-3">
+                                                <div>
                                                     {visibleTasks.map(task => (
                                                         <SortableTaskItem
                                                             key={task._id}
