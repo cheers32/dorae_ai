@@ -21,7 +21,7 @@ import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable';
 
-const SortableSidebarItem = ({ id, icon: Icon, label, isActive, onClick, data, isFolder, onDelete, count, onColorChange, color }) => {
+const SortableSidebarItem = ({ id, icon: Icon, label, isActive, onClick, data, isFolder, onDelete, count, onColorChange, color, isCollapsed }) => {
     const [isDeleting, setIsDeleting] = useState(false);
 
     const {
@@ -45,13 +45,14 @@ const SortableSidebarItem = ({ id, icon: Icon, label, isActive, onClick, data, i
         <div ref={setNodeRef} style={style} {...attributes} {...listeners} className="relative group">
             <button
                 className={`nav-item w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all ${isActive ? 'bg-blue-500/10 text-blue-400' : 'text-gray-400 hover:text-gray-200 hover:bg-white/5'
-                    } ${isOver && !isDragging ? 'bg-blue-500/20 border-blue-400 shadow-[0_0_15px_rgba(59,130,246,0.3)]' : ''}`}
+                    } ${isOver && !isDragging ? 'bg-blue-500/20 border-blue-400 shadow-[0_0_15px_rgba(59,130,246,0.3)]' : ''} ${isCollapsed ? 'justify-center px-0' : ''}`}
                 onClick={onClick}
+                title={isCollapsed ? label : ''}
             >
                 {Icon && <Icon size={18} className={isOver ? 'text-blue-400' : ''} />}
-                {!Icon && <div className="w-2 h-2 rounded-full" style={{ backgroundColor: data?.color || '#3B82F6' }} />}
-                <span className={`text-sm font-medium ${isOver ? 'text-blue-400' : ''}`}>{label}</span>
-                {count !== undefined && count > 0 && (
+                {!Icon && <div className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: data?.color || '#3B82F6' }} />}
+                {!isCollapsed && <span className={`text-sm font-medium ${isOver ? 'text-blue-400' : ''}`}>{label}</span>}
+                {!isCollapsed && count !== undefined && count > 0 && (
                     <span className={`ml-auto text-xs ${isActive ? 'text-blue-400' : 'text-gray-600'}`}>{count}</span>
                 )}
                 {isActive && !isOver && (
@@ -98,7 +99,7 @@ const SortableSidebarItem = ({ id, icon: Icon, label, isActive, onClick, data, i
     );
 };
 
-const DraggableSidebarLabel = ({ id, label, isActive, onClick, color, data, count, onDelete, onColorChange }) => {
+const DraggableSidebarLabel = ({ id, label, isActive, onClick, color, data, count, onDelete, onColorChange, isCollapsed }) => {
     const [isDeleting, setIsDeleting] = useState(false);
 
     const {
@@ -131,12 +132,13 @@ const DraggableSidebarLabel = ({ id, label, isActive, onClick, color, data, coun
         >
             <button
                 className={`nav-item w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all touch-none cursor-grab active:cursor-grabbing ${isActive ? 'bg-blue-500/10 text-blue-400' : 'text-gray-400 hover:text-gray-200 hover:bg-white/5'
-                    } ${isOver && !isDragging ? 'bg-blue-500/20 border-blue-400 shadow-[0_0_15px_rgba(59,130,246,0.3)]' : ''}`}
+                    } ${isOver && !isDragging ? 'bg-blue-500/20 border-blue-400 shadow-[0_0_15px_rgba(59,130,246,0.3)]' : ''} ${isCollapsed ? 'justify-center px-0' : ''}`}
                 onClick={onClick}
+                title={isCollapsed ? label : ''}
             >
-                <div className="w-2 h-2 rounded-full pointer-events-none" style={{ backgroundColor: color || '#3B82F6' }} />
-                <span className={`text-sm font-medium pointer-events-none ${isOver ? 'text-blue-400' : ''}`}>{label}</span>
-                {count !== undefined && count > 0 && (
+                <div className="w-2 h-2 rounded-full pointer-events-none shrink-0" style={{ backgroundColor: color || '#3B82F6' }} />
+                {!isCollapsed && <span className={`text-sm font-medium pointer-events-none ${isOver ? 'text-blue-400' : ''}`}>{label}</span>}
+                {!isCollapsed && count !== undefined && count > 0 && (
                     <span className={`ml-auto text-xs transition-opacity group-hover:opacity-0 ${isActive ? 'text-blue-400' : 'text-gray-600'}`}>{count}</span>
                 )}
                 {isActive && !isOver && (
@@ -192,7 +194,7 @@ const DraggableSidebarLabel = ({ id, label, isActive, onClick, color, data, coun
     );
 };
 
-export function Sidebar({ activeTab, onNavigate, labels = [], onLabelsChange, selectedLabel, folders = [], onFoldersChange, selectedFolder, sidebarItems = [], stats = {} }) {
+export function Sidebar({ activeTab, onNavigate, labels = [], onLabelsChange, selectedLabel, folders = [], onFoldersChange, selectedFolder, sidebarItems = [], stats = {}, isCollapsed, onToggle }) {
     const [isAddingLabel, setIsAddingLabel] = useState(false);
     const [newLabelName, setNewLabelName] = useState('');
     const [isAddingFolder, setIsAddingFolder] = useState(false);
@@ -276,49 +278,54 @@ export function Sidebar({ activeTab, onNavigate, labels = [], onLabelsChange, se
 
     return (
         <motion.div
-            className="w-[280px] h-screen bg-[#0f111a] border-r border-white/5 flex flex-col pt-8"
+            className={`h-screen bg-[#0f111a] border-r border-white/5 flex flex-col pt-8 transition-all duration-300 ease-in-out ${isCollapsed ? 'w-[80px]' : 'w-[280px]'}`}
             initial={{ x: -20, opacity: 0 }}
             animate={{ x: 0, opacity: 1 }}
-            transition={{ duration: 0.5 }}
         >
-            <div className="px-6 mb-10 flex items-center justify-between">
+            <div className={`px-6 mb-10 flex items-center justify-between ${isCollapsed ? 'px-0 justify-center' : ''}`}>
                 <div
                     className="flex items-center gap-3 cursor-pointer group"
-                    onClick={() => onNavigate('active', null)}
+                    onClick={() => onToggle()}
                 >
                     <div className="p-2.5 bg-blue-500/10 rounded-xl group-hover:bg-blue-500/20 transition-colors">
                         <Sparkles size={24} className="text-blue-400" />
                     </div>
-                    <div className="flex flex-col items-start px-1">
-                        <h2 className="text-xl font-semibold bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-blue-100 tracking-tight leading-none mb-1">
-                            Task AI
-                        </h2>
-                        <span className="text-[9px] text-gray-500/60 font-mono uppercase tracking-[0.3em] leading-none">
-                            {__APP_VERSION__}
-                        </span>
-                    </div>
+                    {!isCollapsed && (
+                        <div className="flex flex-col items-start px-1">
+                            <h2 className="text-xl font-semibold bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-blue-100 tracking-tight leading-none mb-1">
+                                Task AI
+                            </h2>
+                            <span className="text-[9px] text-gray-500/60 font-mono uppercase tracking-[0.3em] leading-none">
+                                {__APP_VERSION__}
+                            </span>
+                        </div>
+                    )}
                 </div>
-                <button
-                    onClick={() => window.location.href = '/'}
-                    className="p-2 rounded-xl hover:bg-white/5 border border-transparent hover:border-white/10 text-gray-500 hover:text-white transition-all flex items-center justify-center group"
-                    title="Back to Home"
-                >
-                    <Home size={18} className="group-hover:scale-110 transition-transform" />
-                </button>
+                {!isCollapsed && (
+                    <button
+                        onClick={() => window.location.href = '/'}
+                        className="p-2 rounded-xl hover:bg-white/5 border border-transparent hover:border-white/10 text-gray-500 hover:text-white transition-all flex items-center justify-center group"
+                        title="Back to Home"
+                    >
+                        <Home size={18} className="group-hover:scale-110 transition-transform" />
+                    </button>
+                )}
             </div>
 
             <div className="flex-1 px-4 overflow-y-auto space-y-8 scrollbar-hide">
                 <nav className="space-y-1">
-                    <div className="flex items-center justify-between px-4 mb-2">
-                        <p className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">Main</p>
-                        <button
-                            onClick={() => setIsAddingFolder(true)}
-                            className="p-1 text-gray-500 hover:text-blue-400 transition-colors"
-                            title="New Folder"
-                        >
-                            <Plus size={14} />
-                        </button>
-                    </div>
+                    {!isCollapsed && (
+                        <div className="flex items-center justify-between px-4 mb-2">
+                            <p className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">Main</p>
+                            <button
+                                onClick={() => setIsAddingFolder(true)}
+                                className="p-1 text-gray-500 hover:text-blue-400 transition-colors"
+                                title="New Folder"
+                            >
+                                <Plus size={14} />
+                            </button>
+                        </div>
+                    )}
                     {/* Unified Sortable List */}
                     <SortableContext items={sidebarItems.map(id => `sidebar-${id}`)} strategy={verticalListSortingStrategy}>
                         {sidebarItems.map(itemId => {
@@ -338,6 +345,7 @@ export function Sidebar({ activeTab, onNavigate, labels = [], onLabelsChange, se
                                         isFolder={true}
                                         onDelete={(!stats.folders || !stats.folders[folder._id]) ? (e) => handleDeleteFolder(e, folder._id) : null}
                                         count={stats.folders && stats.folders[folder._id]}
+                                        isCollapsed={isCollapsed}
                                     />
                                 );
                             } else {
@@ -353,6 +361,7 @@ export function Sidebar({ activeTab, onNavigate, labels = [], onLabelsChange, se
                                         onClick={() => onNavigate(itemId, null)}
                                         data={{ type: 'sidebar', target: itemId }}
                                         count={stats[itemId]}
+                                        isCollapsed={isCollapsed}
                                     />
                                 );
                             }
@@ -390,15 +399,17 @@ export function Sidebar({ activeTab, onNavigate, labels = [], onLabelsChange, se
                 </nav>
 
                 <div className="space-y-1">
-                    <div className="px-4 flex items-center justify-between mb-2">
-                        <p className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">Labels</p>
-                        <button
-                            onClick={() => setIsAddingLabel(true)}
-                            className="p-1 text-gray-500 hover:text-blue-400 transition-colors"
-                        >
-                            <Plus size={14} />
-                        </button>
-                    </div>
+                    {!isCollapsed && (
+                        <div className="px-4 flex items-center justify-between mb-2">
+                            <p className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">Labels</p>
+                            <button
+                                onClick={() => setIsAddingLabel(true)}
+                                className="p-1 text-gray-500 hover:text-blue-400 transition-colors"
+                            >
+                                <Plus size={14} />
+                            </button>
+                        </div>
+                    )}
 
                     <div className="space-y-1">
                         <AnimatePresence>
@@ -440,6 +451,7 @@ export function Sidebar({ activeTab, onNavigate, labels = [], onLabelsChange, se
                                     count={stats.labels && stats.labels[label.name]}
                                     onDelete={(e) => handleDeleteLabel(e, label._id)}
                                     onColorChange={(e) => handleColorChange(e, label._id)}
+                                    isCollapsed={isCollapsed}
                                 />
                             ))}
                         </SortableContext>
@@ -452,13 +464,14 @@ export function Sidebar({ activeTab, onNavigate, labels = [], onLabelsChange, se
                 </div>
             </div >
 
-            <div className="p-4 mt-auto border-t border-white/5 bg-black/20">
+            <div className={`p-4 mt-auto border-t border-white/5 bg-black/20 ${isCollapsed ? 'px-0 flex justify-center' : ''}`}>
                 <button
-                    className="w-full flex items-center gap-3 px-4 py-3 text-gray-400 hover:text-white hover:bg-white/5 rounded-xl transition-all"
+                    className={`nav-item w-full flex items-center gap-3 px-4 py-3 text-gray-400 hover:text-white hover:bg-white/5 rounded-xl transition-all ${isCollapsed ? 'px-0 justify-center' : ''}`}
                     onClick={() => api.logout()}
+                    title={isCollapsed ? 'Log Out' : ''}
                 >
                     <LogOut size={18} />
-                    <span className="text-sm font-medium">Log Out</span>
+                    {!isCollapsed && <span className="text-sm font-medium">Log Out</span>}
                 </button>
             </div>
         </motion.div >

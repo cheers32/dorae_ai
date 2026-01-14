@@ -51,6 +51,7 @@ export const TaskManager = () => {
         return saved ? parseInt(saved, 10) : 15;
     });
     const [history, setHistory] = useState([]);
+    const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
     const [workareaTasks, setWorkareaTasks] = useState(() => {
         // Initialize from localStorage
         const saved = localStorage.getItem('workareaTasks');
@@ -866,6 +867,8 @@ export const TaskManager = () => {
                     selectedFolder={selectedFolder}
                     sidebarItems={sidebarItems}
                     stats={stats}
+                    isCollapsed={isSidebarCollapsed}
+                    onToggle={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
                 />
 
                 <main className="flex-1 flex flex-col min-w-0 bg-[#0f1014] h-full relative">
