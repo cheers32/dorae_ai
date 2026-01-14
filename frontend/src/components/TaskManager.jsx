@@ -347,10 +347,8 @@ export const TaskManager = () => {
 
 
     const handleSendToWorkarea = (task) => {
-        if (!workareaTasks.find(t => t._id === task._id)) {
-            // [MODIFIED] Add _forceExpanded: true to keep it expanded after pinning
-            setWorkareaTasks(prev => [...prev, { ...task, _forceExpanded: true }]);
-        }
+        // [MODIFIED] Single-item focus: Replace existing item
+        setWorkareaTasks([{ ...task, _forceExpanded: true }]);
     };
 
     const handleRemoveFromWorkarea = (taskId) => {
@@ -540,12 +538,50 @@ export const TaskManager = () => {
                 const overIsWorkarea = overId.startsWith('workarea-task-');
 
                 if (activeIsWorkarea && overIsWorkarea) {
-                    // Reordering within Workarea
+                    // Reordering within Workarea -> No real effect with 1 item, but keeps logic clean
                     setWorkareaTasks((items) => {
                         const oldIndex = items.findIndex((item) => `workarea-task-${item._id}` === active.id);
                         const newIndex = items.findIndex((item) => `workarea-task-${item._id}` === over.id);
                         return arrayMove(items, oldIndex, newIndex);
                     });
+                } else if (!activeIsWorkarea && overIsWorkarea) {
+                    // [NEW] Dragging from Main List -> Workarea (Current Focus)
+                    const { task } = getTaskAndList(activeId);
+
+                    if (task) {
+                        // Check if Workarea already has a focused item
+                        if (workareaTasks.length > 0) {
+                            const focusedTask = workareaTasks[0];
+                            // "Attach" logic: Link dragged task to focused task
+                            const newAttachment = {
+                                _id: task._id,
+                                title: task.title,
+                                folderId: task.folderId,
+                                status: task.status
+                            };
+
+                            const currentAttachments = focusedTask.attachments || [];
+                            // Avoid duplicates
+                            if (!currentAttachments.find(a => a._id === task._id)) {
+                                const newAttachments = [...currentAttachments, newAttachment];
+
+                                // Update focused task with new attachments list
+                                api.updateTask(focusedTask._id, { attachments: newAttachments })
+                                    .then(() => {
+                                        // Update local state for immediate feedback
+                                        setWorkareaTasks(prev => prev.map(t =>
+                                            t._id === focusedTask._id
+                                                ? { ...t, attachments: newAttachments }
+                                                : t
+                                        ));
+                                    })
+                                    .catch(console.error);
+                            }
+                        } else {
+                            // Empty Focus: Standard pin logic
+                            setWorkareaTasks([{ ...task, _forceExpanded: true }]);
+                        }
+                    }
                 } else if (!activeIsWorkarea && !overIsWorkarea) {
                     // Reordering standard list
                     setTasks((items) => {
@@ -718,21 +754,17 @@ export const TaskManager = () => {
                                     {/* [NEW] Workarea Section (Pinned to Top) */}
                                     <AnimatePresence>
                                         {workareaTasks.length > 0 && (
-                                            <motion.div
-                                                initial={{ height: 0, opacity: 0 }}
-                                                animate={{ height: 'auto', opacity: 1 }}
-                                                exit={{ height: 0, opacity: 0 }}
-                                                className="border-b border-white/10 bg-[#0f1014] relative flex flex-col shrink-0 max-h-[40vh]"
-                                            >
-                                                <div className="px-8 py-3 bg-[#0f1014]/90 backdrop-blur border-b border-white/5 flex items-center justify-between sticky top-0 z-10">
-                                                    <h2 className="text-sm font-bold uppercase tracking-widest text-blue-400">Work Area</h2>
-                                                    <span className="text-xs text-gray-500">{workareaTasks.length} tasks pinned</span>
-                                                </div>
-                                                <div className="overflow-y-auto px-8 py-4 space-y-3 scrollbar-thin scrollbar-thumb-gray-800 scrollbar-track-transparent">
-                                                    <SortableContext
-                                                        items={workareaTasks.map(t => `workarea-task-${t._id}`)}
-                                                        strategy={verticalListSortingStrategy}
-                                                    >
+                                            <>
+                                                <motion.div
+                                                    initial={{ height: 0, opacity: 0 }}
+                                                    animate={{ height: 'auto', opacity: 1 }}
+                                                    exit={{ height: 0, opacity: 0 }}
+                                                    className="bg-white/[0.03] border-b border-white/5 relative flex flex-col shrink-0"
+                                                >
+                                                    <div className="px-8 py-3 bg-white/[0.02] backdrop-blur border-white/5 flex items-center justify-between sticky top-0 z-10">
+                                                        <h2 className="text-sm font-bold uppercase tracking-widest text-blue-400">Current Focus</h2>
+                                                    </div>
+                                                    <div className="px-8 py-4">
                                                         {workareaTasks.map(task => (
                                                             <SortableTaskItem
                                                                 key={`workarea-${task._id}`}
@@ -745,11 +777,12 @@ export const TaskManager = () => {
                                                                 defaultExpanded={task._forceExpanded}
                                                                 onRemoveFromWorkarea={() => handleRemoveFromWorkarea(task._id)}
                                                             />
-
                                                         ))}
-                                                    </SortableContext>
-                                                </div>
-                                            </motion.div>
+                                                    </div>
+                                                </motion.div>
+
+                                                <div className="h-px bg-white/5 my-6 mx-8"></div>
+                                            </>
                                         )}
                                     </AnimatePresence>
 

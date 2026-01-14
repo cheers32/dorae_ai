@@ -315,7 +315,7 @@ def update_task(task_id):
         data = request.json
         update_fields = {}
         update_fields = {}
-        allowed_fields = ['title', 'priority', 'category', 'status', 'importance', 'labels', 'folderId']
+        allowed_fields = ['title', 'priority', 'category', 'status', 'importance', 'labels', 'folderId', 'attachments']
         
         for field in allowed_fields:
             if field in data:

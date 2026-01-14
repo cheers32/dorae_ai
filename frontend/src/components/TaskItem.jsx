@@ -7,7 +7,8 @@ import {
     ChevronUp,
     Pencil,
     Check,
-    Sparkles
+    Sparkles,
+    Paperclip
 } from 'lucide-react';
 import { api } from '../api';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -267,6 +268,19 @@ export const TaskItem = forwardRef(({ task, onUpdate, showTags, style, dragHandl
     };
 
 
+    const handleUnlinkAttachment = async (attachmentId) => {
+        const currentAttachments = task.attachments || [];
+        const newAttachments = currentAttachments.filter(a => a._id !== attachmentId);
+
+        try {
+            await api.updateTask(task._id, { attachments: newAttachments });
+            onUpdate();
+        } catch (err) {
+            console.error("Failed to unlink attachment", err);
+        }
+    };
+
+
 
     return (
         <motion.div
@@ -398,9 +412,9 @@ export const TaskItem = forwardRef(({ task, onUpdate, showTags, style, dragHandl
                                         e.stopPropagation();
                                         if (onRemoveFromWorkarea) onRemoveFromWorkarea();
                                     }}
-                                    title="Remove from Workarea"
+                                    title="Remove from Focus"
                                 >
-                                    Unpin
+                                    Unfocus
                                 </button>
                             ) : (
                                 <button
@@ -409,9 +423,9 @@ export const TaskItem = forwardRef(({ task, onUpdate, showTags, style, dragHandl
                                         e.stopPropagation();
                                         if (onSendToWorkarea) onSendToWorkarea();
                                     }}
-                                    title="Send to Workarea"
+                                    title="Set as Current Focus"
                                 >
-                                    To Workarea
+                                    Focus
                                 </button>
                             )}
                         </div>
@@ -429,6 +443,27 @@ export const TaskItem = forwardRef(({ task, onUpdate, showTags, style, dragHandl
                     >
                         <div className="px-4 pb-4 pt-0 border-t border-white/5 bg-black/20">
                             <div className="py-4 space-y-1">
+                                {/* Attachments Chips */}
+                                {task.attachments && task.attachments.length > 0 && (
+                                    <div className="mb-4 pl-28 pr-4">
+                                        <h4 className="text-[10px] uppercase tracking-wider text-gray-500 font-bold mb-2">Attached Tasks</h4>
+                                        <div className="flex flex-wrap gap-2">
+                                            {task.attachments.map(att => (
+                                                <div key={att._id} className="flex items-center gap-2 bg-white/5 border border-white/10 rounded-lg px-3 py-1.5 text-xs text-gray-300 group/chip hover:bg-white/10 transition-colors">
+                                                    <Paperclip size={12} className="text-blue-400" />
+                                                    <span>{att.title}</span>
+                                                    <button
+                                                        onClick={() => handleUnlinkAttachment(att._id)}
+                                                        className="ml-1 p-0.5 text-gray-500 hover:text-red-400 opacity-0 group-hover/chip:opacity-100 transition-opacity"
+                                                        title="Unlink Attachment"
+                                                    >
+                                                        <X size={12} />
+                                                    </button>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </div>
+                                )}
                                 {task.updates.map((update) => (
                                     <div key={update.id} className="flex gap-4 group/item text-sm">
                                         <div className="w-24 text-xs text-gray-400 text-right pt-0.5 font-mono shrink-0">
