@@ -117,7 +117,7 @@ const parseUTCDate = (dateString) => {
     return new Date(normalized);
 };
 
-export const TaskItem = forwardRef(({ task, onUpdate, showTags, style, dragHandleProps, isOverlay, availableLabels = [], onSendToWorkarea, onRemoveFromWorkarea, isWorkarea, defaultExpanded, onAttachmentClick, onTaskClick, globalExpanded, showFullTitles, showPreview }, ref) => {
+export const TaskItem = forwardRef(({ task, onUpdate, showTags, style, dragHandleProps, isOverlay, availableLabels = [], onSendToWorkarea, onRemoveFromWorkarea, isWorkarea, defaultExpanded, onAttachmentClick, onTaskClick, globalExpanded, showFullTitles, showPreview, fontSize }, ref) => {
     const [expanded, setExpanded] = useState(defaultExpanded || false);
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [isEditingTitle, setIsEditingTitle] = useState(false);
@@ -311,19 +311,25 @@ export const TaskItem = forwardRef(({ task, onUpdate, showTags, style, dragHandl
             className={`group hover:bg-white/[0.04] transition-colors border-b border-white/5 bg-transparent ${expanded || globalExpanded ? 'bg-white/[0.02]' : ''}`}
         >
             <div
-                className="flex items-start gap-4 cursor-pointer pr-4"
+                className="flex items-center gap-4 cursor-pointer pr-4"
                 onClick={() => setExpanded(!expanded)}
                 {...(expanded || globalExpanded ? {} : dragHandleProps)}
             >
-                <div className="py-2 px-4 flex items-start gap-4 flex-1 min-w-0">
+                <div
+                    className="px-4 flex items-center gap-4 flex-1 min-w-0"
+                    style={{
+                        paddingTop: `${Math.max(2, fontSize - 7)}px`,
+                        paddingBottom: `${Math.max(2, fontSize - 7)}px`
+                    }}
+                >
                     <div
-                        className={`p-1 mt-0.5 text-gray-600 hover:text-gray-400 transition-colors ${expanded ? 'cursor-pointer' : 'cursor-grab active:cursor-grabbing'}`}
+                        className={`p-1 text-gray-600 hover:text-gray-400 transition-colors ${expanded ? 'cursor-pointer' : 'cursor-grab active:cursor-grabbing'}`}
                         onClick={(e) => {
                             if (expanded || globalExpanded) {
                                 e.stopPropagation();
                                 if (globalExpanded) {
                                     // If global is on, individual collapse toggle works on local state
-                                    // but UI might stay expanded. 
+                                    // but UI might stay expanded.
                                     // Actually, if global is on, we should probably just allow local toggle to change local state.
                                 }
                                 setExpanded(false);
@@ -333,7 +339,7 @@ export const TaskItem = forwardRef(({ task, onUpdate, showTags, style, dragHandl
                         {expanded || globalExpanded ? <ChevronUp size={16} /> : <GripVertical size={16} />}
                     </div>
                     <div
-                        className={`w-3 h-3 mt-1.5 rounded-full shrink-0 transition-colors ${localLabels.length > 0 && availableLabels.find(l => l.name === localLabels[0])?.color
+                        className={`${fontSize < 11 ? 'w-2.5 h-2.5' : 'w-3 h-3'} rounded-full shrink-0 transition-colors ${localLabels.length > 0 && availableLabels.find(l => l.name === localLabels[0])?.color
                             ? ''
                             : `shadow-[0_0_10px_rgba(59,130,246,0.3)] ${task.status === 'completed' ? 'bg-green-500 shadow-[0_0_10px_rgba(34,197,94,0.3)]' :
                                 task.status === 'in_progress' ? 'bg-yellow-500 shadow-[0_0_10px_rgba(234,179,8,0.3)]' :
@@ -371,9 +377,10 @@ export const TaskItem = forwardRef(({ task, onUpdate, showTags, style, dragHandl
                             rows={1}
                         />
                     ) : (
-                        <div className="flex-1 min-w-0 flex items-start gap-2 group/title">
+                        <div className="flex-1 min-w-0 flex items-center gap-2 group/title">
                             <h3
                                 className={`font-medium text-gray-200 text-left ${expanded || globalExpanded || showFullTitles ? 'break-words whitespace-pre-wrap cursor-text' : 'truncate'} ${(task.status === 'Deleted' || task.status === 'deleted') ? 'line-through opacity-50' : ''}`}
+                                style={{ fontSize: `${fontSize}px`, lineHeight: '1.4' }}
                                 onClick={(e) => {
                                     if (expanded || globalExpanded || showFullTitles) {
                                         e.stopPropagation();
@@ -386,7 +393,7 @@ export const TaskItem = forwardRef(({ task, onUpdate, showTags, style, dragHandl
                             >
                                 {task.title}
                                 {showPreview && !(expanded || globalExpanded) && task.updates && task.updates.length > 0 && (
-                                    <span className="text-gray-500 font-normal ml-2">
+                                    <span className="text-gray-500 font-normal ml-2" style={{ fontSize: `${Math.max(11, fontSize - 1)}px` }}>
                                         <span className="text-gray-600 mr-1">—</span>
                                         {task.updates[task.updates.length - 1].content}
                                     </span>
@@ -429,8 +436,10 @@ export const TaskItem = forwardRef(({ task, onUpdate, showTags, style, dragHandl
                     )}
                 </div>
 
-                <div className="flex items-center gap-3">
-                    <span className="text-[10px] text-gray-400 font-mono mt-3">
+                <div className="flex items-center gap-4">
+                    <span
+                        className="text-[10px] text-gray-500 font-mono whitespace-nowrap"
+                    >
                         {(() => {
                             const lastUpdate = task.updates && task.updates.length > 0
                                 ? parseUTCDate(task.updates.reduce((max, u) => new Date(u.timestamp) > new Date(max) ? u.timestamp : max, task.updates[0].timestamp))

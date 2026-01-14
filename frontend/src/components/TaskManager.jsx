@@ -5,7 +5,7 @@ import { Sidebar } from './Sidebar';
 import { ChatInterface } from './ChatInterface';
 import { AgentList } from './AgentList';
 import { AgentItem } from './AgentItem';
-import { Plus, Home as HomeIcon, Tag as TagIcon, ArrowLeft, Trash2, X, ChevronsUpDown, ChevronsDownUp, Type, MessageSquare } from 'lucide-react';
+import { Plus, Home as HomeIcon, Tag as TagIcon, ArrowLeft, Trash2, X, ChevronsUpDown, ChevronsDownUp, Type, MessageSquare, ZoomIn, ZoomOut } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import {
@@ -46,6 +46,10 @@ export const TaskManager = () => {
     const [globalExpanded, setGlobalExpanded] = useState(false);
     const [showFullTitles, setShowFullTitles] = useState(false);
     const [showPreview, setShowPreview] = useState(false);
+    const [fontSize, setFontSize] = useState(() => {
+        const saved = localStorage.getItem('task_list_font_size');
+        return saved ? parseInt(saved, 10) : 15;
+    });
     const [history, setHistory] = useState([]);
     const [workareaTasks, setWorkareaTasks] = useState(() => {
         // Initialize from localStorage
@@ -952,6 +956,26 @@ export const TaskManager = () => {
                                 </button>
                             )}
 
+                            {activeTab !== 'assistant' && tasks.length > 0 && (
+                                <div className="flex items-center gap-1 bg-gray-900 border border-gray-800 rounded-lg p-1">
+                                    <button
+                                        onClick={() => setFontSize(prev => Math.max(9, prev - 1))}
+                                        className="p-1.5 hover:bg-white/10 rounded transition-colors text-gray-400 hover:text-white"
+                                        title="Decrease font size"
+                                    >
+                                        <ZoomOut size={16} />
+                                    </button>
+                                    <span className="text-[10px] font-medium text-gray-500 w-6 text-center">{fontSize}</span>
+                                    <button
+                                        onClick={() => setFontSize(prev => Math.min(24, prev + 1))}
+                                        className="p-1.5 hover:bg-white/10 rounded transition-colors text-gray-400 hover:text-white"
+                                        title="Increase font size"
+                                    >
+                                        <ZoomIn size={16} />
+                                    </button>
+                                </div>
+                            )}
+
                             {activeTab === 'assistant' && (
                                 <button
                                     onClick={() => setIsCreatingAgent(true)}
@@ -1038,6 +1062,7 @@ export const TaskManager = () => {
                                                     globalExpanded={globalExpanded}
                                                     showFullTitles={showFullTitles}
                                                     showPreview={showPreview}
+                                                    fontSize={fontSize}
                                                 />
                                             );
                                         })}
@@ -1142,6 +1167,7 @@ export const TaskManager = () => {
                                                             globalExpanded={globalExpanded}
                                                             showFullTitles={showFullTitles}
                                                             showPreview={showPreview}
+                                                            fontSize={fontSize}
                                                         />
                                                     ))}
                                                 </div>
