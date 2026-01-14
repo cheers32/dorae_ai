@@ -10,8 +10,17 @@ export const AgentList = ({ onFocusAgent, focusedAgentId }) => {
     const [isCreating, setIsCreating] = useState(false);
     const [newAgentName, setNewAgentName] = useState('');
 
+
     useEffect(() => {
         fetchAgents();
+
+        // Listen for updates (assignments)
+        const handleAgentUpdate = () => fetchAgents();
+        window.addEventListener('agent-updated', handleAgentUpdate);
+
+        return () => {
+            window.removeEventListener('agent-updated', handleAgentUpdate);
+        };
     }, []);
 
     const fetchAgents = async () => {
@@ -114,15 +123,17 @@ export const AgentList = ({ onFocusAgent, focusedAgentId }) => {
 
                 {/* Grid */}
                 <div className="grid grid-cols-1 gap-4">
-                    {agents.map(agent => (
-                        <AgentItem
-                            key={agent._id}
-                            agent={agent}
-                            isFocused={focusedAgentId === agent._id}
-                            onFocus={onFocusAgent}
-                            onDelete={() => handleDeleteAgent(agent._id)}
-                        />
-                    ))}
+                    {agents
+                        .filter(agent => agent._id !== focusedAgentId)
+                        .map(agent => (
+                            <AgentItem
+                                key={agent._id}
+                                agent={agent}
+                                isFocused={focusedAgentId === agent._id}
+                                onFocus={onFocusAgent}
+                                onDelete={() => handleDeleteAgent(agent._id)}
+                            />
+                        ))}
 
                     {/* Empty State */}
                     {!isLoading && agents.length === 0 && !isCreating && (

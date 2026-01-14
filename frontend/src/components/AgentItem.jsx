@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { Brain, Cpu, MessageSquare, Zap, Target } from 'lucide-react';
+import { Brain, Cpu, MessageSquare, Zap, Target, Layers } from 'lucide-react';
 import { useDroppable } from '@dnd-kit/core';
 
 export const AgentItem = ({ agent, onFocus, onEdit, onDelete, isFocused }) => {
@@ -18,10 +18,7 @@ export const AgentItem = ({ agent, onFocus, onEdit, onDelete, isFocused }) => {
             exit={{ opacity: 0, scale: 0.95 }}
             className={`
                 relative p-5 rounded-2xl border transition-all duration-300 group
-                ${isFocused
-                    ? 'bg-blue-500/10 border-blue-500/50 shadow-[0_0_30px_rgba(59,130,246,0.2)]'
-                    : 'bg-white/5 border-white/10 hover:border-white/20 hover:bg-white/10'
-                }
+                bg-white/5 border-white/10 hover:border-white/20 hover:bg-white/10
                 ${isOver ? 'ring-2 ring-blue-400 bg-blue-500/20 scale-[1.02]' : ''}
             `}
         >
@@ -29,7 +26,7 @@ export const AgentItem = ({ agent, onFocus, onEdit, onDelete, isFocused }) => {
                 <div className="flex items-center gap-4">
                     <div className={`
                         p-3 rounded-xl flex items-center justify-center
-                        ${isFocused ? 'bg-blue-500 text-white shadow-lg shadow-blue-500/30' : 'bg-gradient-to-br from-purple-500/20 to-blue-500/20 text-blue-300'}
+                        bg-gradient-to-br from-purple-500/20 to-blue-500/20 text-blue-300
                     `}>
                         <Brain size={24} />
                     </div>
@@ -59,6 +56,18 @@ export const AgentItem = ({ agent, onFocus, onEdit, onDelete, isFocused }) => {
             <p className="text-sm text-gray-400 mb-6 leading-relaxed">
                 {agent.description || "Ready to assist with your tasks. Drag tasks here to assign."}
             </p>
+
+            {/* Assigned Tasks Chips */}
+            {agent.active_tasks && agent.active_tasks.length > 0 && (
+                <div className="flex flex-wrap gap-2 mb-4">
+                    {agent.active_tasks.map(task => (
+                        <div key={task._id} className="bg-blue-500/10 border border-blue-500/20 text-blue-300 px-2.5 py-1 rounded-lg text-xs font-medium flex items-center gap-1.5 shadow-sm">
+                            <span className="w-1.5 h-1.5 rounded-full bg-blue-400 shadow-[0_0_8px_rgba(96,165,250,0.5)]"></span>
+                            <span className="truncate max-w-[150px]">{task.title}</span>
+                        </div>
+                    ))}
+                </div>
+            )}
 
             <div className="space-y-3">
                 <div className="flex items-center justify-between text-xs text-gray-500 font-medium uppercase tracking-widest">

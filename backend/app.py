@@ -393,15 +393,16 @@ def create_task():
             "title": data['title'],
             "status": "Active",
             "created_at": datetime.utcnow().isoformat(),
+            "updated_at": datetime.utcnow().isoformat(), # New field
             "completed_at": None,
             "priority": "medium", # Default
             "importance": 3,      # Default
             "category": "General", # Default
-            "category": "General", # Default
             "labels": data.get('labels', []), # Use provided labels or empty array
             "folderId": data.get('folderId'),
+            "assigned_agent_id": None, # [NEW]
             "user_email": data.get('user_email'), # Associate with user
-            "updates": [{
+            "updates": [{ # Initial update for task creation
                 "id": str(uuid.uuid4()),
                 "content": "Task created",
                 "timestamp": datetime.utcnow().isoformat(),
@@ -787,7 +788,20 @@ def get_agents():
             query['$or'] = [{'user_email': None}, {'user_email': {'$exists': False}}]
             
         # Sort by created_at (desc)
+        # Sort by created_at (desc)
         agents = list(agents_collection.find(query).sort('created_at', -1))
+        
+        # [NEW] Attach active tasks to each agent
+        for agent in agents:
+            # Find Active tasks assigned to this agent
+            agent_id = str(agent['_id'])
+            # assigned_agent_id should be string in task
+            tasks = list(tasks_collection.find({
+                'assigned_agent_id': agent_id,
+                'status': {'$nin': ['Closed', 'completed', 'Deleted', 'deleted']}
+            }, {'title': 1, 'status': 1}))
+            agent['active_tasks'] = [serialize_doc(t) for t in tasks]
+
         return jsonify([serialize_doc(a) for a in agents]), 200
     except Exception as e:
         return jsonify({"error": str(e)}), 500

@@ -202,7 +202,7 @@ export function Sidebar({ activeTab, onNavigate, labels = [], onLabelsChange, se
     const systemItems = {
         'active': { label: 'Active Tasks', icon: Layout },
         'closed': { label: 'Closed Tasks', icon: CheckSquare },
-        'assistant': { label: 'Assistant', icon: MessageSquare },
+        'assistant': { label: 'Agents', icon: MessageSquare },
         'trash': { label: 'Trash', icon: Trash2 },
     };
 

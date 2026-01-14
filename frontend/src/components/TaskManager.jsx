@@ -424,8 +424,12 @@ export const TaskManager = () => {
 
 
     const handleSendToWorkarea = (task) => {
-        // [MODIFIED] Single-item focus: Replace existing item
-        setWorkareaTasks([{ ...task, _forceExpanded: true }]);
+        // [MODIFIED] Max 1 Task + 1 Agent
+        setWorkareaTasks(prev => {
+            // Keep agents, remove other tasks
+            const agents = prev.filter(item => item.type === 'agent');
+            return [...agents, { ...task, _forceExpanded: true }];
+        });
     };
 
     const handleRemoveFromWorkarea = (taskId) => {
@@ -595,14 +599,41 @@ export const TaskManager = () => {
 
             if (task) {
                 try {
-                    // For now, we'll just add an update to the task saying it was assigned
-                    // In a real app, update 'assigneeId' or similar
+                    // Update assigneeId (backend)
+                    await api.updateTask(realId, { assigned_agent_id: agentId });
+
+                    // Add audit log
                     await api.addUpdate(realId, `Assigned to agent: ${over.data.current.agent.name}`, 'execution');
 
-                    // Visual feedback/notification could be added here
                     console.log(`Assigned task ${realId} to agent ${agentId}`);
 
+                    // Force refresh to update Agent list (which now includes active_tasks) and Task list
+                    // We need to refresh agents too, but AgentList handles its own state. 
+                    // Ideally we should trigger a global refresh or specifically refresh agents.
+                    // For now, fetchTasks updates tasks, but AgentList might need a reload. 
+                    // Since AgentList is a parent or sibling, we might depend on a page reload or state lift.
+                    // Actually, if we are in Assistant view, workarea updates might trigger re-renders.
                     fetchTasks(false);
+                    // Trigger agent refresh via callback if available, or just reload page for now? 
+                    // Better: The AgentList should poll or be updated. 
+                    // Let's assume we refresh tasks for now. 
+                    // If we want instant update on the chip, we need to update local state in AgentList.
+                    // Since we can't easily reach AgentList state from here without prop drilling 'onAgentUpdate',
+                    // we will rely on next fetch or maybe trigger a window event.
+                    window.dispatchEvent(new CustomEvent('agent-updated'));
+
+                    // [NEW] Also update local workareaTasks if the target agent is there!!
+                    setWorkareaTasks(prev => prev.map(item => {
+                        if (item.type === 'agent' && item._id === agentId) {
+                            return {
+                                ...item,
+                                active_tasks: [...(item.active_tasks || []), task]
+                            };
+                        }
+                        return item;
+                    }));
+
+
                 } catch (err) {
                     console.error("Failed to assign task to agent", err);
                 }
@@ -734,7 +765,7 @@ export const TaskManager = () => {
             case 'active': return 'Active Tasks';
             case 'closed': return 'Closed Tasks';
             case 'trash': return 'Deleted Tasks';
-            case 'assistant': return 'AI Assistant';
+            case 'assistant': return 'Agents';
             default: return 'Tasks';
         }
     }
@@ -821,9 +852,6 @@ export const TaskManager = () => {
                                     </span>
                                 </h1>
                                 <p className="text-gray-500 text-lg border-l border-gray-800 pl-4 py-0.5 leading-none">
-                                    {activeTab === 'assistant'
-                                        ? 'Chat with your tasks powered by Gemini 3.0'
-                                        : ''}
                                 </p>
                             </div>
                         </div>
