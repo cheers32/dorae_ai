@@ -32,6 +32,7 @@ try:
     tasks_collection = db['tasks']
     labels_collection = db['labels']
     folders_collection = db['folders']
+    agents_collection = db['agents']
     print("Connected to MongoDB")
 except Exception as e:
     print(f"Error connecting to MongoDB: {e}")
@@ -770,6 +771,81 @@ def update_folder(folder_id):
             return jsonify({"error": "Folder not found"}), 404
             
         return jsonify({"message": "Folder updated"}), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+# --- Agent Endpoints ---
+
+@app.route('/api/agents', methods=['GET'])
+def get_agents():
+    try:
+        user_email = request.args.get('user_email')
+        query = {}
+        if user_email:
+            query['user_email'] = user_email
+        else:
+            query['$or'] = [{'user_email': None}, {'user_email': {'$exists': False}}]
+            
+        # Sort by created_at (desc)
+        agents = list(agents_collection.find(query).sort('created_at', -1))
+        return jsonify([serialize_doc(a) for a in agents]), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+@app.route('/api/agents', methods=['POST'])
+def create_agent():
+    try:
+        data = request.json
+        if not data or 'name' not in data:
+            return jsonify({"error": "Agent name is required"}), 400
+        
+        new_agent = {
+            "name": data['name'],
+            "description": data.get('description', ''),
+            "role": data.get('role', 'Assistant'),
+            "user_email": data.get('user_email'),
+            "created_at": datetime.utcnow().isoformat(),
+            "skills": data.get('skills', []), # Placeholder for skills
+            "status": "idle" # idle, busy, focused
+        }
+        
+        result = agents_collection.insert_one(new_agent)
+        new_agent['_id'] = result.inserted_id
+        return jsonify(serialize_doc(new_agent)), 201
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+@app.route('/api/agents/<agent_id>', methods=['PUT'])
+def update_agent(agent_id):
+    try:
+        data = request.json
+        update_fields = {}
+        
+        allowed_fields = ['name', 'description', 'role', 'skills', 'status']
+        for field in allowed_fields:
+            if field in data:
+                update_fields[field] = data[field]
+            
+        if not update_fields:
+            return jsonify({"error": "No fields to update"}), 400
+        
+        result = agents_collection.update_one(
+            {"_id": ObjectId(agent_id)},
+            {"$set": update_fields}
+        )
+        
+        if result.matched_count == 0:
+            return jsonify({"error": "Agent not found"}), 404
+            
+        return jsonify({"message": "Agent updated"}), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+@app.route('/api/agents/<agent_id>', methods=['DELETE'])
+def delete_agent(agent_id):
+    try:
+        result = agents_collection.delete_one({"_id": ObjectId(agent_id)})
+        return jsonify({"message": "Agent deleted"}), 200
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 

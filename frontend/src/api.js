@@ -242,5 +242,40 @@ export const api = {
         localStorage.removeItem('userProfile');
         localStorage.removeItem('isAuthenticated');
         window.location.href = '/';
+    },
+
+    // --- Agent API ---
+
+    getAgents: async () => {
+        const query = new URLSearchParams();
+        const userEmail = getUserEmail();
+        if (userEmail) query.append('user_email', userEmail);
+        const res = await fetch(`${API_BASE}/agents?${query.toString()}`);
+        return res.json();
+    },
+
+    createAgent: async (name, role, description = '') => {
+        const res = await fetch(`${API_BASE}/agents`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ name, role, description, user_email: getUserEmail() }),
+        });
+        return res.json();
+    },
+
+    updateAgent: async (agentId, updates) => {
+        const res = await fetch(`${API_BASE}/agents/${agentId}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(updates),
+        });
+        return res.json();
+    },
+
+    deleteAgent: async (agentId) => {
+        const res = await fetch(`${API_BASE}/agents/${agentId}`, {
+            method: 'DELETE',
+        });
+        return res.json();
     }
 };

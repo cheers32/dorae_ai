@@ -3,6 +3,8 @@ import { api } from '../api';
 import { TaskItem, SortableTaskItem } from './TaskItem';
 import { Sidebar } from './Sidebar';
 import { ChatInterface } from './ChatInterface';
+import { AgentList } from './AgentList';
+import { AgentItem } from './AgentItem';
 import { Plus, Home as HomeIcon, Tag as TagIcon, ArrowLeft, Trash2, X } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
@@ -67,6 +69,20 @@ export const TaskManager = () => {
         folders: {},
         labels: {}
     });
+
+    const [focusedAgentId, setFocusedAgentId] = useState(null);
+
+    const handleFocusAgent = (agent) => {
+        // Toggle focus: If already in workarea, remove it. If not, add it.
+        const isInWorkarea = workareaTasks.some(item => item._id === agent._id && item.type === 'agent');
+
+        if (isInWorkarea) {
+            setWorkareaTasks(prev => prev.filter(item => !(item._id === agent._id && item.type === 'agent')));
+        } else {
+            // Add to workarea with type 'agent'
+            setWorkareaTasks(prev => [{ ...agent, type: 'agent', _forceExpanded: true }, ...prev]);
+        }
+    };
 
     const navigate = useNavigate();
 
@@ -562,6 +578,31 @@ export const TaskManager = () => {
             return;
         }
 
+
+
+        // Check if dropped over an agent (Assign Task -> Agent)
+        if (overId.startsWith('agent-') && !activeId.startsWith('agent-')) {
+            const agentId = over.data.current.agent._id;
+            const { task, realId } = getTaskAndList(activeId);
+
+            if (task) {
+                try {
+                    // For now, we'll just add an update to the task saying it was assigned
+                    // In a real app, update 'assigneeId' or similar
+                    await api.addUpdate(realId, `Assigned to agent: ${over.data.current.agent.name}`, 'execution');
+
+                    // Visual feedback/notification could be added here
+                    console.log(`Assigned task ${realId} to agent ${agentId}`);
+
+                    fetchTasks(false);
+                } catch (err) {
+                    console.error("Failed to assign task to agent", err);
+                }
+            }
+            setActiveId(null);
+            return;
+        }
+
         if (active.id !== over.id) {
             // Check if reordering sidebar items
             if (activeId.startsWith('sidebar-') && overId.startsWith('sidebar-')) {
@@ -827,8 +868,11 @@ export const TaskManager = () => {
                     </header>
 
                     {activeTab === 'assistant' ? (
-                        <div className="flex-1 overflow-hidden px-8 pb-8">
-                            <ChatInterface />
+                        <div className="flex-1 overflow-hidden">
+                            <AgentList
+                                onFocusAgent={handleFocusAgent}
+                                focusedAgentId={focusedAgentId}
+                            />
                         </div>
                     ) : (
                         <div className="flex-1 flex flex-col px-8 pb-8 overflow-hidden">
@@ -861,24 +905,39 @@ export const TaskManager = () => {
                                                         <h2 className="text-sm font-bold uppercase tracking-widest text-blue-400">Current Focus</h2>
                                                     </div>
                                                     <div className="px-8 py-4">
-                                                        {workareaTasks.map(task => (
-                                                            <SortableTaskItem
-                                                                key={`workarea-${task._id}`}
-                                                                id={`workarea-task-${task._id}`}
-                                                                task={task}
-                                                                onUpdate={() => {
-                                                                    fetchTasks(false);
-                                                                    refreshWorkareaTask(task._id);
-                                                                }}
-                                                                showTags={true}
-                                                                availableLabels={labels}
-                                                                isWorkarea={true}
-                                                                defaultExpanded={task._forceExpanded}
-                                                                onRemoveFromWorkarea={() => handleRemoveFromWorkarea(task._id)}
-                                                                onAttachmentClick={handleNavigateToTask}
-                                                                onTaskClick={() => handleNavigateToTask(task)}
-                                                            />
-                                                        ))}
+                                                        {workareaTasks.map(item => {
+                                                            if (item.type === 'agent') {
+                                                                return (
+                                                                    <div key={`workarea-agent-${item._id}`} className="mb-2">
+                                                                        <AgentItem
+                                                                            agent={item}
+                                                                            isFocused={true}
+                                                                            onFocus={() => handleFocusAgent(item)}
+                                                                        // Add compact prop if needed
+                                                                        />
+                                                                    </div>
+                                                                );
+                                                            }
+                                                            // Default to Task
+                                                            return (
+                                                                <SortableTaskItem
+                                                                    key={`workarea-${item._id}`}
+                                                                    id={`workarea-task-${item._id}`}
+                                                                    task={item}
+                                                                    onUpdate={() => {
+                                                                        fetchTasks(false);
+                                                                        refreshWorkareaTask(item._id);
+                                                                    }}
+                                                                    showTags={true}
+                                                                    availableLabels={labels}
+                                                                    isWorkarea={true}
+                                                                    defaultExpanded={item._forceExpanded}
+                                                                    onRemoveFromWorkarea={() => handleRemoveFromWorkarea(item._id)}
+                                                                    onAttachmentClick={handleNavigateToTask}
+                                                                    onTaskClick={() => handleNavigateToTask(item)}
+                                                                />
+                                                            );
+                                                        })}
                                                     </div>
                                                 </motion.div>
 
