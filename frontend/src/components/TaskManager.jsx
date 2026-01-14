@@ -5,7 +5,7 @@ import { Sidebar } from './Sidebar';
 import { ChatInterface } from './ChatInterface';
 import { AgentList } from './AgentList';
 import { AgentItem } from './AgentItem';
-import { Search, Plus, Home as HomeIcon, Tag as TagIcon, ArrowLeft, ArrowRight, Trash2, X, ChevronsUpDown, ChevronsDownUp, Type, MessageSquare, ZoomIn, ZoomOut } from 'lucide-react';
+import { Search, Plus, Home as HomeIcon, Tag as TagIcon, ArrowLeft, ArrowRight, Trash2, X, ChevronsUpDown, ChevronsDownUp, Type, MessageSquare, ZoomIn, ZoomOut, MoreVertical, SlidersHorizontal, Settings2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import {
@@ -40,20 +40,22 @@ export const TaskManager = () => {
     const newTaskTextareaRef = useRef(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
-    const [showTags, setShowTags] = useState(false);
+    const [showTags, setShowTags] = useState(() => localStorage.getItem('task_manager_show_tags') === 'true');
     const [isCreating, setIsCreating] = useState(false);
     const [isCreatingAgent, setIsCreatingAgent] = useState(false);
     const [activeId, setActiveId] = useState(null);
-    const [globalExpanded, setGlobalExpanded] = useState(false);
-    const [showFullTitles, setShowFullTitles] = useState(false);
-    const [showPreview, setShowPreview] = useState(false);
+    const [globalExpanded, setGlobalExpanded] = useState(() => localStorage.getItem('task_manager_global_expanded') === 'true');
+    const [showFullTitles, setShowFullTitles] = useState(() => localStorage.getItem('task_manager_show_full_titles') === 'true');
+    const [showPreview, setShowPreview] = useState(() => localStorage.getItem('task_manager_show_preview') === 'true');
     const [fontSize, setFontSize] = useState(() => {
         const saved = localStorage.getItem('task_list_font_size');
         return saved ? parseInt(saved, 10) : 15;
     });
+    const [isMenuOpen, setIsMenuOpen] = useState(false);
+    const menuRef = useRef(null);
     const [history, setHistory] = useState([]);
     const [forwardHistory, setForwardHistory] = useState([]);
-    const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
+    const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(() => localStorage.getItem('task_manager_sidebar_collapsed') === 'true');
     const [workareaTasks, setWorkareaTasks] = useState(() => {
         // Initialize from localStorage
         const saved = localStorage.getItem('workareaTasks');
@@ -332,8 +334,18 @@ export const TaskManager = () => {
             }
         };
 
+        const handleClickOutside = (event) => {
+            if (menuRef.current && !menuRef.current.contains(event.target)) {
+                setIsMenuOpen(false);
+            }
+        };
+
         window.addEventListener('keydown', handleKeyDown);
-        return () => window.removeEventListener('keydown', handleKeyDown);
+        window.addEventListener('mousedown', handleClickOutside);
+        return () => {
+            window.removeEventListener('keydown', handleKeyDown);
+            window.removeEventListener('mousedown', handleClickOutside);
+        };
     }, [history, forwardHistory, handleBack, handleForward]);
 
     useEffect(() => {
@@ -345,6 +357,30 @@ export const TaskManager = () => {
     useEffect(() => {
         localStorage.setItem('workareaTasks', JSON.stringify(workareaTasks));
     }, [workareaTasks]);
+
+    useEffect(() => {
+        localStorage.setItem('task_manager_show_tags', showTags);
+    }, [showTags]);
+
+    useEffect(() => {
+        localStorage.setItem('task_manager_global_expanded', globalExpanded);
+    }, [globalExpanded]);
+
+    useEffect(() => {
+        localStorage.setItem('task_manager_show_full_titles', showFullTitles);
+    }, [showFullTitles]);
+
+    useEffect(() => {
+        localStorage.setItem('task_manager_show_preview', showPreview);
+    }, [showPreview]);
+
+    useEffect(() => {
+        localStorage.setItem('task_manager_sidebar_collapsed', isSidebarCollapsed);
+    }, [isSidebarCollapsed]);
+
+    useEffect(() => {
+        localStorage.setItem('task_list_font_size', fontSize);
+    }, [fontSize]);
 
     // Refresh workarea tasks from database on mount to get latest data including attachments
     useEffect(() => {
@@ -958,8 +994,8 @@ export const TaskManager = () => {
                         </div>
 
                         {/* Gmail-like Search Bar */}
-                        <div className="flex-[3] flex justify-center mx-6 min-w-[400px]">
-                            <div className="w-full max-w-3xl group relative transition-all duration-300 focus-within:max-w-4xl">
+                        <div className="flex-[3] flex justify-center mx-6 min-w-[300px]">
+                            <div className="w-full max-w-xl group relative transition-all duration-300 focus-within:max-w-2xl">
                                 <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
                                     <Search size={18} className="text-gray-400 group-focus-within:text-blue-400 transition-colors" />
                                 </div>
@@ -968,7 +1004,7 @@ export const TaskManager = () => {
                                     placeholder="Search tasks..."
                                     value={searchQuery}
                                     onChange={(e) => setSearchQuery(e.target.value)}
-                                    className="w-full bg-white/5 border border-white/5 rounded-xl py-2 pl-12 pr-10 text-sm text-gray-200 placeholder:text-gray-500 focus:outline-none focus:bg-white/10 focus:border-blue-500/50 focus:ring-4 focus:ring-blue-500/10 transition-all shadow-inner"
+                                    className="w-full bg-white/5 border border-white/5 rounded-xl py-1.5 pl-12 pr-10 text-sm text-gray-200 placeholder:text-gray-500 focus:outline-none focus:bg-white/10 focus:border-blue-500/50 focus:ring-4 focus:ring-blue-500/10 transition-all shadow-inner"
                                 />
                                 {searchQuery && (
                                     <button
@@ -1002,72 +1038,109 @@ export const TaskManager = () => {
                                     <span className="text-xs font-medium">Hire Agent</span>
                                 </button>
                             )}
-                            {activeTab === 'trash' && tasks.length > 0 && (
+                            <div className="relative" ref={menuRef}>
                                 <button
-                                    onClick={handleEmptyTrash}
-                                    className="px-1.5 py-1.5 rounded-lg transition-colors flex items-center text-red-400 bg-red-400/10 hover:bg-red-400/20"
-                                    title="Empty Trash"
+                                    onClick={() => setIsMenuOpen(!isMenuOpen)}
+                                    className={`p-2 rounded-lg transition-all flex items-center justify-center ${isMenuOpen ? 'bg-blue-500/20 text-blue-400 border border-blue-500/30' : 'bg-gray-900 border border-gray-800 text-gray-400 hover:text-gray-200 hover:border-gray-700'}`}
+                                    title="View Options"
                                 >
-                                    <span className="text-xs font-medium">Empty Trash</span>
+                                    <SlidersHorizontal size={18} />
                                 </button>
-                            )}
-                            <button
-                                onClick={() => setShowTags(!showTags)}
-                                className={`px-1.5 py-1.5 rounded-lg transition-colors flex items-center gap-1.5 ${showTags ? 'text-blue-400 bg-blue-400/10' : 'text-gray-500 hover:text-gray-300'}`}
-                                title="Toggle Tags Visibility"
-                            >
-                                <TagIcon size={16} />
-                                <span className="text-xs font-medium">{showTags ? 'Hide Tags' : 'Show Tags'}</span>
-                            </button>
 
-                            {activeTab !== 'assistant' && tasks.length > 0 && (
-                                <button
-                                    onClick={() => setGlobalExpanded(!globalExpanded)}
-                                    className={`px-1.5 py-1.5 rounded-lg transition-colors flex items-center ${globalExpanded ? 'text-blue-400 bg-blue-400/10' : 'text-gray-500 hover:text-gray-300'}`}
-                                    title={globalExpanded ? 'Collapse All' : 'Expand All'}
-                                >
-                                    <span className="text-xs font-medium">{globalExpanded ? 'Collapse All' : 'Expand All'}</span>
-                                </button>
-                            )}
+                                <AnimatePresence>
+                                    {isMenuOpen && (
+                                        <motion.div
+                                            initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                                            animate={{ opacity: 1, y: 0, scale: 1 }}
+                                            exit={{ opacity: 0, y: 10, scale: 0.95 }}
+                                            transition={{ duration: 0.15 }}
+                                            className="absolute right-0 mt-2 w-56 bg-gray-950 border border-gray-800 rounded-xl shadow-2xl py-2 z-50 backdrop-blur-xl"
+                                        >
+                                            <div className="px-3 py-1.5 mb-1">
+                                                <span className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">Layout & Visibility</span>
+                                            </div>
 
-                            {activeTab !== 'assistant' && tasks.length > 0 && (
-                                <button
-                                    onClick={() => setShowFullTitles(!showFullTitles)}
-                                    className={`px-1.5 py-1.5 rounded-lg transition-colors flex items-center ${showFullTitles ? 'text-blue-400 bg-blue-400/10' : 'text-gray-500 hover:text-gray-300'}`}
-                                    title={showFullTitles ? 'Truncate Titles' : 'Full Titles'}
-                                >
-                                    <span className="text-xs font-medium">{showFullTitles ? 'Truncate Titles' : 'Full Titles'}</span>
-                                </button>
-                            )}
+                                            <button
+                                                onClick={() => { setShowTags(!showTags); setIsMenuOpen(false); }}
+                                                className={`w-full px-4 py-2 text-left flex items-center gap-3 transition-colors hover:bg-white/5 ${showTags ? 'text-blue-400' : 'text-gray-400'}`}
+                                            >
+                                                <TagIcon size={16} />
+                                                <span className="text-xs font-medium">{showTags ? 'Hide Tags' : 'Show Tags'}</span>
+                                            </button>
 
-                            {activeTab !== 'assistant' && tasks.length > 0 && (
-                                <button
-                                    onClick={() => setShowPreview(!showPreview)}
-                                    className={`px-1.5 py-1.5 rounded-lg transition-colors flex items-center ${showPreview ? 'text-blue-400 bg-blue-400/10' : 'text-gray-500 hover:text-gray-300'}`}
-                                    title={showPreview ? 'Hide Preview' : 'Show Preview'}
-                                >
-                                    <span className="text-xs font-medium">{showPreview ? 'Hide Preview' : 'Show Preview'}</span>
-                                </button>
-                            )}
+                                            {activeTab !== 'assistant' && tasks.length > 0 && (
+                                                <>
+                                                    <button
+                                                        onClick={() => { setGlobalExpanded(!globalExpanded); setIsMenuOpen(false); }}
+                                                        className={`w-full px-4 py-2 text-left flex items-center gap-3 transition-colors hover:bg-white/5 ${globalExpanded ? 'text-blue-400' : 'text-gray-400'}`}
+                                                    >
+                                                        <ChevronsUpDown size={16} />
+                                                        <span className="text-xs font-medium">{globalExpanded ? 'Collapse All' : 'Expand All'}</span>
+                                                    </button>
 
-                            {activeTab !== 'assistant' && tasks.length > 0 && (
-                                <div className="flex items-center bg-gray-900 border border-gray-800 rounded-lg overflow-hidden">
-                                    <button
-                                        onClick={() => setFontSize(prev => Math.max(9, prev - 1))}
-                                        className="p-1 hover:bg-white/10 transition-colors text-gray-400 hover:text-white border-r border-gray-800 w-10 h-7 flex justify-center items-center"
-                                        title="Decrease font size"
-                                    >
-                                        <ZoomOut size={12} />
-                                    </button>
-                                    <button
-                                        onClick={() => setFontSize(prev => Math.min(24, prev + 1))}
-                                        className="p-1 hover:bg-white/10 transition-colors text-gray-400 hover:text-white w-10 h-7 flex justify-center items-center"
-                                        title="Increase font size"
-                                    >
-                                        <ZoomIn size={12} />
-                                    </button>
-                                </div>
-                            )}
+                                                    <button
+                                                        onClick={() => { setShowFullTitles(!showFullTitles); setIsMenuOpen(false); }}
+                                                        className={`w-full px-4 py-2 text-left flex items-center gap-3 transition-colors hover:bg-white/5 ${showFullTitles ? 'text-blue-400' : 'text-gray-400'}`}
+                                                    >
+                                                        <Type size={16} />
+                                                        <span className="text-xs font-medium">{showFullTitles ? 'Truncate Titles' : 'Full Titles'}</span>
+                                                    </button>
+
+                                                    <button
+                                                        onClick={() => { setShowPreview(!showPreview); setIsMenuOpen(false); }}
+                                                        className={`w-full px-4 py-2 text-left flex items-center gap-3 transition-colors hover:bg-white/5 ${showPreview ? 'text-blue-400' : 'text-gray-400'}`}
+                                                    >
+                                                        <MessageSquare size={16} />
+                                                        <span className="text-xs font-medium">{showPreview ? 'Hide Preview' : 'Show Preview'}</span>
+                                                    </button>
+                                                </>
+                                            )}
+
+                                            <div className="h-px bg-gray-800 my-2 mx-2"></div>
+
+                                            <div className="px-3 py-1.5 mb-1">
+                                                <span className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">Preferences</span>
+                                            </div>
+
+                                            {activeTab !== 'assistant' && tasks.length > 0 && (
+                                                <div className="px-4 py-2 flex items-center justify-between">
+                                                    <div className="flex items-center gap-3 text-gray-400">
+                                                        <ZoomIn size={16} />
+                                                        <span className="text-xs font-medium">Text Size</span>
+                                                    </div>
+                                                    <div className="flex items-center bg-gray-900 border border-gray-800 rounded-lg overflow-hidden h-7">
+                                                        <button
+                                                            onClick={() => setFontSize(prev => Math.max(9, prev - 1))}
+                                                            className="px-2 hover:bg-white/10 text-gray-400 hover:text-white border-r border-gray-800 h-full flex items-center"
+                                                        >
+                                                            <ZoomOut size={12} />
+                                                        </button>
+                                                        <button
+                                                            onClick={() => setFontSize(prev => Math.min(24, prev + 1))}
+                                                            className="px-2 hover:bg-white/10 text-gray-400 hover:text-white h-full flex items-center"
+                                                        >
+                                                            <ZoomIn size={12} />
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                            )}
+
+                                            {activeTab === 'trash' && tasks.length > 0 && (
+                                                <>
+                                                    <div className="h-px bg-gray-800 my-2 mx-2"></div>
+                                                    <button
+                                                        onClick={() => { handleEmptyTrash(); setIsMenuOpen(false); }}
+                                                        className="w-full px-4 py-2 text-left flex items-center gap-3 transition-colors hover:bg-red-500/10 text-red-400"
+                                                    >
+                                                        <Trash2 size={16} />
+                                                        <span className="text-xs font-medium">Empty Trash</span>
+                                                    </button>
+                                                </>
+                                            )}
+                                        </motion.div>
+                                    )}
+                                </AnimatePresence>
+                            </div>
 
 
 
