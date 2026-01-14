@@ -125,6 +125,7 @@ export const TaskItem = forwardRef(({ task, onUpdate, showTags, style, dragHandl
     const [isEditingTitle, setIsEditingTitle] = useState(false);
     const [editedTitle, setEditedTitle] = useState(task.title);
     const [localLabels, setLocalLabels] = useState(task.labels || []);
+    const [localAttachments, setLocalAttachments] = useState(task.attachments || []);
     const [deletingUpdateId, setDeletingUpdateId] = useState(null);
     const localRef = useRef(null); // Local ref to track the DOM element
     const textareaRef = useRef(null);
@@ -142,6 +143,10 @@ export const TaskItem = forwardRef(({ task, onUpdate, showTags, style, dragHandl
     useEffect(() => {
         setLocalLabels(task.labels || []);
     }, [task.labels]);
+
+    useEffect(() => {
+        setLocalAttachments(task.attachments || []);
+    }, [task.attachments]);
 
     // Auto-expand when defaultExpanded changes to true
     useEffect(() => {
@@ -340,14 +345,17 @@ export const TaskItem = forwardRef(({ task, onUpdate, showTags, style, dragHandl
 
         // If dropped outside, remove the attachment
         if (!over) {
-            const currentAttachments = task.attachments || [];
-            const newAttachments = currentAttachments.filter(a => a._id !== active.id);
+            const newAttachments = localAttachments.filter(a => a._id !== active.id);
+            // Optimistically update UI
+            setLocalAttachments(newAttachments);
 
             try {
                 await api.updateTask(task._id, { attachments: newAttachments });
                 onUpdate();
             } catch (err) {
                 console.error("Failed to unlink attachment", err);
+                // Revert on error
+                setLocalAttachments(task.attachments || []);
             }
         }
     };
@@ -524,7 +532,7 @@ export const TaskItem = forwardRef(({ task, onUpdate, showTags, style, dragHandl
                         <div className="px-4 pb-4 pt-0 border-t border-white/5 bg-black/20">
                             <div className="py-4 space-y-1">
                                 {/* Attachments Chips */}
-                                {task.attachments && task.attachments.length > 0 && (
+                                {localAttachments && localAttachments.length > 0 && (
                                     <div className="mb-4 pl-28 pr-4">
 
                                         <div className="flex flex-wrap gap-2">
@@ -533,7 +541,7 @@ export const TaskItem = forwardRef(({ task, onUpdate, showTags, style, dragHandl
                                                 collisionDetection={pointerWithinTaskItem} // Use custom strategy to detect drag out of item
                                                 onDragEnd={handleAttachmentDragEnd}
                                             >
-                                                {task.attachments.map(att => (
+                                                {localAttachments.map(att => (
                                                     <SortableAttachment
                                                         key={att._id}
                                                         attachment={att}

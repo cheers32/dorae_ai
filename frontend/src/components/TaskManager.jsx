@@ -410,6 +410,19 @@ export const TaskManager = () => {
         fetchTasks(false);
     };
 
+    const refreshWorkareaTask = async (taskId) => {
+        try {
+            const freshTask = await api.getTask(taskId);
+            if (freshTask) {
+                setWorkareaTasks(prev => prev.map(t =>
+                    t._id === taskId ? { ...freshTask, _forceExpanded: true } : t
+                ));
+            }
+        } catch (err) {
+            console.error('Failed to refresh workarea task', err);
+        }
+    };
+
     const handleDragEnd = async (event) => {
         const { active, over } = event;
 
@@ -853,7 +866,10 @@ export const TaskManager = () => {
                                                                 key={`workarea-${task._id}`}
                                                                 id={`workarea-task-${task._id}`}
                                                                 task={task}
-                                                                onUpdate={() => fetchTasks(false)}
+                                                                onUpdate={() => {
+                                                                    fetchTasks(false);
+                                                                    refreshWorkareaTask(task._id);
+                                                                }}
                                                                 showTags={true}
                                                                 availableLabels={labels}
                                                                 isWorkarea={true}
