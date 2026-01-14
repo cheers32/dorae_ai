@@ -1,13 +1,52 @@
-import React from 'react';
-import { motion } from 'framer-motion';
+import React, { useState } from 'react';
+import { api } from '../api';
+import { motion, AnimatePresence } from 'framer-motion';
 import { Brain, Cpu, MessageSquare, Zap, Target, Layers } from 'lucide-react';
 import { useDroppable } from '@dnd-kit/core';
+
+
+
 
 export const AgentItem = ({ agent, onFocus, onEdit, onDelete, isFocused }) => {
     const { setNodeRef, isOver } = useDroppable({
         id: `agent-${agent._id}`,
         data: { type: 'agent', agent }
     });
+
+    const [showChat, setShowChat] = useState(false);
+    const [chatInput, setChatInput] = useState('');
+    const [chatMessages, setChatMessages] = useState([
+        { role: 'ai', text: `Hi! I'm ${agent.name}. How can I help with your tasks?` }
+    ]);
+    const [isChatLoading, setIsChatLoading] = useState(false);
+    const chatEndRef = React.useRef(null);
+
+    React.useEffect(() => {
+        if (showChat && chatEndRef.current) {
+            chatEndRef.current.scrollIntoView({ behavior: "smooth" });
+        }
+    }, [chatMessages, showChat]);
+
+    const handleSendMessage = async (e) => {
+        e.preventDefault();
+        if (!chatInput.trim() || isChatLoading) return;
+
+        const userMsg = chatInput.trim();
+        setChatInput('');
+        setChatMessages(prev => [...prev, { role: 'user', text: userMsg }]);
+        setIsChatLoading(true);
+
+        try {
+            // Using the global chat API for now
+            const data = await api.chatWithAI(userMsg);
+            setChatMessages(prev => [...prev, { role: 'ai', text: data.reply }]);
+        } catch (err) {
+            console.error(err);
+            setChatMessages(prev => [...prev, { role: 'ai', text: "I'm having trouble connecting right now." }]);
+        } finally {
+            setIsChatLoading(false);
+        }
+    };
 
     return (
         <motion.div
@@ -61,9 +100,11 @@ export const AgentItem = ({ agent, onFocus, onEdit, onDelete, isFocused }) => {
                 </div>
             </div>
 
-            <p className="text-sm text-gray-400 mb-6 leading-relaxed">
-                {agent.description || "Ready to assist with your tasks. Drag tasks here to assign."}
-            </p>
+            {(!agent.active_tasks || agent.active_tasks.length === 0) && (
+                <p className="text-sm text-gray-400 mb-6 leading-relaxed">
+                    {agent.description || "Ready to assist with your tasks. Drag tasks here to assign."}
+                </p>
+            )}
 
             {/* Assigned Tasks Chips */}
             {agent.active_tasks && agent.active_tasks.length > 0 && (
@@ -87,22 +128,77 @@ export const AgentItem = ({ agent, onFocus, onEdit, onDelete, isFocused }) => {
                 </div>
 
                 <div className="grid grid-cols-2 gap-2">
-                    {/* Skills Placeholder */}
-                    <div className="bg-black/20 p-2 rounded-lg border border-white/5 flex items-center gap-2">
-                        <MessageSquare size={14} className="text-purple-400" />
-                        <span className="text-xs text-gray-300">Context Chat</span>
-                    </div>
-                    <div className="bg-black/20 p-2 rounded-lg border border-white/5 flex items-center gap-2">
-                        <Target size={14} className="text-green-400" />
-                        <span className="text-xs text-gray-300">Task Planning</span>
-                    </div>
-                    {/* "Add Skill" Placeholder */}
-                    <div className="col-span-2 border border-dashed border-white/10 rounded-lg p-2 flex items-center justify-center gap-2 text-gray-600 hover:text-gray-400 hover:border-white/20 transition-colors cursor-pointer group/skill">
+                    {/* Context Chat Toggle */}
+                    <button
+                        onClick={() => setShowChat(!showChat)}
+                        className={`
+                            p-2 rounded-lg border flex items-center gap-2 transition-all
+                            ${showChat
+                                ? 'bg-purple-500/20 border-purple-500/50 text-purple-300'
+                                : 'bg-black/20 border-white/5 text-gray-300 hover:bg-white/5 hover:border-white/10'
+                            }
+                        `}
+                    >
+                        <MessageSquare size={14} className={showChat ? "text-purple-300" : "text-purple-400"} />
+                        <span className="text-xs">Context Chat</span>
+                    </button>
+
+                    {/* "Add Skill" Placeholder (Spans remaining) */}
+                    <div className="col-span-1 border border-dashed border-white/10 rounded-lg p-2 flex items-center justify-center gap-2 text-gray-600 hover:text-gray-400 hover:border-white/20 transition-colors cursor-pointer group/skill">
                         <Cpu size={14} />
                         <span className="text-xs">Add Skill Pack</span>
                     </div>
                 </div>
             </div>
+
+            {/* Inline Chat Window */}
+            <AnimatePresence>
+                {showChat && (
+                    <motion.div
+                        initial={{ height: 0, opacity: 0, marginTop: 0 }}
+                        animate={{ height: 'auto', opacity: 1, marginTop: 16 }}
+                        exit={{ height: 0, opacity: 0, marginTop: 0 }}
+                        className="bg-black/40 rounded-xl border border-white/10 overflow-hidden"
+                    >
+                        <div className="h-48 overflow-y-auto p-4 space-y-3 custom-scrollbar">
+                            {chatMessages.map((msg, i) => (
+                                <div key={i} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
+                                    <div className={`
+                                        max-w-[85%] rounded-lg px-3 py-2 text-xs leading-relaxed
+                                        ${msg.role === 'user'
+                                            ? 'bg-blue-500/20 text-blue-100 border border-blue-500/20'
+                                            : 'bg-white/5 text-gray-300 border border-white/5'
+                                        }
+                                    `}>
+                                        {msg.text}
+                                    </div>
+                                </div>
+                            ))}
+                            {isChatLoading && (
+                                <div className="flex justify-start">
+                                    <div className="bg-white/5 rounded-lg px-3 py-2 border border-white/5">
+                                        <div className="flex gap-1">
+                                            <span className="w-1 h-1 bg-gray-500 rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></span>
+                                            <span className="w-1 h-1 bg-gray-500 rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></span>
+                                            <span className="w-1 h-1 bg-gray-500 rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></span>
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
+                            <div ref={chatEndRef} />
+                        </div>
+                        <form onSubmit={handleSendMessage} className="p-2 border-t border-white/10 bg-black/20">
+                            <input
+                                type="text"
+                                value={chatInput}
+                                onChange={(e) => setChatInput(e.target.value)}
+                                placeholder="Type a message..."
+                                className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-1.5 text-xs text-white focus:outline-none focus:border-purple-500/50 transition-colors placeholder:text-gray-600"
+                            />
+                        </form>
+                    </motion.div>
+                )}
+            </AnimatePresence>
 
             {/* Drag Target Indicator */}
             {isOver && (
