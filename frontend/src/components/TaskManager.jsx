@@ -5,7 +5,7 @@ import { Sidebar } from './Sidebar';
 import { ChatInterface } from './ChatInterface';
 import { AgentList } from './AgentList';
 import { AgentItem } from './AgentItem';
-import { Search, Plus, Home as HomeIcon, Tag as TagIcon, ArrowLeft, ArrowRight, Trash2, X, ChevronsUpDown, ChevronsDownUp, Type, MessageSquare, ZoomIn, ZoomOut, MoreVertical, SlidersHorizontal, Settings2, Bug } from 'lucide-react';
+import { Search, Plus, Home as HomeIcon, Tag as TagIcon, ArrowLeft, ArrowRight, Trash2, X, ChevronsUpDown, ChevronsDownUp, Type, MessageSquare, ZoomIn, ZoomOut, MoreVertical, SlidersHorizontal, Settings2, Bug, Calendar, ArrowDownAZ, GripVertical } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import {
@@ -57,6 +57,7 @@ export const TaskManager = () => {
     const [history, setHistory] = useState([]);
     const [forwardHistory, setForwardHistory] = useState([]);
     const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(() => localStorage.getItem('task_manager_sidebar_collapsed') === 'true');
+    const [sortBy, setSortBy] = useState('manual'); // 'manual', 'date', 'title'
     const searchInputRef = useRef(null);
     const [workareaTasks, setWorkareaTasks] = useState(() => {
         // Initialize from localStorage
@@ -83,6 +84,16 @@ export const TaskManager = () => {
                 (t.title && t.title.toLowerCase().includes(query)) ||
                 (t.labels && t.labels.some(l => l.toLowerCase().includes(query)))
             );
+        })
+        .sort((a, b) => {
+            if (sortBy === 'date') {
+                return new Date(b.created_at) - new Date(a.created_at);
+            }
+            if (sortBy === 'title') {
+                return (a.title || '').localeCompare(b.title || '');
+            }
+            // Manual sort is handled by the order in the array from backend (which is by 'order' field)
+            return 0;
         });
 
     // Sidebar Order State
@@ -1099,6 +1110,32 @@ export const TaskManager = () => {
                                             transition={{ duration: 0.15 }}
                                             className="absolute right-0 mt-2 w-56 bg-gray-950 border border-gray-800 rounded-xl shadow-2xl py-2 z-50 backdrop-blur-xl"
                                         >
+                                            <div className="px-3 py-1.5 mb-1">
+                                                <span className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">Sort By</span>
+                                            </div>
+                                            <div className="px-2 pb-2">
+                                                <div className="flex bg-gray-900 rounded-lg p-1 border border-gray-800">
+                                                    <button
+                                                        onClick={() => setSortBy('manual')}
+                                                        className={`flex-1 py-1 text-[10px] font-medium rounded-md transition-all ${sortBy === 'manual' ? 'bg-blue-500/20 text-blue-400 shadow-sm' : 'text-gray-400 hover:text-gray-300'}`}
+                                                    >
+                                                        Manual
+                                                    </button>
+                                                    <button
+                                                        onClick={() => setSortBy('date')}
+                                                        className={`flex-1 py-1 text-[10px] font-medium rounded-md transition-all ${sortBy === 'date' ? 'bg-blue-500/20 text-blue-400 shadow-sm' : 'text-gray-400 hover:text-gray-300'}`}
+                                                    >
+                                                        Date
+                                                    </button>
+                                                    <button
+                                                        onClick={() => setSortBy('title')}
+                                                        className={`flex-1 py-1 text-[10px] font-medium rounded-md transition-all ${sortBy === 'title' ? 'bg-blue-500/20 text-blue-400 shadow-sm' : 'text-gray-400 hover:text-gray-300'}`}
+                                                    >
+                                                        Title
+                                                    </button>
+                                                </div>
+                                            </div>
+                                            <div className="h-px bg-gray-800 my-2 mx-2"></div>
                                             <div className="px-3 py-1.5 mb-1">
                                                 <span className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">Layout & Visibility</span>
                                             </div>
