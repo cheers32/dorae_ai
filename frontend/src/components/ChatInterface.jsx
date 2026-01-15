@@ -1,12 +1,25 @@
 import { useState, useRef, useEffect } from 'react';
-import { Send, Sparkles, User } from 'lucide-react';
+import { Send, User } from 'lucide-react';
 import { api } from '../api';
 import { motion, AnimatePresence } from 'framer-motion';
 import ReactMarkdown from 'react-markdown';
 
+const GeminiIcon = ({ size = 16, className = "" }) => (
+    <svg
+        width={size}
+        height={size}
+        viewBox="0 0 24 24"
+        fill="none"
+        xmlns="http://www.w3.org/2000/svg"
+        className={className}
+    >
+        <path d="M12 2C12 7.525 16.475 12 22 12C16.475 12 12 16.475 12 22C12 16.475 7.525 12 2 12C7.525 12 12 7.525 12 2Z" fill="currentColor" />
+    </svg>
+);
+
 export function ChatInterface() {
     const [messages, setMessages] = useState([
-        { role: 'ai', text: 'Hello! I\'m Dorae. I have access to your tasks. How can I help you organize your day?' }
+        { role: 'ai', text: 'Hello! I\'m Gemini. I have access to your tasks. How can I help you organize your day?' }
     ]);
     const [input, setInput] = useState('');
     const [isLoading, setIsLoading] = useState(false);
@@ -51,7 +64,7 @@ export function ChatInterface() {
                         className={`message-wrapper ${msg.role}`}
                     >
                         <div className="message-avatar">
-                            {msg.role === 'ai' ? <Sparkles size={16} /> : <User size={16} />}
+                            {msg.role === 'ai' ? <GeminiIcon size={16} /> : <User size={16} />}
                         </div>
                         <div className="message-bubble prose prose-invert prose-sm max-w-none">
                             <ReactMarkdown>{msg.text}</ReactMarkdown>
@@ -64,7 +77,7 @@ export function ChatInterface() {
                         animate={{ opacity: 1 }}
                         className="message-wrapper ai"
                     >
-                        <div className="message-avatar"><Sparkles size={16} /></div>
+                        <div className="message-avatar"><GeminiIcon size={16} /></div>
                         <div className="message-bubble typing">
                             <span>.</span><span>.</span><span>.</span>
                         </div>
