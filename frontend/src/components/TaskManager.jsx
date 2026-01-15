@@ -5,7 +5,7 @@ import { Sidebar } from './Sidebar';
 import { ChatInterface } from './ChatInterface';
 import { AgentList } from './AgentList';
 import { AgentItem } from './AgentItem';
-import { Search, Plus, Home as HomeIcon, Tag as TagIcon, ArrowLeft, ArrowRight, Trash2, X, ChevronsUpDown, ChevronsDownUp, Type, MessageSquare, ZoomIn, ZoomOut, MoreVertical, SlidersHorizontal, Settings2 } from 'lucide-react';
+import { Search, Plus, Home as HomeIcon, Tag as TagIcon, ArrowLeft, ArrowRight, Trash2, X, ChevronsUpDown, ChevronsDownUp, Type, MessageSquare, ZoomIn, ZoomOut, MoreVertical, SlidersHorizontal, Settings2, Bug } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import {
@@ -47,6 +47,7 @@ export const TaskManager = () => {
     const [globalExpanded, setGlobalExpanded] = useState(() => localStorage.getItem('task_manager_global_expanded') === 'true');
     const [showFullTitles, setShowFullTitles] = useState(() => localStorage.getItem('task_manager_show_full_titles') === 'true');
     const [showPreview, setShowPreview] = useState(() => localStorage.getItem('task_manager_show_preview') === 'true');
+    const [showDebugInfo, setShowDebugInfo] = useState(() => localStorage.getItem('task_manager_show_debug_info') === 'true');
     const [fontSize, setFontSize] = useState(() => {
         const saved = localStorage.getItem('task_list_font_size');
         return saved ? parseInt(saved, 10) : 15;
@@ -398,6 +399,10 @@ export const TaskManager = () => {
     useEffect(() => {
         localStorage.setItem('task_manager_show_preview', showPreview);
     }, [showPreview]);
+
+    useEffect(() => {
+        localStorage.setItem('task_manager_show_debug_info', showDebugInfo);
+    }, [showDebugInfo]);
 
     useEffect(() => {
         localStorage.setItem('task_manager_sidebar_collapsed', isSidebarCollapsed);
@@ -1131,6 +1136,14 @@ export const TaskManager = () => {
                                                         <MessageSquare size={16} />
                                                         <span className="text-xs font-medium">{showPreview ? 'Hide Preview' : 'Show Preview'}</span>
                                                     </button>
+
+                                                    <button
+                                                        onClick={() => { setShowDebugInfo(!showDebugInfo); setIsMenuOpen(false); }}
+                                                        className={`w-full px-4 py-2 text-left flex items-center gap-3 transition-colors hover:bg-white/5 ${showDebugInfo ? 'text-blue-400' : 'text-gray-400'}`}
+                                                    >
+                                                        <Bug size={16} />
+                                                        <span className="text-xs font-medium">{showDebugInfo ? 'Hide Debug Info' : 'Show Debug Info'}</span>
+                                                    </button>
                                                 </>
                                             )}
 
@@ -1248,6 +1261,7 @@ export const TaskManager = () => {
                                                     globalExpanded={globalExpanded}
                                                     showFullTitles={showFullTitles}
                                                     showPreview={showPreview}
+                                                    showDebugInfo={showDebugInfo}
                                                     fontSize={fontSize}
                                                 />
                                             );
@@ -1356,6 +1370,7 @@ export const TaskManager = () => {
                                                             globalExpanded={globalExpanded}
                                                             showFullTitles={showFullTitles}
                                                             showPreview={showPreview}
+                                                            showDebugInfo={showDebugInfo}
                                                             fontSize={fontSize}
                                                         />
                                                     ))}
@@ -1392,6 +1407,7 @@ export const TaskManager = () => {
                                 isOverlay={true}
                                 onUpdate={() => { }}
                                 availableLabels={labels}
+                                showDebugInfo={showDebugInfo}
                             />
                         ) : (activeId && activeId.toString().startsWith('workarea-task-')) ? (
                             <TaskItem
@@ -1401,6 +1417,7 @@ export const TaskManager = () => {
                                 onUpdate={() => { }}
                                 availableLabels={labels}
                                 isWorkarea={true}
+                                showDebugInfo={showDebugInfo}
                             />
                         ) : null}
                     </DragOverlay >,

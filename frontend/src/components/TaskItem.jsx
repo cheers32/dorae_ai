@@ -117,7 +117,7 @@ const parseUTCDate = (dateString) => {
     return new Date(normalized);
 };
 
-export const TaskItem = forwardRef(({ task, onUpdate, showTags, style, dragHandleProps, isOverlay, availableLabels = [], onSendToWorkarea, onRemoveFromWorkarea, isWorkarea, defaultExpanded, onAttachmentClick, onTaskClick, globalExpanded, showFullTitles, showPreview, fontSize }, ref) => {
+export const TaskItem = forwardRef(({ task, onUpdate, showTags, style, dragHandleProps, isOverlay, availableLabels = [], onSendToWorkarea, onRemoveFromWorkarea, isWorkarea, defaultExpanded, onAttachmentClick, onTaskClick, globalExpanded, showFullTitles, showPreview, showDebugInfo, fontSize }, ref) => {
     const [expanded, setExpanded] = useState(defaultExpanded || false);
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [isEditingTitle, setIsEditingTitle] = useState(false);
@@ -394,7 +394,7 @@ export const TaskItem = forwardRef(({ task, onUpdate, showTags, style, dragHandl
                                 {task.title}
                                 {showPreview && !(expanded || globalExpanded) && task.updates && task.updates.length > 0 && (
                                     <span className="text-gray-600 font-normal ml-2" style={{ fontSize: `${Math.max(11, fontSize - 1)}px` }}>
-                                        <span className="text-gray-700 mr-1">—</span>
+                                        <span className="text-gray-700 mr-1">-</span>
                                         {task.updates[task.updates.length - 1].content}
                                     </span>
                                 )}
@@ -437,9 +437,11 @@ export const TaskItem = forwardRef(({ task, onUpdate, showTags, style, dragHandl
                 </div>
 
                 <div className="flex items-center gap-4">
-                    <span className="text-xs text-indigo-400 font-mono font-medium whitespace-nowrap">
-                        [{task.status}]
-                    </span>
+                    {showDebugInfo && (
+                        <span className="text-xs text-indigo-400 font-mono font-medium whitespace-nowrap">
+                            [{task.status}]
+                        </span>
+                    )}
                     <span
                         className="text-xs text-gray-400 font-mono font-medium whitespace-nowrap"
                     >
