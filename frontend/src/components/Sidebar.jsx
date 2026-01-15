@@ -16,6 +16,8 @@ import {
     Check,
     ChevronLeft,
     ChevronRight,
+    ChevronDown,
+    ChevronUp,
     Layers
 } from 'lucide-react';
 import { api } from '../api';
@@ -203,6 +205,7 @@ export function Sidebar({ activeTab, onNavigate, labels = [], onLabelsChange, se
     const [isAddingFolder, setIsAddingFolder] = useState(false);
     const [newFolderName, setNewFolderName] = useState('');
     const [editingLabelId, setEditingLabelId] = useState(null);
+    const [showAllFolders, setShowAllFolders] = useState(false);
 
     const systemItems = {
         'active': { label: 'Active Tasks', icon: Layout },
@@ -344,45 +347,81 @@ export function Sidebar({ activeTab, onNavigate, labels = [], onLabelsChange, se
                     )}
                     {/* Unified Sortable List */}
                     <SortableContext items={sidebarItems.map(id => `sidebar-${id}`)} strategy={verticalListSortingStrategy}>
-                        {sidebarItems.map(itemId => {
-                            if (itemId.startsWith('folder-')) {
-                                const folderId = itemId.replace('folder-', '');
-                                const folder = folders.find(f => f._id === folderId);
-                                if (!folder) return null;
-                                return (
-                                    <SortableSidebarItem
-                                        key={itemId}
-                                        id={`sidebar-${itemId}`}
-                                        icon={Folder}
-                                        label={folder.name}
-                                        isActive={activeTab === 'folder' && selectedFolder === folder._id}
-                                        onClick={() => onNavigate('folder', null, folder._id)}
-                                        data={{ type: 'folder', target: folder._id, folderId: folder._id }}
-                                        isFolder={true}
-                                        onDelete={(!stats.folders || !stats.folders[folder._id]) ? (e) => handleDeleteFolder(e, folder._id) : null}
-                                        count={stats.folders && stats.folders[folder._id]}
-                                        isCollapsed={isCollapsed}
-                                    />
-                                );
-                            } else {
-                                const item = systemItems[itemId];
-                                if (!item) return null;
-                                return (
-                                    <SortableSidebarItem
-                                        key={itemId}
-                                        id={`sidebar-${itemId}`}
-                                        icon={item.icon}
-                                        label={item.label}
-                                        isActive={activeTab === itemId && !selectedLabel}
-                                        onClick={() => onNavigate(itemId, null)}
-                                        data={{ type: 'sidebar', target: itemId }}
-                                        count={stats[itemId]}
-                                        isCollapsed={isCollapsed}
-                                    />
-                                );
-                            }
-                        })}
+                        {(() => {
+                            let itemCount = 0;
+                            const itemLimit = 10;
+
+                            return sidebarItems.map(itemId => {
+                                // Logic for System Items
+                                if (!itemId.startsWith('folder-')) {
+                                    const item = systemItems[itemId];
+                                    if (!item) return null;
+
+                                    itemCount++;
+                                    if (!showAllFolders && itemCount > itemLimit) return null;
+
+                                    return (
+                                        <SortableSidebarItem
+                                            key={itemId}
+                                            id={`sidebar-${itemId}`}
+                                            icon={item.icon}
+                                            label={item.label}
+                                            isActive={activeTab === itemId && !selectedLabel}
+                                            onClick={() => onNavigate(itemId, null)}
+                                            data={{ type: 'sidebar', target: itemId }}
+                                            count={stats[itemId]}
+                                            isCollapsed={isCollapsed}
+                                        />
+                                    );
+                                }
+                                // Logic for Folders
+                                else {
+                                    const folderId = itemId.replace('folder-', '');
+                                    const folder = folders.find(f => f._id === folderId);
+                                    if (!folder) return null;
+
+                                    itemCount++;
+                                    if (!showAllFolders && itemCount > itemLimit) return null;
+
+                                    return (
+                                        <SortableSidebarItem
+                                            key={itemId}
+                                            id={`sidebar-${itemId}`}
+                                            icon={Folder}
+                                            label={folder.name}
+                                            isActive={activeTab === 'folder' && selectedFolder === folder._id}
+                                            onClick={() => onNavigate('folder', null, folder._id)}
+                                            data={{ type: 'folder', target: folder._id, folderId: folder._id }}
+                                            isFolder={true}
+                                            onDelete={(!stats.folders || !stats.folders[folder._id]) ? (e) => handleDeleteFolder(e, folder._id) : null}
+                                            count={stats.folders && stats.folders[folder._id]}
+                                            isCollapsed={isCollapsed}
+                                        />
+                                    );
+                                }
+                            });
+                        })()}
                     </SortableContext>
+
+                    {/* Show toggle if we have more items than limit */}
+                    {sidebarItems.length > 10 && !isCollapsed && (
+                        <button
+                            onClick={() => setShowAllFolders(!showAllFolders)}
+                            className="w-full flex items-center gap-3 px-4 py-2 text-gray-500 hover:text-white hover:bg-white/5 rounded-xl transition-all text-sm font-medium group mt-1"
+                        >
+                            {showAllFolders ? (
+                                <>
+                                    <ChevronUp size={16} />
+                                    <span>Less</span>
+                                </>
+                            ) : (
+                                <>
+                                    <ChevronDown size={16} />
+                                    <span>More</span>
+                                </>
+                            )}
+                        </button>
+                    )}
 
                     <div className="space-y-1 pt-2 border-t border-white/5 mt-2">
                         <AnimatePresence>
