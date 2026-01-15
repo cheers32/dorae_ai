@@ -599,6 +599,7 @@ def analyze_task(task_id):
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
+
 @app.route('/api/chat', methods=['POST'])
 def chat():
     try:
@@ -657,17 +658,36 @@ def chat():
             agent = agents_collection.find_one({"_id": ObjectId(agent_id)})
             if agent:
                 agent_context = {
+                    "id": agent_id,
                     "name": agent.get('name'),
                     "role": agent.get('role'),
                     "description": agent.get('description'),
-                    "notes": agent.get('notes', [])
+                    "notes": agent.get('notes', []),
+                    "skills": agent.get('skills', [])  # Include agent skills
                 }
 
         response_text = ai_service.chat_with_task_context(message, tasks_context, agent_context)
         
+        # Check if response includes function call to create task
+        if isinstance(response_text, dict) and response_text.get('action') == 'create_task':
+            # Agent wants to create a task - do it via the add_task skill
+            task_data = response_text.get('task_data', {})
+            try:
+                new_task = add_task_skill.create_task(agent_id, task_data)
+                # Return confirmation message
+                return jsonify({
+                    "reply": f"✅ I've created the task: **{task_data.get('title')}**",
+                    "task_created": serialize_doc(new_task)
+                }), 200
+            except Exception as e:
+                return jsonify({
+                    "reply": f"I tried to create the task but encountered an error: {str(e)}"
+                }), 200
+        
         return jsonify({"reply": response_text}), 200
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+
 
 # --- Label Endpoints ---
 

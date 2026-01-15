@@ -112,6 +112,12 @@ export const AgentItem = ({ agent, onFocus, onEdit, onDelete, isFocused, availab
             // Pass agent ID to filter tasks, but use default Gemini persona
             const data = await api.chatWithAI(userMsg, agent._id);
             setChatMessages(prev => [...prev, { role: 'ai', text: data.reply }]);
+
+            // If a task was created, refresh the task list and agent data
+            if (data.task_created) {
+                window.dispatchEvent(new CustomEvent('task-created'));
+                window.dispatchEvent(new CustomEvent('agent-updated'));
+            }
         } catch (err) {
             console.error(err);
             setChatMessages(prev => [...prev, { role: 'ai', text: "I'm having trouble connecting right now." }]);

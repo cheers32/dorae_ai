@@ -353,6 +353,31 @@ export const TaskManager = () => {
         }
     }, [sidebarItems]);
 
+    // Listen for cross-component refresh events
+    useEffect(() => {
+        const handleRefresh = () => {
+            fetchTasks(false);
+            fetchStats();
+        };
+
+        const handleAgentUpdate = () => {
+            fetchStats();
+            // If we have a focused agent, we might need to refresh it
+            if (focusedAgentId) {
+                // This will trigger a re-fetch of fresh data for workarea items
+                // since workarea components often rely on passed props or local storage
+            }
+        };
+
+        window.addEventListener('task-created', handleRefresh);
+        window.addEventListener('agent-updated', handleAgentUpdate);
+
+        return () => {
+            window.removeEventListener('task-created', handleRefresh);
+            window.removeEventListener('agent-updated', handleAgentUpdate);
+        };
+    }, [focusedAgentId, activeTab, selectedLabel, selectedFolder]);
+
     // Keyboard navigation
     useEffect(() => {
         const handleKeyDown = (event) => {
