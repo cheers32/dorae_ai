@@ -308,7 +308,7 @@ export const TaskItem = forwardRef(({ task, onUpdate, showTags, style, dragHandl
             initial={isOverlay ? false : { opacity: 0 }}
             animate={isOverlay ? false : { opacity: baseStyle.opacity }}
             exit={isOverlay ? false : { opacity: 0 }}
-            className={`group hover:bg-white/[0.03] transition-colors border-b border-white/5 bg-transparent ${expanded || globalExpanded ? 'bg-white/[0.015]' : ''}`}
+            className={`group hover:bg-white/[0.03] transition-all duration-200 bg-transparent ${expanded || globalExpanded ? 'my-2 rounded-xl bg-blue-500/5 border-blue-500/30 border shadow-lg z-10 overflow-hidden' : 'border-b border-white/5 border-l border-l-transparent'}`}
         >
             <div
                 className="flex items-center gap-4 cursor-pointer pr-4"
@@ -438,7 +438,7 @@ export const TaskItem = forwardRef(({ task, onUpdate, showTags, style, dragHandl
 
                 <div className="flex items-center gap-4">
                     <span
-                        className="text-[10px] text-gray-600 font-mono whitespace-nowrap"
+                        className="text-xs text-gray-400 font-mono font-medium whitespace-nowrap"
                     >
                         {(() => {
                             const lastUpdate = task.updates && task.updates.length > 0
@@ -448,32 +448,8 @@ export const TaskItem = forwardRef(({ task, onUpdate, showTags, style, dragHandl
                         })()}
                     </span>
 
-                    {/* [NEW] Send/Remove Workarea Button */}
                     {!isOverlay && (expanded || globalExpanded) && (
                         <div className="mt-2.5">
-                            {isWorkarea ? (
-                                <button
-                                    className="p-1 px-2 text-[10px] font-bold uppercase tracking-wider bg-red-500/10 text-red-400 hover:bg-red-500/20 rounded border border-red-500/20 transition-colors"
-                                    onClick={(e) => {
-                                        e.stopPropagation();
-                                        if (onRemoveFromWorkarea) onRemoveFromWorkarea();
-                                    }}
-                                    title="Remove from Focus"
-                                >
-                                    Unfocus
-                                </button>
-                            ) : (
-                                <button
-                                    className="p-1 px-2 text-[10px] font-bold uppercase tracking-wider bg-blue-500/10 text-blue-400 hover:bg-blue-500/20 rounded border border-blue-500/20 transition-colors"
-                                    onClick={(e) => {
-                                        e.stopPropagation();
-                                        if (onSendToWorkarea) onSendToWorkarea();
-                                    }}
-                                    title="Set as Current Focus"
-                                >
-                                    Focus
-                                </button>
-                            )}
                         </div>
                     )}
                 </div>
@@ -577,6 +553,33 @@ export const TaskItem = forwardRef(({ task, onUpdate, showTags, style, dragHandl
                                         <Sparkles size={14} />
                                         {isSubmitting ? 'Analyzing...' : 'AI Analyze'}
                                     </button>
+                                    {!isOverlay && (
+                                        <>
+                                            {isWorkarea ? (
+                                                <button
+                                                    className="p-1 px-2 text-[10px] font-bold uppercase tracking-wider bg-red-500/10 text-red-400 hover:bg-red-500/20 rounded border border-red-500/20 transition-colors"
+                                                    onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        if (onRemoveFromWorkarea) onRemoveFromWorkarea();
+                                                    }}
+                                                    title="Remove from Focus"
+                                                >
+                                                    Unfocus
+                                                </button>
+                                            ) : (
+                                                <button
+                                                    className="p-1 px-2 text-[10px] font-bold uppercase tracking-wider bg-blue-500/10 text-blue-400 hover:bg-blue-500/20 rounded border border-blue-500/20 transition-colors"
+                                                    onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        if (onSendToWorkarea) onSendToWorkarea();
+                                                    }}
+                                                    title="Set as Current Focus"
+                                                >
+                                                    Focus
+                                                </button>
+                                            )}
+                                        </>
+                                    )}
                                 </div>
                             </div>
                         </div>
