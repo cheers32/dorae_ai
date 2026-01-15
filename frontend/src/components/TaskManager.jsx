@@ -5,7 +5,7 @@ import { Sidebar } from './Sidebar';
 import { ChatInterface } from './ChatInterface';
 import { AgentList } from './AgentList';
 import { AgentItem } from './AgentItem';
-import { Search, Plus, Home as HomeIcon, Tag as TagIcon, ArrowLeft, ArrowRight, Trash2, X, ChevronsUpDown, ChevronsDownUp, Type, MessageSquare, ZoomIn, ZoomOut, MoreVertical, SlidersHorizontal, Settings2, Bug, Calendar, ArrowDownAZ, GripVertical } from 'lucide-react';
+import { Search, Plus, Home as HomeIcon, Tag as TagIcon, ArrowLeft, ArrowRight, Trash2, X, ChevronsUpDown, ChevronsDownUp, Type, MessageSquare, ZoomIn, ZoomOut, MoreVertical, SlidersHorizontal, Settings2, Bug, Calendar, ArrowDownAZ, GripVertical, Folder } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import {
@@ -41,6 +41,7 @@ export const TaskManager = () => {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
     const [showTags, setShowTags] = useState(() => localStorage.getItem('task_manager_show_tags') === 'true');
+    const [showFolders, setShowFolders] = useState(() => localStorage.getItem('task_manager_show_folders') === 'true');
     const [isCreating, setIsCreating] = useState(false);
     const [isCreatingAgent, setIsCreatingAgent] = useState(false);
     const [activeId, setActiveId] = useState(null);
@@ -400,6 +401,10 @@ export const TaskManager = () => {
     useEffect(() => {
         localStorage.setItem('task_manager_show_tags', showTags);
     }, [showTags]);
+
+    useEffect(() => {
+        localStorage.setItem('task_manager_show_folders', showFolders);
+    }, [showFolders]);
 
     useEffect(() => {
         localStorage.setItem('task_manager_global_expanded', globalExpanded);
@@ -1172,6 +1177,14 @@ export const TaskManager = () => {
                                                 <span className="text-xs font-medium">{showTags ? 'Hide Tags' : 'Show Tags'}</span>
                                             </button>
 
+                                            <button
+                                                onClick={() => { setShowFolders(!showFolders); setIsMenuOpen(false); }}
+                                                className={`w-full px-4 py-2 text-left flex items-center gap-3 transition-colors hover:bg-white/5 ${showFolders ? 'text-blue-400' : 'text-gray-400'}`}
+                                            >
+                                                <Folder size={16} />
+                                                <span className="text-xs font-medium">{showFolders ? 'Hide Folders' : 'Show Folders'}</span>
+                                            </button>
+
                                             {activeTab !== 'assistant' && tasks.length > 0 && (
                                                 <>
                                                     <button
@@ -1313,6 +1326,8 @@ export const TaskManager = () => {
                                                         refreshWorkareaTask(item._id);
                                                     }}
                                                     showTags={true}
+                                                    showFolders={showFolders}
+                                                    folders={folders}
                                                     availableLabels={labels}
                                                     isWorkarea={true}
                                                     defaultExpanded={item._forceExpanded}
@@ -1362,7 +1377,7 @@ export const TaskManager = () => {
                                 </div>
                             ) : (
                                 <>
-                                    <div className="flex-1 overflow-y-auto pr-2 scrollbar-thin scrollbar-thumb-gray-800 scrollbar-track-transparent">
+                                    <div className="flex-1 overflow-y-auto pr-2 scrollbar-hide">
                                         {loading ? (
                                             null
                                         ) : tasks.length === 0 ? (
@@ -1385,6 +1400,8 @@ export const TaskManager = () => {
                                                                 fetchStats();
                                                             }}
                                                             showTags={showTags}
+                                                            showFolders={showFolders}
+                                                            folders={folders}
                                                             availableLabels={labels}
                                                             onSendToWorkarea={() => handleSendToWorkarea(task)}
                                                             isWorkarea={false}
@@ -1427,6 +1444,8 @@ export const TaskManager = () => {
                             <TaskItem
                                 task={activeTask}
                                 showTags={showTags}
+                                showFolders={showFolders}
+                                folders={folders}
                                 isOverlay={true}
                                 onUpdate={() => { }}
                                 availableLabels={labels}
@@ -1436,6 +1455,8 @@ export const TaskManager = () => {
                             <TaskItem
                                 task={workareaTasks.find(t => `workarea-task-${t._id}` === activeId)}
                                 showTags={true}
+                                showFolders={showFolders}
+                                folders={folders}
                                 isOverlay={true}
                                 onUpdate={() => { }}
                                 availableLabels={labels}

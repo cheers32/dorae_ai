@@ -8,7 +8,8 @@ import {
     Pencil,
     Check,
     Sparkles,
-    Paperclip
+    Paperclip,
+    Folder
 } from 'lucide-react';
 import { api } from '../api';
 import { UpdatesTimeline } from './UpdatesTimeline';
@@ -117,7 +118,7 @@ const parseUTCDate = (dateString) => {
     return new Date(normalized);
 };
 
-export const TaskItem = forwardRef(({ task, onUpdate, showTags, style, dragHandleProps, isOverlay, availableLabels = [], onSendToWorkarea, onRemoveFromWorkarea, isWorkarea, defaultExpanded, onAttachmentClick, onTaskClick, globalExpanded, showFullTitles, showPreview, showDebugInfo, fontSize }, ref) => {
+export const TaskItem = forwardRef(({ task, onUpdate, showTags, showFolders, folders, style, dragHandleProps, isOverlay, availableLabels = [], onSendToWorkarea, onRemoveFromWorkarea, isWorkarea, defaultExpanded, onAttachmentClick, onTaskClick, globalExpanded, showFullTitles, showPreview, showDebugInfo, fontSize }, ref) => {
     const [expanded, setExpanded] = useState(defaultExpanded || false);
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [isEditingTitle, setIsEditingTitle] = useState(false);
@@ -401,35 +402,48 @@ export const TaskItem = forwardRef(({ task, onUpdate, showTags, style, dragHandl
                             </h3>
 
                             {/* Labels Display */}
-                            {showTags && (
+                            {(showTags || (showFolders && task.folderId)) && (
                                 <div className="flex flex-wrap gap-1 ml-2 shrink-0 max-w-[60%]">
-                                    <DndContext
-                                        sensors={sensors}
-                                        collisionDetection={pointerWithinTaskItem}
-                                        onDragEnd={handleLabelDragEnd}
-                                    >
-                                        <SortableContext
-                                            items={localLabels}
-                                            strategy={horizontalListSortingStrategy}
+                                    {/* Folder Chip */}
+                                    {showFolders && task.folderId && folders && (
+                                        <div
+                                            className="inline-flex items-center gap-1.5 px-2 py-1 rounded border uppercase tracking-wider font-semibold text-[10px] group/folder transition-colors bg-white/5 border-white/10 text-gray-400"
+                                            onClick={(e) => e.stopPropagation()}
                                         >
-                                            {localLabels.map(labelName => {
-                                                const labelColor = availableLabels.find(l => l.name === labelName)?.color || '#3B82F6';
-                                                return (
-                                                    <SortableLabel
-                                                        key={labelName}
-                                                        labelName={labelName}
-                                                        color={labelColor}
-                                                        onDelete={async () => {
-                                                            const newLabels = localLabels.filter(l => l !== labelName);
-                                                            setLocalLabels(newLabels);
-                                                            await api.updateTask(task._id, { labels: newLabels });
-                                                            onUpdate();
-                                                        }}
-                                                    />
-                                                );
-                                            })}
-                                        </SortableContext>
-                                    </DndContext>
+                                            <Folder size={10} className="text-gray-500" />
+                                            {folders.find(f => f._id === task.folderId)?.name || 'Unknown'}
+                                        </div>
+                                    )}
+
+                                    {showTags && (
+                                        <DndContext
+                                            sensors={sensors}
+                                            collisionDetection={pointerWithinTaskItem}
+                                            onDragEnd={handleLabelDragEnd}
+                                        >
+                                            <SortableContext
+                                                items={localLabels}
+                                                strategy={horizontalListSortingStrategy}
+                                            >
+                                                {localLabels.map(labelName => {
+                                                    const labelColor = availableLabels.find(l => l.name === labelName)?.color || '#3B82F6';
+                                                    return (
+                                                        <SortableLabel
+                                                            key={labelName}
+                                                            labelName={labelName}
+                                                            color={labelColor}
+                                                            onDelete={async () => {
+                                                                const newLabels = localLabels.filter(l => l !== labelName);
+                                                                setLocalLabels(newLabels);
+                                                                await api.updateTask(task._id, { labels: newLabels });
+                                                                onUpdate();
+                                                            }}
+                                                        />
+                                                    );
+                                                })}
+                                            </SortableContext>
+                                        </DndContext>
+                                    )}
                                 </div>
                             )}
                         </div>
