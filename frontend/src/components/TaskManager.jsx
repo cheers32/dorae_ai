@@ -1126,7 +1126,7 @@ export const TaskManager = () => {
                             {/* Search (Secondary) - Only show if not primary */}
                             {!isSearchPrimary && (
                                 <div className="relative group/search">
-                                    <div className={`flex items-center transition-all duration-300 ${searchQuery ? 'w-48 bg-white/10' : 'w-8 hover:w-48 hover:bg-white/5'} rounded-lg overflow-hidden border border-transparent focus-within:w-64 focus-within:border-blue-500/30 focus-within:bg-white/10`}>
+                                    <div className={`flex items-center transition-all duration-300 ${searchQuery ? 'w-64 bg-white/10' : 'w-8 hover:w-64 hover:bg-white/5'} rounded-lg overflow-hidden border border-transparent focus-within:w-64 focus-within:border-blue-500/30 focus-within:bg-white/10`}>
                                         <div className="absolute left-2 flex items-center pointer-events-none text-gray-400">
                                             <Search size={16} />
                                         </div>
@@ -1136,6 +1136,12 @@ export const TaskManager = () => {
                                             placeholder="Search"
                                             value={searchQuery}
                                             onChange={(e) => setSearchQuery(e.target.value)}
+                                            onKeyDown={(e) => {
+                                                if (e.key === 'Escape') {
+                                                    setSearchQuery('');
+                                                    e.currentTarget.blur();
+                                                }
+                                            }}
                                             className="w-full bg-transparent py-1.5 pl-8 pr-8 text-xs text-gray-200 placeholder:text-gray-500 focus:outline-none"
                                         />
                                         {searchQuery && (
