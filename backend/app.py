@@ -527,7 +527,7 @@ def close_task(task_id):
 # ... existing imports
 # ... existing imports
 from ai_service import AIService
-from skills import TimerSkill
+from skills import TimerSkill, AddTaskSkill
 
 # ... existing code
 
@@ -545,6 +545,7 @@ if os.environ.get('WERKZEUG_RUN_MAIN') == 'true' or not app.debug:
 
 # Initialize Skills
 timer_skill = TimerSkill(scheduler, ai_service, db)
+add_task_skill = AddTaskSkill(db)
 
 # ... existing endpoints
 
@@ -1061,6 +1062,111 @@ def stop_timer_skill(agent_id, job_id):
             return jsonify({"error": "Timer job not found"}), 404
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+
+# --- Add Task Skill Endpoints ---
+
+@app.route('/api/agents/<agent_id>/skills/add-task', methods=['POST'])
+def create_task_via_skill(agent_id):
+    """
+    Allow an agent to create a new task using the Add Task skill.
+    
+    Expected JSON body:
+    {
+        "title": "Task title" (required),
+        "labels": ["label1", "label2"] (optional),
+        "folderId": "folder_id" (optional),
+        "priority": "low/medium/high" (optional, default: medium),
+        "category": "Category name" (optional, default: General),
+        "user_email": "user@example.com" (optional),
+        "initial_update": "Initial task details" (optional)
+    }
+    """
+    try:
+        data = request.json
+        if not data or 'title' not in data:
+            return jsonify({"error": "Task title is required"}), 400
+        
+        # Create the task via the skill
+        new_task = add_task_skill.create_task(agent_id, data)
+        
+        # Serialize for response
+        new_task['_id'] = str(new_task['_id'])
+        
+        return jsonify({
+            "message": "Task created via Add Task skill",
+            "task": new_task
+        }), 201
+    except ValueError as e:
+        return jsonify({"error": str(e)}), 400
+    except Exception as e:
+        print(f"Error creating task via skill: {e}")
+        return jsonify({"error": str(e)}), 500
+
+@app.route('/api/agents/<agent_id>/skills/add-task/tasks', methods=['GET'])
+def get_agent_created_tasks(agent_id):
+    """
+    Get tasks created by this agent using the Add Task skill.
+    
+    Query params:
+        - limit: Maximum number of tasks to return (default: 10)
+    """
+    try:
+        limit = int(request.args.get('limit', 10))
+        tasks = add_task_skill.get_agent_created_tasks(agent_id, limit)
+        
+        # Serialize tasks
+        serialized_tasks = []
+        for task in tasks:
+            task['_id'] = str(task['_id'])
+            serialized_tasks.append(task)
+        
+        return jsonify({
+            "tasks": serialized_tasks,
+            "count": len(serialized_tasks)
+        }), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+@app.route('/api/agents/<agent_id>/skills/add-task', methods=['GET'])
+def check_add_task_skill_status(agent_id):
+    """
+    Check if the Add Task skill is available for this agent.
+    Returns skill info and statistics.
+    """
+    try:
+        # Verify agent exists
+        agent = agents_collection.find_one({"_id": ObjectId(agent_id)})
+        if not agent:
+            return jsonify({"error": "Agent not found"}), 404
+        
+        # Get tasks created by this agent
+        tasks = add_task_skill.get_agent_created_tasks(agent_id, limit=100)
+        
+        return jsonify({
+            "skill": "add_task",
+            "status": "active",
+            "agent": {
+                "id": agent_id,
+                "name": agent.get('name', 'Unknown')
+            },
+            "statistics": {
+                "total_tasks_created": len(tasks),
+                "tasks_created_last_24h": sum(1 for t in tasks if _is_within_24h(t.get('created_at')))
+            }
+        }), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+def _is_within_24h(timestamp_str):
+    """Helper to check if timestamp is within last 24 hours."""
+    if not timestamp_str:
+        return False
+    try:
+        from datetime import datetime, timedelta
+        timestamp = datetime.fromisoformat(timestamp_str)
+        return datetime.utcnow() - timestamp < timedelta(hours=24)
+    except:
+        return False
 
 if __name__ == '__main__':
     app.run(debug=True, port=5001, use_reloader=False)

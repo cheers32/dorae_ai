@@ -1,14 +1,28 @@
 import React, { useState } from 'react';
 import { api } from '../api';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Brain, Cpu, MessageSquare, Zap, Target, Layers, Pencil, Trash2, Check, X } from 'lucide-react';
+import { Brain, Cpu, MessageSquare, Zap, Target, Layers, Pencil, Trash2, Check, X, Clock, Plus } from 'lucide-react';
 import { useDroppable, useDraggable, DndContext, PointerSensor, useSensor, useSensors } from '@dnd-kit/core';
 import { UpdatesTimeline } from './UpdatesTimeline';
 import ReactMarkdown from 'react-markdown';
 
-
-
-
+// Available AI Skills
+const AVAILABLE_SKILLS = [
+    {
+        id: 'timer',
+        name: 'Timer',
+        description: 'Schedule periodic actions on tasks',
+        icon: Clock,
+        color: 'blue'
+    },
+    {
+        id: 'add_task',
+        name: 'Add Task',
+        description: 'Create tasks programmatically via API',
+        icon: Plus,
+        color: 'green'
+    }
+];
 
 // Draggable Task Chip Component
 const DraggableTaskChip = ({ task, labelColor, onUnassign }) => {
@@ -68,6 +82,7 @@ export const AgentItem = ({ agent, onFocus, onEdit, onDelete, isFocused, availab
     const [isDeleting, setIsDeleting] = useState(false);
 
     const [showNotes, setShowNotes] = useState(false); // [NEW]
+    const [showSkills, setShowSkills] = useState(false); // Skill management modal
     const chatEndRef = React.useRef(null);
 
     // Sync local state when agent prop changes
@@ -127,6 +142,22 @@ export const AgentItem = ({ agent, onFocus, onEdit, onDelete, isFocused, availab
             await onDelete();
         } finally {
             setIsDeleting(false);
+        }
+    };
+
+    const handleToggleSkill = async (skillId) => {
+        try {
+            const currentSkills = agent.skills || [];
+            const hasSkill = currentSkills.includes(skillId);
+
+            const updatedSkills = hasSkill
+                ? currentSkills.filter(s => s !== skillId)
+                : [...currentSkills, skillId];
+
+            await api.updateAgent(agent._id, { skills: updatedSkills });
+            window.dispatchEvent(new CustomEvent('agent-updated'));
+        } catch (err) {
+            console.error('Failed to toggle skill:', err);
         }
     };
 
@@ -360,10 +391,19 @@ export const AgentItem = ({ agent, onFocus, onEdit, onDelete, isFocused, availab
                         <span className="text-xs">Notes ({agent.notes?.length || 0})</span>
                     </button>
 
-                    <div className="col-span-2 border border-dashed border-white/10 rounded-lg p-2 flex items-center justify-center gap-2 text-gray-600 hover:text-gray-400 hover:border-white/20 transition-colors cursor-pointer group/skill">
+                    <button
+                        onClick={() => setShowSkills(!showSkills)}
+                        className={`
+                            col-span-2 border rounded-lg p-2 flex items-center justify-center gap-2 transition-all
+                            ${showSkills
+                                ? 'border-green-500/50 bg-green-500/20 text-green-300'
+                                : 'border-dashed border-white/10 text-gray-600 hover:text-gray-400 hover:border-white/20 cursor-pointer group/skill'
+                            }
+                        `}
+                    >
                         <Cpu size={14} />
-                        <span className="text-xs">Add Skill Pack</span>
-                    </div>
+                        <span className="text-xs">{showSkills ? 'Close Skills' : 'Add AI Skill'}</span>
+                    </button>
                 </div>
             </div>
 
@@ -393,6 +433,109 @@ export const AgentItem = ({ agent, onFocus, onEdit, onDelete, isFocused, availab
                                 }}
                                 placeholder="Add a persistent instruction or memory..."
                             />
+                        </div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
+
+            {/* AI Skills Management Modal */}
+            <AnimatePresence>
+                {showSkills && (
+                    <motion.div
+                        initial={{ height: 0, opacity: 0, marginTop: 0 }}
+                        animate={{ height: 'auto', opacity: 1, marginTop: 16 }}
+                        exit={{ height: 0, opacity: 0, marginTop: 0 }}
+                        className="bg-black/40 rounded-xl border border-white/10 overflow-hidden"
+                    >
+                        <div className="p-4">
+                            <div className="flex items-center justify-between mb-4">
+                                <h4 className="text-sm font-bold text-white flex items-center gap-2">
+                                    <Zap size={14} className="text-yellow-400" />
+                                    Available AI Skills
+                                </h4>
+                                <span className="text-xs text-gray-500">
+                                    {agent.skills?.length || 0} enabled
+                                </span>
+                            </div>
+
+                            <div className="space-y-2">
+                                {AVAILABLE_SKILLS.map(skill => {
+                                    const isEnabled = agent.skills?.includes(skill.id);
+                                    const IconComponent = skill.icon;
+
+                                    return (
+                                        <button
+                                            key={skill.id}
+                                            onClick={() => handleToggleSkill(skill.id)}
+                                            className={`
+                                                w-full p-3 rounded-lg border transition-all text-left
+                                                ${isEnabled
+                                                    ? `bg-${skill.color}-500/20 border-${skill.color}-500/50 hover:bg-${skill.color}-500/30`
+                                                    : 'bg-white/5 border-white/10 hover:bg-white/10 hover:border-white/20'
+                                                }
+                                            `}
+                                        >
+                                            <div className="flex items-start justify-between">
+                                                <div className="flex items-start gap-3">
+                                                    <div className={`
+                                                        p-2 rounded-lg
+                                                        ${isEnabled
+                                                            ? `bg-${skill.color}-500/30 text-${skill.color}-300`
+                                                            : 'bg-white/10 text-gray-400'
+                                                        }
+                                                    `}>
+                                                        <IconComponent size={16} />
+                                                    </div>
+                                                    <div>
+                                                        <div className="flex items-center gap-2">
+                                                            <span className={`
+                                                                text-sm font-bold
+                                                                ${isEnabled ? 'text-white' : 'text-gray-300'}
+                                                            `}>
+                                                                {skill.name}
+                                                            </span>
+                                                            {isEnabled && (
+                                                                <span className={`
+                                                                    px-2 py-0.5 rounded-full text-[10px] font-bold uppercase
+                                                                    bg-${skill.color}-500/30 text-${skill.color}-300
+                                                                `}>
+                                                                    Active
+                                                                </span>
+                                                            )}
+                                                        </div>
+                                                        <p className="text-xs text-gray-400 mt-1">
+                                                            {skill.description}
+                                                        </p>
+                                                    </div>
+                                                </div>
+
+                                                <div className={`
+                                                    w-10 h-5 rounded-full transition-all border
+                                                    ${isEnabled
+                                                        ? `bg-${skill.color}-500 border-${skill.color}-400`
+                                                        : 'bg-gray-700 border-gray-600'
+                                                    }
+                                                    relative
+                                                `}>
+                                                    <div className={`
+                                                        absolute top-0.5 w-4 h-4 bg-white rounded-full shadow-lg transition-all
+                                                        ${isEnabled ? 'right-0.5' : 'left-0.5'}
+                                                    `} />
+                                                </div>
+                                            </div>
+                                        </button>
+                                    );
+                                })}
+                            </div>
+
+                            <div className="mt-4 p-3 bg-blue-500/10 border border-blue-500/20 rounded-lg">
+                                <p className="text-xs text-blue-300 flex items-start gap-2">
+                                    <Zap size={12} className="mt-0.5 flex-shrink-0" />
+                                    <span>
+                                        Toggle skills to unlock new capabilities for this agent. Each skill adds API endpoints and autonomous actions.
+                                    </span>
+                                </p>
+                            </div>
                         </div>
                     </motion.div>
                 )}
