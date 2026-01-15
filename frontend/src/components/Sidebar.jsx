@@ -317,12 +317,12 @@ export function Sidebar({ activeTab, onNavigate, labels = [], onLabelsChange, se
             initial={{ x: -20, opacity: 0 }}
             animate={{ x: 0, opacity: 1 }}
         >
-            <div className={`px-6 mb-10 flex items-center justify-between ${isCollapsed ? 'px-0 justify-center' : ''}`}>
+            <div className={`px-6 mb-6 flex items-start justify-between ${isCollapsed ? 'px-0 justify-center' : ''}`}>
                 <div
-                    className="flex items-center gap-3 cursor-pointer group"
+                    className="flex items-start gap-3 cursor-pointer group"
                     onClick={() => onNavigate('active', null)}
                 >
-                    <div className="p-2.5 bg-blue-500/10 rounded-xl group-hover:bg-blue-500/20 transition-colors">
+                    <div className="pt-1.5 pb-2.5 px-2.5 bg-blue-500/10 rounded-xl group-hover:bg-blue-500/20 transition-colors">
                         <Sparkles size={24} className="text-blue-400" />
                     </div>
                     {!isCollapsed && (
@@ -359,7 +359,7 @@ export function Sidebar({ activeTab, onNavigate, labels = [], onLabelsChange, se
                 </div>
             </div>
 
-            <div className="flex-1 px-4 overflow-y-auto space-y-8 scrollbar-hide">
+            <div className="flex-1 px-4 overflow-y-auto space-y-4 scrollbar-hide">
                 <nav className={spacingClass}>
                     {!isCollapsed && (
                         <div className="flex items-center justify-between px-4 mb-2">
