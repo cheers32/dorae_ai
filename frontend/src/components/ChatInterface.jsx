@@ -45,6 +45,11 @@ export function ChatInterface() {
         try {
             const data = await api.chatWithAI(userMessage);
             setMessages(prev => [...prev, { role: 'ai', text: data.reply }]);
+
+            // If a task was created, refresh the task list
+            if (data.task_created) {
+                window.dispatchEvent(new CustomEvent('task-created'));
+            }
         } catch (err) {
             console.error(err);
             setMessages(prev => [...prev, { role: 'ai', text: "Sorry, I encountered an error. Please try again." }]);

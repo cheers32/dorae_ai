@@ -52,10 +52,13 @@ class AddTaskSkill:
         if not task_data or 'title' not in task_data:
             raise ValueError("Task title is required")
         
-        # Verify agent exists
-        agent = self.agents_collection.find_one({"_id": ObjectId(agent_id)})
-        if not agent:
-            raise ValueError(f"Agent {agent_id} not found")
+        # Verify agent exists if ID provided
+        agent = None
+        if agent_id:
+            try:
+                agent = self.agents_collection.find_one({"_id": ObjectId(agent_id)})
+            except Exception:
+                pass
         
         # Build task document
         now = datetime.utcnow()
@@ -79,9 +82,10 @@ class AddTaskSkill:
         }
         
         # Add creation update
+        agent_name = agent.get('name', 'AI Assistant') if agent else 'AI Assistant'
         creation_update = {
             "id": str(uuid.uuid4()),
-            "content": f"Task created by agent: {agent.get('name', 'Unknown Agent')}",
+            "content": f"Task created by: {agent_name}",
             "timestamp": now.isoformat(),
             "type": "creation",
             "agent_id": agent_id,

@@ -672,6 +672,12 @@ def chat():
         if isinstance(response_text, dict) and response_text.get('action') == 'create_task':
             # Agent wants to create a task - do it via the add_task skill
             task_data = response_text.get('task_data', {})
+            
+            # Ensure task is associated with the user from chat context so it appears in their UI
+            user_email = data.get('user_email')
+            if user_email:
+                task_data['user_email'] = user_email
+                
             try:
                 new_task = add_task_skill.create_task(agent_id, task_data)
                 # Return confirmation message
