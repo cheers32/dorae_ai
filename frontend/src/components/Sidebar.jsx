@@ -26,8 +26,16 @@ import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable';
 
-const SortableSidebarItem = ({ id, icon: Icon, label, isActive, onClick, data, isFolder, onDelete, count, onColorChange, color, isCollapsed }) => {
+const SortableSidebarItem = ({ id, icon: Icon, label, isActive, onClick, data, isFolder, onDelete, count, onColorChange, color, isCollapsed, density = 5 }) => {
     const [isDeleting, setIsDeleting] = useState(false);
+
+    // Calculate padding based on numeric density (1=compact, 10=comfortable)
+    // Linear scale: 1=2px, 2=3.5px, 3=5px ... 10=16px
+    const getPaddingPx = (density) => {
+        // Linear interpolation from 2px (level 1) to 16px (level 10)
+        return 2 + ((density - 1) * 1.56); // ~1.56px per level
+    };
+    const paddingY = getPaddingPx(density);
 
     const {
         attributes,
@@ -49,8 +57,9 @@ const SortableSidebarItem = ({ id, icon: Icon, label, isActive, onClick, data, i
     return (
         <div ref={setNodeRef} style={style} {...attributes} {...listeners} className="relative group">
             <button
-                className={`nav-item w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all ${isActive ? 'bg-blue-500/10 text-blue-400' : 'text-gray-400 hover:text-gray-200 hover:bg-white/5'
+                className={`nav-item w-full flex items-center gap-3 px-4 rounded-xl transition-all ${isActive ? 'bg-blue-500/10 text-blue-400' : 'text-gray-400 hover:text-gray-200 hover:bg-white/5'
                     } ${isOver && !isDragging ? 'bg-blue-500/20 border-blue-400 shadow-[0_0_15px_rgba(59,130,246,0.3)]' : ''} ${isCollapsed ? 'justify-center px-0' : ''}`}
+                style={{ paddingTop: `${paddingY}px`, paddingBottom: `${paddingY}px` }}
                 onClick={onClick}
                 title={isCollapsed ? label : ''}
             >
@@ -104,8 +113,16 @@ const SortableSidebarItem = ({ id, icon: Icon, label, isActive, onClick, data, i
     );
 };
 
-const DraggableSidebarLabel = ({ id, label, isActive, onClick, color, data, count, onDelete, onColorChange, isCollapsed }) => {
+const DraggableSidebarLabel = ({ id, label, isActive, onClick, color, data, count, onDelete, onColorChange, isCollapsed, density = 5 }) => {
     const [isDeleting, setIsDeleting] = useState(false);
+
+    // Calculate padding based on numeric density (1=compact, 10=comfortable)
+    // Linear scale: 1=2px, 2=3.5px, 3=5px ... 10=16px
+    const getPaddingPx = (density) => {
+        // Linear interpolation from 2px (level 1) to 16px (level 10)
+        return 2 + ((density - 1) * 1.56); // ~1.56px per level
+    };
+    const paddingY = getPaddingPx(density);
 
     const {
         attributes,
@@ -136,8 +153,9 @@ const DraggableSidebarLabel = ({ id, label, isActive, onClick, color, data, coun
             className="relative group w-full"
         >
             <button
-                className={`nav-item w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all touch-none cursor-grab active:cursor-grabbing ${isActive ? 'bg-blue-500/10 text-blue-400' : 'text-gray-400 hover:text-gray-200 hover:bg-white/5'
+                className={`nav-item w-full flex items-center gap-3 px-4 rounded-xl transition-all touch-none cursor-grab active:cursor-grabbing ${isActive ? 'bg-blue-500/10 text-blue-400' : 'text-gray-400 hover:text-gray-200 hover:bg-white/5'
                     } ${isOver && !isDragging ? 'bg-blue-500/20 border-blue-400 shadow-[0_0_15px_rgba(59,130,246,0.3)]' : ''} ${isCollapsed ? 'justify-center px-0' : ''}`}
+                style={{ paddingTop: `${paddingY}px`, paddingBottom: `${paddingY}px` }}
                 onClick={onClick}
                 title={isCollapsed ? label : ''}
             >
@@ -199,13 +217,23 @@ const DraggableSidebarLabel = ({ id, label, isActive, onClick, color, data, coun
     );
 };
 
-export function Sidebar({ activeTab, onNavigate, labels = [], onLabelsChange, selectedLabel, folders = [], onFoldersChange, selectedFolder, sidebarItems = [], stats = {}, isCollapsed, onToggle }) {
+export function Sidebar({ activeTab, onNavigate, labels = [], onLabelsChange, selectedLabel, folders = [], onFoldersChange, selectedFolder, sidebarItems = [], stats = {}, isCollapsed, onToggle, density = 5 }) {
     const [isAddingLabel, setIsAddingLabel] = useState(false);
     const [newLabelName, setNewLabelName] = useState('');
     const [isAddingFolder, setIsAddingFolder] = useState(false);
     const [newFolderName, setNewFolderName] = useState('');
     const [editingLabelId, setEditingLabelId] = useState(null);
     const [showAllFolders, setShowAllFolders] = useState(false);
+
+    // Calculate spacing based on numeric density (1=compact, 10=comfortable)
+    // More granular: 1-2=space-y-0.5, 3-4=space-y-1, 5-7=space-y-1.5, 8-10=space-y-2
+    const getSpacingClass = (density) => {
+        if (density <= 2) return 'space-y-0.5';
+        if (density <= 4) return 'space-y-1';
+        if (density <= 7) return 'space-y-1.5';
+        return 'space-y-2';
+    };
+    const spacingClass = getSpacingClass(density);
 
     const systemItems = {
         'active': { label: 'Active Tasks', icon: Layout },
@@ -332,7 +360,7 @@ export function Sidebar({ activeTab, onNavigate, labels = [], onLabelsChange, se
             </div>
 
             <div className="flex-1 px-4 overflow-y-auto space-y-8 scrollbar-hide">
-                <nav className="space-y-1">
+                <nav className={spacingClass}>
                     {!isCollapsed && (
                         <div className="flex items-center justify-between px-4 mb-2">
                             <p className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">Main</p>
@@ -371,6 +399,7 @@ export function Sidebar({ activeTab, onNavigate, labels = [], onLabelsChange, se
                                             data={{ type: 'sidebar', target: itemId }}
                                             count={stats[itemId]}
                                             isCollapsed={isCollapsed}
+                                            density={density}
                                         />
                                     );
                                 }
@@ -396,6 +425,7 @@ export function Sidebar({ activeTab, onNavigate, labels = [], onLabelsChange, se
                                             onDelete={(!stats.folders || !stats.folders[folder._id]) ? (e) => handleDeleteFolder(e, folder._id) : null}
                                             count={stats.folders && stats.folders[folder._id]}
                                             isCollapsed={isCollapsed}
+                                            density={density}
                                         />
                                     );
                                 }
@@ -453,7 +483,7 @@ export function Sidebar({ activeTab, onNavigate, labels = [], onLabelsChange, se
 
                 </nav>
 
-                <div className="space-y-1">
+                <div className={spacingClass}>
                     {!isCollapsed && (
                         <div className="px-4 flex items-center justify-between mb-2">
                             <p className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">Labels</p>
@@ -466,7 +496,7 @@ export function Sidebar({ activeTab, onNavigate, labels = [], onLabelsChange, se
                         </div>
                     )}
 
-                    <div className="space-y-1">
+                    <div className={spacingClass}>
                         <AnimatePresence>
                             {isAddingLabel && (
                                 <motion.form
@@ -507,6 +537,7 @@ export function Sidebar({ activeTab, onNavigate, labels = [], onLabelsChange, se
                                     onDelete={(e) => handleDeleteLabel(e, label._id)}
                                     onColorChange={(e) => handleColorChange(e, label._id)}
                                     isCollapsed={isCollapsed}
+                                    density={density}
                                 />
                             ))}
                         </SortableContext>

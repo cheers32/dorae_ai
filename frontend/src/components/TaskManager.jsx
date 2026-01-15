@@ -59,6 +59,18 @@ export const TaskManager = () => {
     const [history, setHistory] = useState([]);
     const [forwardHistory, setForwardHistory] = useState([]);
     const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(() => localStorage.getItem('task_manager_sidebar_collapsed') === 'true');
+    const [sidebarDensity, setSidebarDensity] = useState(() => {
+        const saved = localStorage.getItem('task_manager_sidebar_density');
+        if (!saved) return 5;
+
+        // Migrate old string values to numeric
+        if (saved === 'compact') return 2;
+        if (saved === 'normal') return 5;
+        if (saved === 'comfortable') return 8;
+
+        const parsed = parseInt(saved, 10);
+        return isNaN(parsed) ? 5 : Math.min(10, Math.max(1, parsed)); // Clamp between 1-10
+    });
     const [isGeminiOpen, setIsGeminiOpen] = useState(false);
     const [sortBy, setSortBy] = useState('manual'); // 'manual', 'date', 'title'
     const searchInputRef = useRef(null);
@@ -436,6 +448,10 @@ export const TaskManager = () => {
     useEffect(() => {
         localStorage.setItem('task_manager_sidebar_collapsed', isSidebarCollapsed);
     }, [isSidebarCollapsed]);
+
+    useEffect(() => {
+        localStorage.setItem('task_manager_sidebar_density', sidebarDensity);
+    }, [sidebarDensity]);
 
     useEffect(() => {
         localStorage.setItem('task_list_font_size', fontSize);
@@ -1008,6 +1024,7 @@ export const TaskManager = () => {
                     stats={stats}
                     isCollapsed={isSidebarCollapsed}
                     onToggle={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
+                    density={sidebarDensity}
                 />
 
                 <main className="flex-1 flex flex-col min-w-0 bg-[#0f1014] h-full relative">
@@ -1279,6 +1296,28 @@ export const TaskManager = () => {
 
                                             <div className="px-3 py-1.5 mb-1">
                                                 <span className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">Preferences</span>
+                                            </div>
+
+                                            {/* Sidebar Density */}
+                                            <div className="px-4 py-2 flex items-center justify-between">
+                                                <div className="flex items-center gap-3 text-gray-400">
+                                                    <SlidersHorizontal size={16} />
+                                                    <span className="text-xs font-medium">Sidebar Density</span>
+                                                </div>
+                                                <div className="flex items-center bg-gray-900 border border-gray-800 rounded-lg overflow-hidden h-7">
+                                                    <button
+                                                        onClick={() => setSidebarDensity(prev => Math.max(1, prev - 1))}
+                                                        className="px-2 hover:bg-white/10 text-gray-400 hover:text-white border-r border-gray-800 h-full flex items-center"
+                                                    >
+                                                        <ZoomOut size={12} />
+                                                    </button>
+                                                    <button
+                                                        onClick={() => setSidebarDensity(prev => Math.min(10, prev + 1))}
+                                                        className="px-2 hover:bg-white/10 text-gray-400 hover:text-white h-full flex items-center"
+                                                    >
+                                                        <ZoomIn size={12} />
+                                                    </button>
+                                                </div>
                                             </div>
 
                                             {activeTab !== 'assistant' && tasks.length > 0 && (
