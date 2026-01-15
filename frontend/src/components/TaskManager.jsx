@@ -995,7 +995,7 @@ export const TaskManager = () => {
                 />
 
                 <main className="flex-1 flex flex-col min-w-0 bg-[#0f1014] h-full relative">
-                    <header className="px-6 py-4 flex justify-between items-center bg-[#0f1014]/80 backdrop-blur-md sticky top-0 z-10 border-b border-white/5">
+                    <header className="px-6 py-4 flex justify-between items-center bg-[#0f1014]/80 backdrop-blur-md sticky top-0 z-40 border-b border-white/5">
                         <div className="flex items-center gap-4 shrink-0">
                             <AnimatePresence mode="popLayout">
                                 <div className="flex items-center gap-1.5">
