@@ -437,6 +437,9 @@ export const TaskItem = forwardRef(({ task, onUpdate, showTags, style, dragHandl
                 </div>
 
                 <div className="flex items-center gap-4">
+                    <span className="text-xs text-indigo-400 font-mono font-medium whitespace-nowrap">
+                        [{task.status}]
+                    </span>
                     <span
                         className="text-xs text-gray-400 font-mono font-medium whitespace-nowrap"
                     >

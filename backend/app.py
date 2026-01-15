@@ -192,8 +192,19 @@ def delete_task(task_id):
             return jsonify({"error": "Task not found"}), 404
 
         if task.get('status') in ['Deleted', 'deleted']:
-             # Hard Delete
-            result = tasks_collection.delete_one({"_id": ObjectId(task_id)})
+            # Soft Delete (Archived) - keep data but hide from trash
+            result = tasks_collection.update_one(
+                {"_id": ObjectId(task_id)},
+                {
+                    "$set": {"status": "Archived", "archived_at": datetime.utcnow()},
+                    "$push": {"updates": {
+                        "id": str(uuid.uuid4()),
+                        "content": "Task permanently removed from trash (soft deleted)",
+                        "type": "archive",
+                        "timestamp": datetime.utcnow().isoformat()
+                    }}
+                }
+            )
             return jsonify({"message": "Task permanently deleted"}), 200
         else:
             # Soft Delete
@@ -223,8 +234,20 @@ def empty_trash():
         query['$or'] = [{'user_email': None}, {'user_email': {'$exists': False}}]
 
     try:
-        result = tasks_collection.delete_many(query)
-        return jsonify({"message": f"Deleted {result.deleted_count} tasks"}), 200
+        # Soft Delete (Archive) all trash items
+        result = tasks_collection.update_many(
+            query,
+            {
+                "$set": {"status": "Archived", "archived_at": datetime.utcnow()},
+                "$push": {"updates": {
+                    "id": str(uuid.uuid4()),
+                    "content": "Task permanently removed from trash (soft deleted)",
+                    "type": "archive",
+                    "timestamp": datetime.utcnow().isoformat()
+                }}
+            }
+        )
+        return jsonify({"message": f"Archived {result.modified_count} tasks"}), 200
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
