@@ -686,10 +686,10 @@ export const TaskItem = forwardRef(({ task, onUpdate, showTags, showFolders, fol
                                 )}
                                 <div className="flex items-center gap-2">
                                     <button
-                                        className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium text-green-400 hover:bg-green-400/10 transition-colors"
+                                        className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium text-blue-400 hover:bg-blue-400/10 transition-colors"
                                         onClick={handleComplete}
                                         disabled={isCompleting}
-                                        title="Mark as Completed"
+                                        title="Mark as Completed & Close"
                                     >
                                         <CheckCircle size={14} />
                                         {isCompleting ? 'Completing...' : 'Complete'}
