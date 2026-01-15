@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { X, ExternalLink } from 'lucide-react';
 import { ChatInterface } from './ChatInterface';
 
-const GeminiIcon = ({ size = 24, className = "" }) => (
+export const GeminiIcon = ({ size = 24, className = "" }) => (
     <svg
         width={size}
         height={size}
@@ -25,7 +25,7 @@ export const GeminiPanel = ({ isOpen, onClose }) => {
             if (isResizing) {
                 const newWidth = window.innerWidth - e.clientX;
                 // Clamp width between 300px and 800px
-                if (newWidth >= 300 && newWidth <= 800) {
+                if (newWidth >= 300 && newWidth <= 1200) {
                     setWidth(newWidth);
                 }
             }
