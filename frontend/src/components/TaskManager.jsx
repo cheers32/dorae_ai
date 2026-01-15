@@ -1144,19 +1144,22 @@ export const TaskManager = () => {
                                         <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
                                             <Plus size={18} className="text-gray-400 group-focus-within:text-blue-400 transition-colors" />
                                         </div>
-                                        <input
+                                        <textarea
                                             ref={newTaskTextareaRef}
-                                            type="text"
+                                            rows={1}
                                             placeholder={selectedFolder ? `Add task to ${stats.folders[selectedFolder] ? folders.find(f => f._id === selectedFolder)?.name : 'folder'}...` : selectedLabel ? `Add task to ${selectedLabel}...` : "What needs to be done?"}
                                             value={newTaskTitle}
                                             onChange={(e) => setNewTaskTitle(e.target.value)}
                                             onKeyDown={(e) => {
-                                                if (e.key === 'Escape') {
+                                                if (e.key === 'Enter' && !e.shiftKey) {
+                                                    e.preventDefault();
+                                                    handleCreateTask(e);
+                                                } else if (e.key === 'Escape') {
                                                     setNewTaskTitle('');
                                                     e.currentTarget.blur();
                                                 }
                                             }}
-                                            className="w-full bg-white/5 border border-white/5 rounded-xl py-1.5 pl-12 pr-10 text-sm text-gray-200 placeholder:text-gray-500 focus:outline-none focus:bg-white/10 focus:border-blue-500/50 focus:ring-4 focus:ring-blue-500/10 transition-all shadow-inner"
+                                            className="w-full bg-white/5 border border-white/5 rounded-xl py-2 pl-12 pr-10 text-sm text-gray-200 placeholder:text-gray-500 focus:outline-none focus:bg-white/10 focus:border-blue-500/50 focus:ring-4 focus:ring-blue-500/10 transition-all shadow-inner resize-none overflow-hidden"
                                         />
                                         {newTaskTitle && (
                                             <button
