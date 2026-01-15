@@ -9,7 +9,8 @@ import {
     Check,
     Sparkles,
     Paperclip,
-    Folder
+    Folder,
+    Tag
 } from 'lucide-react';
 import { api } from '../api';
 import { UpdatesTimeline } from './UpdatesTimeline';
@@ -111,6 +112,56 @@ const SortableAttachment = ({ attachment, onDelete, availableLabels, onClick }) 
     );
 };
 
+const LabelPicker = ({ availableLabels, selectedLabels, onToggle, onClose }) => {
+    const pickerRef = useRef(null);
+
+    useEffect(() => {
+        const handleClickOutside = (event) => {
+            if (pickerRef.current && !pickerRef.current.contains(event.target)) {
+                onClose();
+            }
+        };
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => document.removeEventListener('mousedown', handleClickOutside);
+    }, [onClose]);
+
+    return (
+        <div
+            ref={pickerRef}
+            className="absolute left-0 top-full mt-2 z-[100] bg-[#1a1d24] border border-white/10 rounded-lg shadow-2xl p-2 min-w-[200px] max-h-[300px] overflow-y-auto"
+            onClick={(e) => e.stopPropagation()}
+        >
+            <div className="text-[10px] font-bold text-gray-500 uppercase tracking-wider px-2 py-1 mb-1">
+                Labels
+            </div>
+            <div className="space-y-0.5">
+                {availableLabels.map(label => {
+                    const isSelected = selectedLabels.includes(label.name);
+                    return (
+                        <button
+                            key={label._id}
+                            onClick={() => onToggle(label.name)}
+                            className={`w-full flex items-center gap-2 px-2 py-1.5 rounded hover:bg-white/5 transition-colors text-xs text-left ${isSelected ? 'text-white' : 'text-gray-400'}`}
+                        >
+                            <div
+                                className="w-2 h-2 rounded-full shrink-0"
+                                style={{ backgroundColor: label.color }}
+                            />
+                            <span className="flex-1 truncate">{label.name}</span>
+                            {isSelected && <Check size={12} className="text-blue-500" />}
+                        </button>
+                    );
+                })}
+            </div>
+            {availableLabels.length === 0 && (
+                <div className="px-2 py-4 text-center text-gray-500 text-xs italic">
+                    No labels available
+                </div>
+            )}
+        </div>
+    );
+};
+
 const parseUTCDate = (dateString) => {
     if (!dateString) return new Date();
     // Ensure the date string ends with Z to trigger UTC parsing
@@ -125,6 +176,7 @@ export const TaskItem = forwardRef(({ task, onUpdate, showTags, showFolders, fol
     const [editedTitle, setEditedTitle] = useState(task.title);
     const [localLabels, setLocalLabels] = useState(task.labels || []);
     const [localAttachments, setLocalAttachments] = useState(task.attachments || []);
+    const [showLabelPicker, setShowLabelPicker] = useState(false);
     const localRef = useRef(null); // Local ref to track the DOM element
     const textareaRef = useRef(null);
 
@@ -309,7 +361,7 @@ export const TaskItem = forwardRef(({ task, onUpdate, showTags, showFolders, fol
             initial={isOverlay ? false : { opacity: 0 }}
             animate={isOverlay ? false : { opacity: baseStyle.opacity }}
             exit={isOverlay ? false : { opacity: 0 }}
-            className={`group hover:bg-white/[0.03] transition-all duration-200 bg-transparent ${expanded || globalExpanded ? 'my-2 rounded-xl bg-blue-500/5 border-blue-500/30 border shadow-lg z-10 overflow-hidden' : 'border-b border-white/5 border-l border-l-transparent'}`}
+            className={`group hover:bg-white/[0.03] transition-all duration-200 bg-transparent ${expanded || globalExpanded ? `my-2 rounded-xl bg-blue-500/5 border-blue-500/30 border shadow-lg ${showLabelPicker ? 'z-[100]' : 'z-10'}` : 'border-b border-white/5 border-l border-l-transparent'}`}
         >
             <div
                 className="flex items-center gap-4 cursor-pointer pr-4 select-none"
@@ -339,23 +391,46 @@ export const TaskItem = forwardRef(({ task, onUpdate, showTags, showFolders, fol
                     >
                         {expanded || globalExpanded ? <ChevronUp size={16} /> : <GripVertical size={16} />}
                     </div>
-                    <div
-                        className={`${fontSize < 11 ? 'w-2.5 h-2.5' : 'w-3 h-3'} rounded-full shrink-0 transition-colors ${localLabels.length > 0 && availableLabels.find(l => l.name === localLabels[0])?.color
-                            ? ''
-                            : `shadow-[0_0_10px_rgba(59,130,246,0.3)] ${task.status === 'completed' ? 'bg-green-500 shadow-[0_0_10px_rgba(34,197,94,0.3)]' :
-                                task.status === 'in_progress' ? 'bg-yellow-500 shadow-[0_0_10px_rgba(234,179,8,0.3)]' :
-                                    'bg-blue-500 shadow-[0_0_10px_rgba(59,130,246,0.3)]'
-                            }`
-                            }`}
-                        style={
-                            localLabels.length > 0
-                                ? {
-                                    backgroundColor: availableLabels.find(l => l.name === localLabels[0])?.color || '#3B82F6',
-                                    boxShadow: `0 0 10px ${availableLabels.find(l => l.name === localLabels[0])?.color || '#3B82F6'}4d`
-                                }
-                                : {}
-                        }
-                    />
+                    <div className="relative">
+                        <div
+                            className={`${fontSize < 11 ? 'w-2.5 h-2.5' : 'w-3 h-3'} rounded-full shrink-0 transition-all duration-200 cursor-pointer hover:scale-110 active:scale-95 ${localLabels.length > 0 && availableLabels.find(l => l.name === localLabels[0])?.color
+                                ? ''
+                                : `shadow-[0_0_10px_rgba(59,130,246,0.3)] ${task.status === 'completed' ? 'bg-green-500 shadow-[0_0_10px_rgba(34,197,94,0.3)]' :
+                                    task.status === 'in_progress' ? 'bg-yellow-500 shadow-[0_0_10px_rgba(234,179,8,0.3)]' :
+                                        'bg-blue-500 shadow-[0_0_10px_rgba(59,130,246,0.3)]'
+                                }`
+                                }`}
+                            style={
+                                localLabels.length > 0
+                                    ? {
+                                        backgroundColor: availableLabels.find(l => l.name === localLabels[0])?.color || '#3B82F6',
+                                        boxShadow: `0 0 10px ${availableLabels.find(l => l.name === localLabels[0])?.color || '#3B82F6'}4d`
+                                    }
+                                    : {}
+                            }
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                setShowLabelPicker(!showLabelPicker);
+                            }}
+                        />
+                        <AnimatePresence>
+                            {showLabelPicker && (
+                                <LabelPicker
+                                    availableLabels={availableLabels}
+                                    selectedLabels={localLabels}
+                                    onToggle={async (labelName) => {
+                                        const newLabels = localLabels.includes(labelName)
+                                            ? localLabels.filter(l => l !== labelName)
+                                            : [...localLabels, labelName];
+                                        setLocalLabels(newLabels);
+                                        await api.updateTask(task._id, { labels: newLabels });
+                                        onUpdate();
+                                    }}
+                                    onClose={() => setShowLabelPicker(false)}
+                                />
+                            )}
+                        </AnimatePresence>
+                    </div>
 
                     {isEditingTitle ? (
                         <textarea
