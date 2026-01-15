@@ -545,6 +545,7 @@ export const TaskManager = () => {
             // Let's keep it open based on previous comment. 
 
             fetchTasks(false);
+            fetchStats();
         } catch (err) {
             console.error(err);
         }
@@ -555,6 +556,7 @@ export const TaskManager = () => {
             try {
                 await api.emptyTrash();
                 fetchTasks(false);
+                fetchStats();
             } catch (err) {
                 console.error("Failed to empty trash", err);
             }
@@ -633,6 +635,7 @@ export const TaskManager = () => {
                     setWorkareaTasks(prev => prev.map(t => t._id === realId ? { ...t, labels: newLabels } : t));
 
                     fetchTasks(false);
+                    fetchStats();
                     setShowTags(true);
                 } catch (err) {
                     console.error("Failed to tag task from sidebar", err);
@@ -657,6 +660,7 @@ export const TaskManager = () => {
                     setWorkareaTasks(prev => prev.map(t => t._id === realId ? { ...t, labels: newLabels } : t));
 
                     fetchTasks(false);
+                    fetchStats();
                     setShowTags(true);
                 } catch (err) {
                     console.error("Failed to tag task", err);
@@ -692,6 +696,7 @@ export const TaskManager = () => {
                     // Maybe keep it if status changed but still valid for workarea?
                     // If deleted/closed, typically we might want to refresh.
                     fetchTasks(false);
+                    fetchStats();
                 } catch (err) {
                     console.error("Failed to update status through drag", err);
                 }
@@ -723,6 +728,7 @@ export const TaskManager = () => {
                 }
 
                 fetchTasks(false);
+                fetchStats();
             } catch (err) {
                 console.error("Failed to move task to folder", err);
             }
@@ -1229,6 +1235,7 @@ export const TaskManager = () => {
                                                     task={item}
                                                     onUpdate={() => {
                                                         fetchTasks(false);
+                                                        fetchStats();
                                                         refreshWorkareaTask(item._id);
                                                     }}
                                                     showTags={true}
@@ -1336,7 +1343,10 @@ export const TaskManager = () => {
                                                             key={task._id}
                                                             id={task._id}
                                                             task={task}
-                                                            onUpdate={() => fetchTasks(false)}
+                                                            onUpdate={() => {
+                                                                fetchTasks(false);
+                                                                fetchStats();
+                                                            }}
                                                             showTags={showTags}
                                                             availableLabels={labels}
                                                             onSendToWorkarea={() => handleSendToWorkarea(task)}
