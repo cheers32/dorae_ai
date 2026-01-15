@@ -112,18 +112,30 @@ const SortableAttachment = ({ attachment, onDelete, availableLabels, onClick }) 
     );
 };
 
-const LabelPicker = ({ availableLabels, selectedLabels, onToggle, onClose }) => {
+const LabelPicker = ({ availableLabels, selectedLabels, onToggle, onClose, triggerRef }) => {
     const pickerRef = useRef(null);
 
     useEffect(() => {
         const handleClickOutside = (event) => {
-            if (pickerRef.current && !pickerRef.current.contains(event.target)) {
+            const isClickOnTrigger = triggerRef?.current && triggerRef.current.contains(event.target);
+            if (pickerRef.current && !pickerRef.current.contains(event.target) && !isClickOnTrigger) {
                 onClose();
             }
         };
+
+        const handleKeyDown = (event) => {
+            if (event.key === 'Escape') {
+                onClose();
+            }
+        };
+
         document.addEventListener('mousedown', handleClickOutside);
-        return () => document.removeEventListener('mousedown', handleClickOutside);
-    }, [onClose]);
+        window.addEventListener('keydown', handleKeyDown);
+        return () => {
+            document.removeEventListener('mousedown', handleClickOutside);
+            window.removeEventListener('keydown', handleKeyDown);
+        };
+    }, [onClose, triggerRef]);
 
     return (
         <div
@@ -131,9 +143,6 @@ const LabelPicker = ({ availableLabels, selectedLabels, onToggle, onClose }) => 
             className="absolute left-0 top-full mt-2 z-[100] bg-[#1a1d24] border border-white/10 rounded-lg shadow-2xl p-2 min-w-[200px] max-h-[300px] overflow-y-auto"
             onClick={(e) => e.stopPropagation()}
         >
-            <div className="text-[10px] font-bold text-gray-500 uppercase tracking-wider px-2 py-1 mb-1">
-                Labels
-            </div>
             <div className="space-y-0.5">
                 {availableLabels.map(label => {
                     const isSelected = selectedLabels.includes(label.name);
@@ -177,6 +186,7 @@ export const TaskItem = forwardRef(({ task, onUpdate, showTags, showFolders, fol
     const [localLabels, setLocalLabels] = useState(task.labels || []);
     const [localAttachments, setLocalAttachments] = useState(task.attachments || []);
     const [showLabelPicker, setShowLabelPicker] = useState(false);
+    const triggerRef = useRef(null);
     const localRef = useRef(null); // Local ref to track the DOM element
     const textareaRef = useRef(null);
 
@@ -391,33 +401,39 @@ export const TaskItem = forwardRef(({ task, onUpdate, showTags, showFolders, fol
                     >
                         {expanded || globalExpanded ? <ChevronUp size={16} /> : <GripVertical size={16} />}
                     </div>
-                    <div className="relative">
+                    <div className="relative flex items-center justify-center">
                         <div
-                            className={`${fontSize < 11 ? 'w-2.5 h-2.5' : 'w-3 h-3'} rounded-full shrink-0 transition-all duration-200 cursor-pointer hover:scale-110 active:scale-95 ${localLabels.length > 0 && availableLabels.find(l => l.name === localLabels[0])?.color
-                                ? ''
-                                : `shadow-[0_0_10px_rgba(59,130,246,0.3)] ${task.status === 'completed' ? 'bg-green-500 shadow-[0_0_10px_rgba(34,197,94,0.3)]' :
-                                    task.status === 'in_progress' ? 'bg-yellow-500 shadow-[0_0_10px_rgba(234,179,8,0.3)]' :
-                                        'bg-blue-500 shadow-[0_0_10px_rgba(59,130,246,0.3)]'
-                                }`
-                                }`}
-                            style={
-                                localLabels.length > 0
-                                    ? {
-                                        backgroundColor: availableLabels.find(l => l.name === localLabels[0])?.color || '#3B82F6',
-                                        boxShadow: `0 0 10px ${availableLabels.find(l => l.name === localLabels[0])?.color || '#3B82F6'}4d`
-                                    }
-                                    : {}
-                            }
+                            ref={triggerRef}
+                            className="p-3 -m-3 cursor-pointer group/dot flex items-center justify-center transition-transform active:scale-95"
                             onClick={(e) => {
                                 e.stopPropagation();
                                 setShowLabelPicker(!showLabelPicker);
                             }}
-                        />
+                        >
+                            <div
+                                className={`${fontSize < 11 ? 'w-2.5 h-2.5' : 'w-3 h-3'} rounded-full shrink-0 transition-all duration-200 group-hover/dot:scale-125 ${localLabels.length > 0 && availableLabels.find(l => l.name === localLabels[0])?.color
+                                    ? ''
+                                    : `shadow-[0_0_10px_rgba(59,130,246,0.3)] ${task.status === 'completed' ? 'bg-green-500 shadow-[0_0_10px_rgba(34,197,94,0.3)]' :
+                                        task.status === 'in_progress' ? 'bg-yellow-500 shadow-[0_0_10px_rgba(234,179,8,0.3)]' :
+                                            'bg-blue-500 shadow-[0_0_10px_rgba(59,130,246,0.3)]'
+                                    }`
+                                    }`}
+                                style={
+                                    localLabels.length > 0
+                                        ? {
+                                            backgroundColor: availableLabels.find(l => l.name === localLabels[0])?.color || '#3B82F6',
+                                            boxShadow: `0 0 10px ${availableLabels.find(l => l.name === localLabels[0])?.color || '#3B82F6'}4d`
+                                        }
+                                        : {}
+                                }
+                            />
+                        </div>
                         <AnimatePresence>
                             {showLabelPicker && (
                                 <LabelPicker
                                     availableLabels={availableLabels}
                                     selectedLabels={localLabels}
+                                    triggerRef={triggerRef}
                                     onToggle={async (labelName) => {
                                         const newLabels = localLabels.includes(labelName)
                                             ? localLabels.filter(l => l !== labelName)
