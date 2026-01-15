@@ -121,6 +121,9 @@ export const TaskManager = () => {
         return null;
     });
 
+    // Helper to determine if Search should be the primary specific action
+    const isSearchPrimary = ['all', 'closed', 'trash'].includes(activeTab);
+
     const handleFocusAgent = (agent) => {
         // Toggle focus logic for single agent
         const isCurrentFocused = focusedAgentId === agent._id;
@@ -1047,70 +1050,105 @@ export const TaskManager = () => {
                             </div>
                         </div>
 
-                        {/* Create Task Bar (Central Priority) */}
+                        {/* Create Task Bar OR Search Bar (Central Priority) */}
                         <div className="flex-[3] flex justify-center mx-6 min-w-[300px]">
                             <div className="w-full max-w-xl group relative transition-all duration-300 focus-within:max-w-2xl">
-                                <form
-                                    onSubmit={(e) => {
-                                        handleCreateTask(e);
-                                    }}
-                                    className="relative w-full"
-                                >
-                                    <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                                        <Plus size={18} className="text-gray-400 group-focus-within:text-blue-400 transition-colors" />
+                                {isSearchPrimary ? (
+                                    // Search Bar (Central)
+                                    <div className="relative w-full">
+                                        <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                                            <Search size={18} className="text-gray-400 group-focus-within:text-blue-400 transition-colors" />
+                                        </div>
+                                        <input
+                                            ref={searchInputRef}
+                                            type="text"
+                                            placeholder={`Search ${activeTab === 'trash' ? 'deleted' : activeTab === 'closed' ? 'closed' : 'all'} tasks...`}
+                                            value={searchQuery}
+                                            onChange={(e) => setSearchQuery(e.target.value)}
+                                            onKeyDown={(e) => {
+                                                if (e.key === 'Escape') {
+                                                    setSearchQuery('');
+                                                    e.currentTarget.blur();
+                                                }
+                                            }}
+                                            className="w-full bg-white/5 border border-white/5 rounded-xl py-2 pl-12 pr-10 text-sm text-gray-200 placeholder:text-gray-500 focus:outline-none focus:bg-white/10 focus:border-blue-500/50 focus:ring-4 focus:ring-blue-500/10 transition-all shadow-inner"
+                                        />
+                                        {searchQuery && (
+                                            <button
+                                                type="button"
+                                                onClick={() => setSearchQuery('')}
+                                                className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-500 hover:text-gray-300 transition-colors"
+                                            >
+                                                <X size={16} />
+                                            </button>
+                                        )}
                                     </div>
-                                    <input
-                                        ref={newTaskTextareaRef}
-                                        type="text"
-                                        placeholder={selectedFolder ? `Add task to ${stats.folders[selectedFolder] ? folders.find(f => f._id === selectedFolder)?.name : 'folder'}...` : selectedLabel ? `Add task to ${selectedLabel}...` : "What needs to be done?"}
-                                        value={newTaskTitle}
-                                        onChange={(e) => setNewTaskTitle(e.target.value)}
-                                        onKeyDown={(e) => {
-                                            if (e.key === 'Escape') {
-                                                setNewTaskTitle('');
-                                                e.currentTarget.blur();
-                                            }
+                                ) : (
+                                    // Create Task Bar
+                                    <form
+                                        onSubmit={(e) => {
+                                            handleCreateTask(e);
                                         }}
-                                        className="w-full bg-white/5 border border-white/5 rounded-xl py-1.5 pl-12 pr-10 text-sm text-gray-200 placeholder:text-gray-500 focus:outline-none focus:bg-white/10 focus:border-blue-500/50 focus:ring-4 focus:ring-blue-500/10 transition-all shadow-inner"
-                                    />
-                                    {newTaskTitle && (
-                                        <button
-                                            type="button"
-                                            onClick={() => setNewTaskTitle('')}
-                                            className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-500 hover:text-gray-300 transition-colors"
-                                        >
-                                            <X size={16} />
-                                        </button>
-                                    )}
-                                </form>
+                                        className="relative w-full"
+                                    >
+                                        <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                                            <Plus size={18} className="text-gray-400 group-focus-within:text-blue-400 transition-colors" />
+                                        </div>
+                                        <input
+                                            ref={newTaskTextareaRef}
+                                            type="text"
+                                            placeholder={selectedFolder ? `Add task to ${stats.folders[selectedFolder] ? folders.find(f => f._id === selectedFolder)?.name : 'folder'}...` : selectedLabel ? `Add task to ${selectedLabel}...` : "What needs to be done?"}
+                                            value={newTaskTitle}
+                                            onChange={(e) => setNewTaskTitle(e.target.value)}
+                                            onKeyDown={(e) => {
+                                                if (e.key === 'Escape') {
+                                                    setNewTaskTitle('');
+                                                    e.currentTarget.blur();
+                                                }
+                                            }}
+                                            className="w-full bg-white/5 border border-white/5 rounded-xl py-1.5 pl-12 pr-10 text-sm text-gray-200 placeholder:text-gray-500 focus:outline-none focus:bg-white/10 focus:border-blue-500/50 focus:ring-4 focus:ring-blue-500/10 transition-all shadow-inner"
+                                        />
+                                        {newTaskTitle && (
+                                            <button
+                                                type="button"
+                                                onClick={() => setNewTaskTitle('')}
+                                                className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-500 hover:text-gray-300 transition-colors"
+                                            >
+                                                <X size={16} />
+                                            </button>
+                                        )}
+                                    </form>
+                                )}
                             </div>
                         </div>
 
                         <div className="flex items-center gap-4 shrink-0">
-                            {/* Search (Secondary) */}
-                            <div className="relative group/search">
-                                <div className={`flex items-center transition-all duration-300 ${searchQuery ? 'w-48 bg-white/10' : 'w-8 hover:w-48 hover:bg-white/5'} rounded-lg overflow-hidden border border-transparent focus-within:w-64 focus-within:border-blue-500/30 focus-within:bg-white/10`}>
-                                    <div className="absolute left-2 flex items-center pointer-events-none text-gray-400">
-                                        <Search size={16} />
+                            {/* Search (Secondary) - Only show if not primary */}
+                            {!isSearchPrimary && (
+                                <div className="relative group/search">
+                                    <div className={`flex items-center transition-all duration-300 ${searchQuery ? 'w-48 bg-white/10' : 'w-8 hover:w-48 hover:bg-white/5'} rounded-lg overflow-hidden border border-transparent focus-within:w-64 focus-within:border-blue-500/30 focus-within:bg-white/10`}>
+                                        <div className="absolute left-2 flex items-center pointer-events-none text-gray-400">
+                                            <Search size={16} />
+                                        </div>
+                                        <input
+                                            ref={searchInputRef}
+                                            type="text"
+                                            placeholder="Search"
+                                            value={searchQuery}
+                                            onChange={(e) => setSearchQuery(e.target.value)}
+                                            className="w-full bg-transparent py-1.5 pl-8 pr-8 text-xs text-gray-200 placeholder:text-gray-500 focus:outline-none"
+                                        />
+                                        {searchQuery && (
+                                            <button
+                                                onClick={() => setSearchQuery('')}
+                                                className="absolute right-2 flex items-center text-gray-500 hover:text-gray-300"
+                                            >
+                                                <X size={14} />
+                                            </button>
+                                        )}
                                     </div>
-                                    <input
-                                        ref={searchInputRef}
-                                        type="text"
-                                        placeholder="Search"
-                                        value={searchQuery}
-                                        onChange={(e) => setSearchQuery(e.target.value)}
-                                        className="w-full bg-transparent py-1.5 pl-8 pr-8 text-xs text-gray-200 placeholder:text-gray-500 focus:outline-none"
-                                    />
-                                    {searchQuery && (
-                                        <button
-                                            onClick={() => setSearchQuery('')}
-                                            className="absolute right-2 flex items-center text-gray-500 hover:text-gray-300"
-                                        >
-                                            <X size={14} />
-                                        </button>
-                                    )}
                                 </div>
-                            </div>
+                            )}
 
                             {activeTab === 'assistant' && (
                                 <button
