@@ -121,12 +121,40 @@ export const UpdatesTimeline = ({
                             </div>
                         ) : (
                             item.type === 'ai_analysis' ? (
-                                <div className="mt-1 mb-2 p-3 rounded-lg bg-indigo-500/10 border border-indigo-500/20 w-full relative group/ai shadow-sm">
+                                <div className="mt-1 mb-2 p-3 rounded-lg bg-indigo-500/10 border border-indigo-500/20 w-full relative group/ai shadow-sm flex justify-between items-start gap-2">
                                     <div className="flex items-start gap-2">
                                         <Sparkles size={14} className="text-blue-400 mt-0.5 shrink-0" />
                                         <p className="text-sm text-blue-200/80 italic leading-relaxed">
                                             {item.content.replace('AI Plan: ', '')}
                                         </p>
+                                    </div>
+                                    <div className={`flex gap-1 ${deletingId === item.id ? 'opacity-100' : 'opacity-0 group-hover/ai:opacity-100'}`}>
+                                        {deletingId === item.id ? (
+                                            <div className="flex items-center gap-1">
+                                                <button
+                                                    className="text-green-400 hover:text-green-300 transition-all bg-green-400/10 rounded p-0.5"
+                                                    onClick={() => handleDelete(item.id)}
+                                                    title="Confirm Delete"
+                                                >
+                                                    <Check size={14} />
+                                                </button>
+                                                <button
+                                                    className="text-gray-500 hover:text-gray-300 transition-all p-0.5"
+                                                    onClick={() => setDeletingId(null)}
+                                                    title="Cancel"
+                                                >
+                                                    <X size={14} />
+                                                </button>
+                                            </div>
+                                        ) : (
+                                            <button
+                                                className="text-indigo-300 hover:text-red-400 transition-all p-0.5"
+                                                onClick={() => setDeletingId(item.id)}
+                                                title="Delete"
+                                            >
+                                                <X size={14} />
+                                            </button>
+                                        )}
                                     </div>
                                 </div>
                             ) : (
