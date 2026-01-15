@@ -63,18 +63,46 @@ class AIService:
         if not self.client:
             return "I can't help you with that right now because the API key is missing."
 
-        # Format tasks for context
+        # Format tasks for context with enriched information
         task_list_str = ""
         for task in tasks_context:
             status = task.get('status', 'unknown')
             title = task.get('title', 'Untitled')
             priority = task.get('priority', 'medium')
-            task_list_str += f"- [{status.upper()}] {title} (Priority: {priority})\n"
+            category = task.get('category', 'General')
+            labels = task.get('labels', [])
+            folder = task.get('folder')
+            recent_updates = task.get('recent_updates', [])
+            linked_items = task.get('linked_items', [])
+            
+            # Build task entry with all context
+            task_entry = f"- [{status.upper()}] {title}\n"
+            task_entry += f"  Priority: {priority} | Category: {category}\n"
+            
+            if labels:
+                task_entry += f"  Tags: {', '.join(labels)}\n"
+            if folder:
+                task_entry += f"  Folder/Project: {folder}\n"
+            if recent_updates:
+                task_entry += f"  Recent Progress: {' → '.join(recent_updates)}\n"
+            if linked_items:
+                # Linked items are CONTEXT, not tasks
+                task_entry += f"  Context Items: {len(linked_items)} linked resources\n"
+            
+            task_list_str += task_entry + "\n"
 
         # Always use default Dorae persona for consistent quality
         agent_name = "Dorae"
         agent_role = "AI Task Assistant"
-        agent_instruction = "You are Dorae, an AI Task Assistant. Be helpful, concise, and encouraging."
+        agent_instruction = """You are Dorae, an AI Task Assistant. Be helpful, concise, and encouraging.
+
+IMPORTANT INSTRUCTIONS:
+1. Use TAGS (labels) to understand task categories and themes
+2. Use FOLDERS to understand which project/area a task belongs to
+3. Review RECENT PROGRESS to understand what's been done
+4. Check CONTEXT ITEMS (linked_items) for reference materials - these are NOT tasks themselves
+5. DO NOT confuse context items with tasks - context items are resources that support tasks
+6. When discussing tasks, consider their full context including tags, folder, and progress"""
         agent_notes_str = ""
 
         # Note: agent_context is used for task filtering in app.py,

@@ -622,14 +622,32 @@ def chat():
         cursor = tasks_collection.find(query).sort('created_at', -1)
         tasks = list(cursor)
         
-        # Serialize simply for AI context
+        # Serialize with enriched context for AI
         tasks_context = []
         for t in tasks:
+            # Get folder name if folderId exists
+            folder_name = None
+            if t.get('folderId'):
+                folder = folders_collection.find_one({"_id": ObjectId(t.get('folderId'))})
+                if folder:
+                    folder_name = folder.get('name')
+            
+            # Extract updates (last 3 for context)
+            updates = t.get('updates', [])
+            recent_updates = [u.get('content') for u in updates[-3:]] if updates else []
+            
+            # Extract attachments/linked items
+            attachments = t.get('attachments', [])
+            
             tasks_context.append({
                 "title": t.get('title'),
                 "status": t.get('status'),
                 "priority": t.get('priority'),
-                "category": t.get('category')
+                "category": t.get('category'),
+                "labels": t.get('labels', []),  # Tags for categorization
+                "folder": folder_name,  # Folder/project context
+                "recent_updates": recent_updates,  # Latest progress
+                "linked_items": attachments  # Context items (URLs, files, etc.)
             })
             
         # Fetch Agent Context if agent_id is provided
