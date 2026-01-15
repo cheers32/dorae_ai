@@ -130,13 +130,13 @@ def get_tasks():
         if status == 'Deleted':
             query['status'] = {'$in': ['Deleted', 'deleted']}
         elif status == 'Active':
-            # Exclude completed/closed and deleted/trash
-            query['status'] = {'$nin': ['Closed', 'completed', 'Deleted', 'deleted']}
+            # Exclude completed/closed and deleted/trash/archived
+            query['status'] = {'$nin': ['Closed', 'completed', 'Deleted', 'deleted', 'Archived', 'archived']}
         elif status:
             query['status'] = status
         else:
-            # Default: exclude deleted
-            query['status'] = {'$nin': ['Deleted', 'deleted']}
+            # Default: exclude deleted and archived
+            query['status'] = {'$nin': ['Deleted', 'deleted', 'Archived', 'archived']}
 
         if label:
             query['labels'] = label
@@ -265,15 +265,15 @@ def get_stats():
         
         # 1. Active Tasks
         active_query = {
-            'status': {'$nin': ['Closed', 'completed', 'Deleted', 'deleted']},
+            'status': {'$nin': ['Closed', 'completed', 'Deleted', 'deleted', 'Archived', 'archived']},
             '$or': [{'folderId': None}, {'folderId': {'$exists': False}}]
         }
         active_query.update(base_query)
         active_count = tasks_collection.count_documents(active_query)
 
-        # 1b. All Tasks (Active + Closed)
+        # 1b. All Tasks (Active + Closed) - Exclude Archived
         all_query = {
-            'status': {'$nin': ['Deleted', 'deleted']}
+            'status': {'$nin': ['Deleted', 'deleted', 'Archived', 'archived']}
         }
         all_query.update(base_query)
         all_active_count = tasks_collection.count_documents(all_query)
@@ -295,7 +295,7 @@ def get_stats():
         for folder in folders:
             folder_id = str(folder['_id'])
             f_count_query = {
-                'status': {'$nin': ['Deleted', 'deleted']},
+                'status': {'$nin': ['Deleted', 'deleted', 'Archived', 'archived']},
                 'folderId': folder_id
             }
             f_count_query.update(base_query)
@@ -309,7 +309,7 @@ def get_stats():
         for label in labels:
             label_name = label['name']
             l_count_query = {
-                'status': {'$nin': ['Deleted', 'deleted']},
+                'status': {'$nin': ['Deleted', 'deleted', 'Archived', 'archived']},
                 'labels': label_name
             }
             l_count_query.update(base_query)
