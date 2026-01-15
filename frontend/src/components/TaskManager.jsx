@@ -336,13 +336,15 @@ export const TaskManager = () => {
             const isTyping = ['INPUT', 'TEXTAREA'].includes(document.activeElement.tagName) || document.activeElement.isContentEditable;
 
             if (!isTyping) {
-                // Gmail-like shortcut: 'c' for Compose (New Task)
+                // Gmail-like shortcut: 'c' for Create Task
                 if (event.key === 'c') {
                     // Only allow if in a view where task creation is supported
                     const canCreate = (activeTab === 'active' || activeTab === 'folder' || activeTab === 'label') || (selectedLabel);
                     if (canCreate) {
                         event.preventDefault();
-                        setIsCreating(true);
+                        if (newTaskTextareaRef.current) {
+                            newTaskTextareaRef.current.focus();
+                        }
                     }
                 }
 
@@ -1040,48 +1042,70 @@ export const TaskManager = () => {
                             </div>
                         </div>
 
-                        {/* Gmail-like Search Bar */}
+                        {/* Create Task Bar (Central Priority) */}
                         <div className="flex-[3] flex justify-center mx-6 min-w-[300px]">
                             <div className="w-full max-w-xl group relative transition-all duration-300 focus-within:max-w-2xl">
-                                <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                                    <Search size={18} className="text-gray-400 group-focus-within:text-blue-400 transition-colors" />
-                                </div>
-                                <input
-                                    ref={searchInputRef}
-                                    type="text"
-                                    placeholder="Search tasks..."
-                                    value={searchQuery}
-                                    onChange={(e) => setSearchQuery(e.target.value)}
-                                    onKeyDown={(e) => {
-                                        if (e.key === 'Escape') {
-                                            setSearchQuery('');
-                                            e.currentTarget.blur();
-                                        }
+                                <form
+                                    onSubmit={(e) => {
+                                        handleCreateTask(e);
                                     }}
-                                    className="w-full bg-white/5 border border-white/5 rounded-xl py-1.5 pl-12 pr-10 text-sm text-gray-200 placeholder:text-gray-500 focus:outline-none focus:bg-white/10 focus:border-blue-500/50 focus:ring-4 focus:ring-blue-500/10 transition-all shadow-inner"
-                                />
-                                {searchQuery && (
-                                    <button
-                                        onClick={() => setSearchQuery('')}
-                                        className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-500 hover:text-gray-300 transition-colors"
-                                    >
-                                        <X size={16} />
-                                    </button>
-                                )}
+                                    className="relative w-full"
+                                >
+                                    <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                                        <Plus size={18} className="text-gray-400 group-focus-within:text-blue-400 transition-colors" />
+                                    </div>
+                                    <input
+                                        ref={newTaskTextareaRef}
+                                        type="text"
+                                        placeholder={selectedFolder ? `Add task to ${stats.folders[selectedFolder] ? folders.find(f => f._id === selectedFolder)?.name : 'folder'}...` : selectedLabel ? `Add task to ${selectedLabel}...` : "What needs to be done?"}
+                                        value={newTaskTitle}
+                                        onChange={(e) => setNewTaskTitle(e.target.value)}
+                                        onKeyDown={(e) => {
+                                            if (e.key === 'Escape') {
+                                                setNewTaskTitle('');
+                                                e.currentTarget.blur();
+                                            }
+                                        }}
+                                        className="w-full bg-white/5 border border-white/5 rounded-xl py-1.5 pl-12 pr-10 text-sm text-gray-200 placeholder:text-gray-500 focus:outline-none focus:bg-white/10 focus:border-blue-500/50 focus:ring-4 focus:ring-blue-500/10 transition-all shadow-inner"
+                                    />
+                                    {newTaskTitle && (
+                                        <button
+                                            type="button"
+                                            onClick={() => setNewTaskTitle('')}
+                                            className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-500 hover:text-gray-300 transition-colors"
+                                        >
+                                            <X size={16} />
+                                        </button>
+                                    )}
+                                </form>
                             </div>
                         </div>
 
                         <div className="flex items-center gap-4 shrink-0">
-                            {((activeTab === 'active' || activeTab === 'folder' || activeTab === 'label') || (selectedLabel)) && (
-                                <button
-                                    onClick={() => {
-                                        setIsCreating(!isCreating);
-                                    }}
-                                    className={`px-1.5 py-1.5 rounded-lg transition-colors flex items-center ${isCreating ? 'bg-blue-500 text-white shadow-lg shadow-blue-500/20' : 'bg-blue-500/10 text-blue-400 hover:bg-blue-500/20'}`}
-                                >
-                                    <span className="text-xs font-medium">{isCreating ? 'Cancel' : 'New Task'}</span>
-                                </button>
-                            )}
+                            {/* Search (Secondary) */}
+                            <div className="relative group/search">
+                                <div className={`flex items-center transition-all duration-300 ${searchQuery ? 'w-48 bg-white/10' : 'w-8 hover:w-48 hover:bg-white/5'} rounded-lg overflow-hidden border border-transparent focus-within:w-64 focus-within:border-blue-500/30 focus-within:bg-white/10`}>
+                                    <div className="absolute left-2 flex items-center pointer-events-none text-gray-400">
+                                        <Search size={16} />
+                                    </div>
+                                    <input
+                                        ref={searchInputRef}
+                                        type="text"
+                                        placeholder="Search"
+                                        value={searchQuery}
+                                        onChange={(e) => setSearchQuery(e.target.value)}
+                                        className="w-full bg-transparent py-1.5 pl-8 pr-8 text-xs text-gray-200 placeholder:text-gray-500 focus:outline-none"
+                                    />
+                                    {searchQuery && (
+                                        <button
+                                            onClick={() => setSearchQuery('')}
+                                            className="absolute right-2 flex items-center text-gray-500 hover:text-gray-300"
+                                        >
+                                            <X size={14} />
+                                        </button>
+                                    )}
+                                </div>
+                            </div>
 
                             {activeTab === 'assistant' && (
                                 <button
@@ -1338,44 +1362,6 @@ export const TaskManager = () => {
                                 </div>
                             ) : (
                                 <>
-                                    <AnimatePresence>
-                                        {isCreating && (
-                                            <motion.form
-                                                initial={{ height: 0, opacity: 0, marginBottom: 0 }}
-                                                animate={{ height: 'auto', opacity: 1, marginBottom: 24 }}
-                                                exit={{ height: 0, opacity: 0, marginBottom: 0 }}
-                                                className="flex gap-4 overflow-hidden"
-                                                onSubmit={(e) => {
-                                                    handleCreateTask(e);
-                                                }}
-                                            >
-                                                <textarea
-                                                    ref={newTaskTextareaRef}
-                                                    autoFocus
-                                                    className="flex-1 bg-gray-900 border border-gray-800 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:border-blue-500 focus:ring-0 transition-all placeholder:text-gray-600 resize-none overflow-hidden"
-                                                    placeholder={selectedFolder ? `Add task to ${stats.folders[selectedFolder] ? folders.find(f => f._id === selectedFolder)?.name : 'folder'}...` : selectedLabel ? `Add task to ${selectedLabel}...` : "What needs to be done?"}
-                                                    value={newTaskTitle}
-                                                    onChange={(e) => setNewTaskTitle(e.target.value)}
-                                                    onKeyDown={(e) => {
-                                                        if (e.key === 'Escape') setIsCreating(false);
-                                                        if (e.key === 'Enter' && !e.shiftKey) {
-                                                            e.preventDefault();
-                                                            handleCreateTask(e);
-                                                        }
-                                                    }}
-                                                    rows={1}
-                                                />
-                                                <button
-                                                    type="submit"
-                                                    disabled={!newTaskTitle.trim()}
-                                                    className="bg-gradient-to-r from-blue-600 to-blue-400 hover:from-blue-500 hover:to-blue-300 text-white px-4 rounded-lg text-xs font-medium transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center whitespace-nowrap"
-                                                >
-                                                    Create
-                                                </button>
-                                            </motion.form>
-                                        )}
-                                    </AnimatePresence>
-
                                     <div className="flex-1 overflow-y-auto pr-2 scrollbar-thin scrollbar-thumb-gray-800 scrollbar-track-transparent">
                                         {loading ? (
                                             null
