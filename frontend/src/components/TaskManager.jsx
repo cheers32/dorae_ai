@@ -56,6 +56,7 @@ export const TaskManager = () => {
     const [history, setHistory] = useState([]);
     const [forwardHistory, setForwardHistory] = useState([]);
     const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(() => localStorage.getItem('task_manager_sidebar_collapsed') === 'true');
+    const searchInputRef = useRef(null);
     const [workareaTasks, setWorkareaTasks] = useState(() => {
         // Initialize from localStorage
         const saved = localStorage.getItem('workareaTasks');
@@ -248,6 +249,7 @@ export const TaskManager = () => {
             if (activeTab === 'closed') status = 'Closed';
             if (activeTab === 'trash') status = 'Deleted';
             if (activeTab === 'folder') status = null;
+            if (activeTab === 'all') status = null;
 
             let queryFolderId = selectedFolder;
             // Exclusive visibility: If in 'Active' tab and no folder selected, only show unfiled tasks
@@ -282,7 +284,7 @@ export const TaskManager = () => {
 
     // Sync folders with sidebarItems
     useEffect(() => {
-        const systemItems = ['active', 'closed', 'assistant', 'trash'];
+        const systemItems = ['active', 'all', 'closed', 'assistant', 'trash'];
         const folderIds = folders.map(f => `folder-${f._id}`);
 
         // Load saved order
@@ -318,6 +320,29 @@ export const TaskManager = () => {
     // Keyboard navigation
     useEffect(() => {
         const handleKeyDown = (event) => {
+            // Check if user is typing in an input or textarea
+            const isTyping = ['INPUT', 'TEXTAREA'].includes(document.activeElement.tagName) || document.activeElement.isContentEditable;
+
+            if (!isTyping) {
+                // Gmail-like shortcut: 'c' for Compose (New Task)
+                if (event.key === 'c') {
+                    // Only allow if in a view where task creation is supported
+                    const canCreate = (activeTab === 'active' || activeTab === 'folder' || activeTab === 'label') || (selectedLabel);
+                    if (canCreate) {
+                        event.preventDefault();
+                        setIsCreating(true);
+                    }
+                }
+
+                // Gmail-like shortcut: '/' for Search
+                if (event.key === '/') {
+                    event.preventDefault();
+                    if (searchInputRef.current) {
+                        searchInputRef.current.focus();
+                    }
+                }
+            }
+
             // Command + [ for back navigation
             if ((event.metaKey || event.ctrlKey) && event.key === '[') {
                 if (history.length > 0) {
@@ -346,7 +371,7 @@ export const TaskManager = () => {
             window.removeEventListener('keydown', handleKeyDown);
             window.removeEventListener('mousedown', handleClickOutside);
         };
-    }, [history, forwardHistory, handleBack, handleForward]);
+    }, [history, forwardHistory, handleBack, handleForward, activeTab, selectedLabel]);
 
     useEffect(() => {
         fetchTasks(true);
@@ -1000,10 +1025,17 @@ export const TaskManager = () => {
                                     <Search size={18} className="text-gray-400 group-focus-within:text-blue-400 transition-colors" />
                                 </div>
                                 <input
+                                    ref={searchInputRef}
                                     type="text"
                                     placeholder="Search tasks..."
                                     value={searchQuery}
                                     onChange={(e) => setSearchQuery(e.target.value)}
+                                    onKeyDown={(e) => {
+                                        if (e.key === 'Escape') {
+                                            setSearchQuery('');
+                                            e.currentTarget.blur();
+                                        }
+                                    }}
                                     className="w-full bg-white/5 border border-white/5 rounded-xl py-1.5 pl-12 pr-10 text-sm text-gray-200 placeholder:text-gray-500 focus:outline-none focus:bg-white/10 focus:border-blue-500/50 focus:ring-4 focus:ring-blue-500/10 transition-all shadow-inner"
                                 />
                                 {searchQuery && (

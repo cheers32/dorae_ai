@@ -247,6 +247,13 @@ def get_stats():
         }
         active_query.update(base_query)
         active_count = tasks_collection.count_documents(active_query)
+
+        # 1b. All Tasks (Active + Closed)
+        all_query = {
+            'status': {'$nin': ['Deleted', 'deleted']}
+        }
+        all_query.update(base_query)
+        all_active_count = tasks_collection.count_documents(all_query)
         
         # 2. Closed Tasks
         closed_query = {'status': {'$in': ['Closed', 'completed']}}
@@ -288,6 +295,7 @@ def get_stats():
             
         return jsonify({
             'active': active_count,
+            'all': all_active_count,
             'closed': closed_count,
             'trash': trash_count,
             'folders': folder_counts,
