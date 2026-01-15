@@ -5,7 +5,8 @@ import { Sidebar } from './Sidebar';
 import { ChatInterface } from './ChatInterface';
 import { AgentList } from './AgentList';
 import { AgentItem } from './AgentItem';
-import { Search, Plus, Home as HomeIcon, Tag as TagIcon, ArrowLeft, ArrowRight, Trash2, X, ChevronsUpDown, ChevronsDownUp, Type, MessageSquare, ZoomIn, ZoomOut, MoreVertical, SlidersHorizontal, Settings2, Bug, Calendar, ArrowDownAZ, GripVertical, Folder } from 'lucide-react';
+import { GeminiPanel } from './GeminiPanel';
+import { Search, Plus, Home as HomeIcon, Tag as TagIcon, ArrowLeft, ArrowRight, Trash2, X, ChevronsUpDown, ChevronsDownUp, Type, MessageSquare, ZoomIn, ZoomOut, MoreVertical, SlidersHorizontal, Settings2, Bug, Calendar, ArrowDownAZ, GripVertical, Folder, Sparkles } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import {
@@ -58,6 +59,7 @@ export const TaskManager = () => {
     const [history, setHistory] = useState([]);
     const [forwardHistory, setForwardHistory] = useState([]);
     const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(() => localStorage.getItem('task_manager_sidebar_collapsed') === 'true');
+    const [isGeminiOpen, setIsGeminiOpen] = useState(false);
     const [sortBy, setSortBy] = useState('manual'); // 'manual', 'date', 'title'
     const searchInputRef = useRef(null);
     const [workareaTasks, setWorkareaTasks] = useState(() => {
@@ -1171,6 +1173,14 @@ export const TaskManager = () => {
                                     <span className="text-xs font-medium">Hire Agent</span>
                                 </button>
                             )}
+                            <button
+                                onClick={() => setIsGeminiOpen(!isGeminiOpen)}
+                                className={`p-2 rounded-lg transition-all flex items-center justify-center ${isGeminiOpen ? 'bg-gradient-to-tr from-blue-500/20 to-purple-500/20 text-blue-400 border border-blue-500/30' : 'bg-gray-900 border border-gray-800 text-gray-400 hover:text-white hover:border-gray-700'}`}
+                                title="Ask Gemini"
+                            >
+                                <Sparkles size={18} />
+                            </button>
+
                             <div className="relative" ref={menuRef}>
                                 <button
                                     onClick={() => setIsMenuOpen(!isMenuOpen)}
@@ -1475,6 +1485,7 @@ export const TaskManager = () => {
 
 
                 </main>
+                <GeminiPanel isOpen={isGeminiOpen} onClose={() => setIsGeminiOpen(false)} />
             </div >
 
 
