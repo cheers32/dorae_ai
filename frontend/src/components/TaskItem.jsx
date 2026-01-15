@@ -312,7 +312,7 @@ export const TaskItem = forwardRef(({ task, onUpdate, showTags, showFolders, fol
             className={`group hover:bg-white/[0.03] transition-all duration-200 bg-transparent ${expanded || globalExpanded ? 'my-2 rounded-xl bg-blue-500/5 border-blue-500/30 border shadow-lg z-10 overflow-hidden' : 'border-b border-white/5 border-l border-l-transparent'}`}
         >
             <div
-                className="flex items-center gap-4 cursor-pointer pr-4"
+                className="flex items-center gap-4 cursor-pointer pr-4 select-none"
                 onClick={() => setExpanded(!expanded)}
                 {...(expanded || globalExpanded ? {} : dragHandleProps)}
             >
@@ -380,7 +380,7 @@ export const TaskItem = forwardRef(({ task, onUpdate, showTags, showFolders, fol
                     ) : (
                         <div className="flex-1 min-w-0 flex items-center gap-2 group/title">
                             <h3
-                                className={`font-medium text-gray-400 text-left ${expanded || globalExpanded || showFullTitles ? 'break-words whitespace-pre-wrap cursor-text' : 'truncate'} ${(task.status === 'Deleted' || task.status === 'deleted') ? 'line-through opacity-50' : ''}`}
+                                className={`font-medium text-gray-400 text-left select-text ${expanded || globalExpanded || showFullTitles ? 'break-words whitespace-pre-wrap cursor-text' : 'truncate'} ${(task.status === 'Deleted' || task.status === 'deleted') ? 'line-through opacity-50' : ''}`}
                                 style={{ fontSize: `${fontSize}px`, lineHeight: '1.4' }}
                                 onClick={(e) => {
                                     if (expanded || globalExpanded || showFullTitles) {
