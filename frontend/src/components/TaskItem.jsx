@@ -10,7 +10,8 @@ import {
     Sparkles,
     Paperclip,
     Folder,
-    Tag
+    Tag,
+    CheckCircle
 } from 'lucide-react';
 import { api } from '../api';
 import { UpdatesTimeline } from './UpdatesTimeline';
@@ -314,6 +315,7 @@ export const TaskItem = forwardRef(({ task, onUpdate, showTags, showFolders, fol
     };
 
     const [isDeleting, setIsDeleting] = useState(false);
+    const [isCompleting, setIsCompleting] = useState(false);
 
     const confirmDelete = async (e) => {
         e.stopPropagation();
@@ -326,6 +328,31 @@ export const TaskItem = forwardRef(({ task, onUpdate, showTags, showFolders, fol
         } finally {
             setIsSubmitting(false);
             setIsDeleting(false);
+        }
+    };
+
+    const handleComplete = async (e) => {
+        e.stopPropagation();
+        setIsCompleting(true);
+        try {
+            // Add "Completed" label if not present
+            if (!localLabels.includes('Completed')) {
+                const newLabels = [...localLabels, 'Completed'];
+                setLocalLabels(newLabels);
+                // Optimistically update UI provided we don't need color from backend immediately
+                await api.updateTask(task._id, { labels: newLabels });
+            }
+
+            // Short pause to show the label
+            await new Promise(resolve => setTimeout(resolve, 800));
+
+            // Close the task
+            await api.closeTask(task._id);
+            onUpdate();
+        } catch (err) {
+            console.error("Failed to complete task", err);
+        } finally {
+            setIsCompleting(false);
         }
     };
 
@@ -371,7 +398,7 @@ export const TaskItem = forwardRef(({ task, onUpdate, showTags, showFolders, fol
             initial={isOverlay ? false : { opacity: 0 }}
             animate={isOverlay ? false : { opacity: baseStyle.opacity }}
             exit={isOverlay ? false : { opacity: 0 }}
-            className={`group hover:bg-white/[0.03] transition-all duration-200 bg-transparent ${expanded || globalExpanded ? `my-2 rounded-xl bg-blue-500/5 border-blue-500/30 border shadow-lg ${showLabelPicker ? 'z-[100]' : 'z-10'}` : 'border-b border-white/5 border-l border-l-transparent'}`}
+            className={`group hover:bg-white/[0.03] transition-all duration-200 bg-transparent ${expanded || globalExpanded ? `mb-4 rounded-xl bg-blue-500/5 border-blue-500/30 border shadow-lg ${showLabelPicker ? 'z-[100]' : 'z-10'}` : 'border-b border-white/5 border-l border-l-transparent'}`}
         >
             <div
                 className="flex items-center gap-4 cursor-pointer pr-4 select-none"
@@ -630,7 +657,7 @@ export const TaskItem = forwardRef(({ task, onUpdate, showTags, showFolders, fol
                                 />
                             </div>
 
-                            <div className="flex justify-between items-center gap-2 pt-2 border-t border-white/5 mx-[-16px] px-4 bg-black/40 pb-2 mb-[-16px]">
+                            <div className="flex justify-between items-center gap-2 pt-2 border-t border-white/5 mx-[-16px] px-4 bg-black/40 pb-2 mb-[-16px] rounded-b-xl">
                                 {isDeleting ? (
                                     <div className="flex items-center gap-1">
                                         <button
@@ -658,6 +685,15 @@ export const TaskItem = forwardRef(({ task, onUpdate, showTags, showFolders, fol
                                     </button>
                                 )}
                                 <div className="flex items-center gap-2">
+                                    <button
+                                        className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium text-green-400 hover:bg-green-400/10 transition-colors"
+                                        onClick={handleComplete}
+                                        disabled={isCompleting}
+                                        title="Mark as Completed"
+                                    >
+                                        <CheckCircle size={14} />
+                                        {isCompleting ? 'Completing...' : 'Complete'}
+                                    </button>
                                     <button
                                         className="p-1.5 text-gray-500 hover:text-blue-400 transition-colors"
                                         onClick={(e) => {
