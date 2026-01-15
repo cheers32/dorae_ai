@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect, forwardRef } from 'react';
-import { format } from 'date-fns';
+import { format, isToday } from 'date-fns';
 import {
     Trash2,
     X,
@@ -457,13 +457,27 @@ export const TaskItem = forwardRef(({ task, onUpdate, showTags, showFolders, fol
                         </span>
                     )}
                     <span
+                        title={format(
+                            (task.updates && task.updates.length > 0)
+                                ? parseUTCDate(task.updates.reduce((max, u) => new Date(u.timestamp) > new Date(max) ? u.timestamp : max, task.updates[0].timestamp))
+                                : parseUTCDate(task.created_at),
+                            'MMM d, yyyy, h:mm a'
+                        )}
                         className="text-xs text-gray-400 font-mono font-medium whitespace-nowrap"
                     >
                         {(() => {
                             const lastUpdate = task.updates && task.updates.length > 0
                                 ? parseUTCDate(task.updates.reduce((max, u) => new Date(u.timestamp) > new Date(max) ? u.timestamp : max, task.updates[0].timestamp))
                                 : parseUTCDate(task.created_at);
-                            return format(lastUpdate, 'MMM d, HH:mm');
+
+                            if (expanded || globalExpanded) {
+                                return format(lastUpdate, 'MMM d, h:mm a');
+                            }
+
+                            if (isToday(lastUpdate)) {
+                                return format(lastUpdate, 'h:mm a');
+                            }
+                            return format(lastUpdate, 'MMM d');
                         })()}
                     </span>
 

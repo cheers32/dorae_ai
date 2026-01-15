@@ -88,7 +88,13 @@ export const TaskManager = () => {
         })
         .sort((a, b) => {
             if (sortBy === 'date') {
-                return new Date(b.created_at) - new Date(a.created_at);
+                const getLastUpdate = (task) => {
+                    if (task.updates && task.updates.length > 0) {
+                        return task.updates.reduce((max, u) => new Date(u.timestamp) > new Date(max) ? new Date(u.timestamp) : max, new Date(task.updates[0].timestamp));
+                    }
+                    return new Date(task.created_at);
+                };
+                return getLastUpdate(b) - getLastUpdate(a);
             }
             if (sortBy === 'title') {
                 return (a.title || '').localeCompare(b.title || '');
