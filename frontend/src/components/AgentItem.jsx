@@ -94,8 +94,8 @@ export const AgentItem = ({ agent, onFocus, onEdit, onDelete, isFocused, availab
         setIsChatLoading(true);
 
         try {
-            // Use default Gemini persona (same as GeminiPanel)
-            const data = await api.chatWithAI(userMsg);
+            // Pass agent ID to filter tasks, but use default Gemini persona
+            const data = await api.chatWithAI(userMsg, agent._id);
             setChatMessages(prev => [...prev, { role: 'ai', text: data.reply }]);
         } catch (err) {
             console.error(err);

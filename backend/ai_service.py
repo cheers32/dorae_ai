@@ -71,24 +71,14 @@ class AIService:
             priority = task.get('priority', 'medium')
             task_list_str += f"- [{status.upper()}] {title} (Priority: {priority})\n"
 
-        # Default Persona
+        # Always use default Dorae persona for consistent quality
         agent_name = "Dorae"
         agent_role = "AI Task Assistant"
         agent_instruction = "You are Dorae, an AI Task Assistant. Be helpful, concise, and encouraging."
         agent_notes_str = ""
 
-        # Apply Agent Context if available
-        if agent_context:
-            agent_name = agent_context.get('name', agent_name)
-            agent_role = agent_context.get('role', agent_role)
-            # If description is empty, fallback to default instruction
-            if agent_context.get('description'):
-                agent_instruction = agent_context.get('description')
-            
-            # Format Notes
-            notes = agent_context.get('notes', [])
-            if notes:
-                agent_notes_str = "\nActive Memories/Notes:\n" + "\n".join([f"- {n['content']}" for n in notes])
+        # Note: agent_context is used for task filtering in app.py,
+        # but we ignore custom agent persona to maintain quality
 
         system_instruction = f"""
         Name: {agent_name}
