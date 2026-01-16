@@ -99,7 +99,7 @@ const SortableAttachment = ({ attachment, onDelete, availableLabels, onClick }) 
             style={style}
             {...attributes}
             {...listeners}
-            className="flex items-center gap-2 bg-white/5 border border-white/10 rounded-lg px-3 py-1.5 text-xs text-gray-300 group/chip hover:bg-white/10 transition-colors cursor-pointer active:cursor-grabbing"
+            className="flex items-center gap-2 bg-white/5 border border-white/10 rounded-lg px-2 pl-3 py-1.5 text-xs text-gray-300 group/chip hover:bg-white/10 transition-colors cursor-pointer active:cursor-grabbing pr-1.5"
             onClick={(e) => {
                 if (!isDragging && onClick) {
                     onClick(attachment);
@@ -110,7 +110,19 @@ const SortableAttachment = ({ attachment, onDelete, availableLabels, onClick }) 
                 className="w-2 h-2 rounded-full shrink-0"
                 style={{ backgroundColor: dotColor }}
             />
-            <span>{attachment.title}</span>
+            <span className="truncate max-w-[150px]">{attachment.title}</span>
+            {onDelete && (
+                <button
+                    className="ml-0.5 p-0.5 rounded-full hover:bg-white/10 text-gray-400 hover:text-white transition-colors opacity-0 group-hover/chip:opacity-100"
+                    onClick={(e) => {
+                        e.stopPropagation();
+                        onDelete();
+                    }}
+                    onPointerDown={(e) => e.stopPropagation()} // Prevent drag start
+                >
+                    <X size={10} />
+                </button>
+            )}
         </div>
     );
 };
@@ -828,6 +840,7 @@ export const TaskItem = forwardRef(({ task, onUpdate, showTags, showFolders, fol
                                                         attachment={att}
                                                         availableLabels={availableLabels}
                                                         onClick={onAttachmentClick}
+                                                        onDelete={() => handleUnlinkAttachment(att._id)}
                                                     />
                                                 ))}
                                             </DndContext>

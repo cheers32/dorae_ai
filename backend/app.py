@@ -919,7 +919,7 @@ def get_agents():
                     {'assigned_agent_ids': agent_id}
                 ],
                 'status': {'$nin': ['Closed', 'completed', 'Deleted', 'deleted']}
-            }, {'title': 1, 'status': 1, 'labels': 1}))
+            }, {'title': 1, 'status': 1, 'labels': 1, 'assigned_agent_ids': 1}))
             agent['active_tasks'] = [serialize_doc(t) for t in tasks]
 
         return jsonify([serialize_doc(a) for a in agents]), 200

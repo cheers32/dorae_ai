@@ -14,6 +14,7 @@ import {
     Plus,
     ChevronUp,
     ChevronDown,
+    ListTodo,
 } from 'lucide-react';
 import { useDroppable, useDraggable, DndContext, PointerSensor, useSensor, useSensors } from '@dnd-kit/core';
 import { UpdatesTimeline } from './UpdatesTimeline';
@@ -38,7 +39,7 @@ const AVAILABLE_SKILLS = [
 ];
 
 // Draggable Task Chip Component
-const DraggableTaskChip = ({ task, labelColor }) => {
+const DraggableTaskChip = ({ task, labelColor, onRemove }) => {
     const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
         id: `agent-task-${task._id}`,
         data: { task, type: 'agent-task-chip' }
@@ -55,7 +56,7 @@ const DraggableTaskChip = ({ task, labelColor }) => {
             ref={setNodeRef}
             {...attributes}
             {...listeners}
-            className="border px-2.5 py-1 rounded-lg text-xs font-medium flex items-center gap-1.5 shadow-sm transition-colors"
+            className="border px-2.5 py-1 rounded-lg text-xs font-medium flex items-center gap-1.5 shadow-sm transition-colors group/chip"
             style={{
                 ...style,
                 backgroundColor: `${labelColor}1a`,
@@ -71,6 +72,18 @@ const DraggableTaskChip = ({ task, labelColor }) => {
                 }}
             ></span>
             <span className="truncate max-w-[150px] text-gray-300">{task.title}</span>
+            {onRemove && (
+                <button
+                    className="ml-0.5 p-0.5 rounded-full hover:bg-white/10 text-gray-400 hover:text-white transition-colors opacity-0 group-hover/chip:opacity-100"
+                    onClick={(e) => {
+                        e.stopPropagation();
+                        onRemove();
+                    }}
+                    onPointerDown={(e) => e.stopPropagation()} // Prevent drag start
+                >
+                    <X size={10} />
+                </button>
+            )}
         </div>
     );
 };
@@ -265,6 +278,12 @@ export const AgentItem = ({ agent, onFocus, onDelete, isFocused, availableLabels
                         <Zap size={10} />
                         <span>{agent.skills?.length || 0} Skills</span>
                     </div>
+                    {agent.active_tasks?.length > 0 && (
+                        <div className="flex items-center gap-1.5 px-2 py-0.5 rounded text-[10px] uppercase font-bold tracking-wider bg-blue-500/10 text-blue-400">
+                            <ListTodo size={10} />
+                            <span>{agent.active_tasks.length} Tasks</span>
+                        </div>
+                    )}
 
                     {/* Actions */}
                     <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity" onClick={e => e.stopPropagation()}>
@@ -346,7 +365,23 @@ export const AgentItem = ({ agent, onFocus, onDelete, isFocused, availableLabels
                                         <div className="flex flex-wrap gap-2">
                                             {agent.active_tasks.slice(0, attachmentLimit || 5).map(task => {
                                                 const labelColor = availableLabels?.find(l => l.name === task.labels?.[0])?.color || '#3B82F6';
-                                                return <DraggableTaskChip key={task._id} task={task} labelColor={labelColor} />;
+                                                return (
+                                                    <DraggableTaskChip
+                                                        key={task._id}
+                                                        task={task}
+                                                        labelColor={labelColor}
+                                                        onRemove={async () => {
+                                                            // Unassign logic
+                                                            const currentIds = task.assigned_agent_ids || [];
+                                                            // Fallback for legacy if not array (though backend should handle now)
+                                                            // Filter out this agent
+                                                            const newIds = currentIds.filter(id => id !== agent._id);
+                                                            await api.updateTask(task._id, { assigned_agent_ids: newIds });
+                                                            window.dispatchEvent(new CustomEvent('agent-updated'));
+                                                            window.dispatchEvent(new CustomEvent('task-created')); // Trigger task list refresh
+                                                        }}
+                                                    />
+                                                );
                                             })}
                                             {agent.active_tasks.length > (attachmentLimit || 5) && (
                                                 <div
