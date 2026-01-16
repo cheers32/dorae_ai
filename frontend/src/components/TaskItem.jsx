@@ -600,8 +600,29 @@ export const TaskItem = forwardRef(({ task, onUpdate, showTags, showFolders, fol
                     </span>
 
                     {!isOverlay && (expanded || globalExpanded) && (
-                        <div className="mt-2.5">
-                        </div>
+                        isWorkarea ? (
+                            <button
+                                className="p-1 px-2 text-[10px] font-bold uppercase tracking-wider bg-red-500/10 text-red-400 hover:bg-red-500/20 rounded border border-red-500/20 transition-colors"
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    if (onRemoveFromWorkarea) onRemoveFromWorkarea();
+                                }}
+                                title="Remove from Focus"
+                            >
+                                Unfocus
+                            </button>
+                        ) : (
+                            <button
+                                className="p-1 px-2 text-[10px] font-bold uppercase tracking-wider bg-blue-500/10 text-blue-400 hover:bg-blue-500/20 rounded border border-blue-500/20 transition-colors"
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    if (onSendToWorkarea) onSendToWorkarea();
+                                }}
+                                title="Set as Current Focus"
+                            >
+                                Focus
+                            </button>
+                        )
                     )}
                 </div>
             </div>
@@ -676,13 +697,31 @@ export const TaskItem = forwardRef(({ task, onUpdate, showTags, showFolders, fol
                                         </button>
                                     </div>
                                 ) : (
-                                    <button
-                                        className="p-1.5 text-gray-500 hover:text-red-400 transition-colors"
-                                        onClick={(e) => { e.stopPropagation(); setIsDeleting(true); }}
-                                        title="Delete Task"
-                                    >
-                                        <Trash2 size={14} />
-                                    </button>
+                                    <div className="flex items-center gap-1">
+                                        <button
+                                            className="p-1.5 text-gray-500 hover:text-red-400 transition-colors"
+                                            onClick={(e) => { e.stopPropagation(); setIsDeleting(true); }}
+                                            title="Delete Task"
+                                        >
+                                            <Trash2 size={14} />
+                                        </button>
+                                        <button
+                                            className={`p-1.5 text-gray-500 hover:text-blue-400 transition-colors ${isEditingTitle ? 'text-blue-400 bg-blue-400/10 rounded' : ''}`}
+                                            onMouseDown={(e) => e.preventDefault()}
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                if (isEditingTitle) {
+                                                    handleSaveTitle();
+                                                } else {
+                                                    setIsEditingTitle(true);
+                                                    setEditedTitle(task.title);
+                                                }
+                                            }}
+                                            title={isEditingTitle ? "Save Title" : "Edit Title"}
+                                        >
+                                            <Pencil size={14} />
+                                        </button>
+                                    </div>
                                 )}
                                 <div className="flex items-center gap-2">
                                     <button
@@ -695,17 +734,6 @@ export const TaskItem = forwardRef(({ task, onUpdate, showTags, showFolders, fol
                                         {isCompleting ? 'Completing...' : 'Complete'}
                                     </button>
                                     <button
-                                        className="p-1.5 text-gray-500 hover:text-blue-400 transition-colors"
-                                        onClick={(e) => {
-                                            e.stopPropagation();
-                                            setIsEditingTitle(true);
-                                            setEditedTitle(task.title);
-                                        }}
-                                        title="Edit Title"
-                                    >
-                                        <Pencil size={14} />
-                                    </button>
-                                    <button
                                         className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium text-blue-400 hover:bg-blue-400/10 transition-colors"
                                         onClick={handleAnalyzeTask}
                                         disabled={isSubmitting}
@@ -713,33 +741,7 @@ export const TaskItem = forwardRef(({ task, onUpdate, showTags, showFolders, fol
                                         <Sparkles size={14} />
                                         {isSubmitting ? 'Analyzing...' : 'AI Analyze'}
                                     </button>
-                                    {!isOverlay && (
-                                        <>
-                                            {isWorkarea ? (
-                                                <button
-                                                    className="p-1 px-2 text-[10px] font-bold uppercase tracking-wider bg-red-500/10 text-red-400 hover:bg-red-500/20 rounded border border-red-500/20 transition-colors"
-                                                    onClick={(e) => {
-                                                        e.stopPropagation();
-                                                        if (onRemoveFromWorkarea) onRemoveFromWorkarea();
-                                                    }}
-                                                    title="Remove from Focus"
-                                                >
-                                                    Unfocus
-                                                </button>
-                                            ) : (
-                                                <button
-                                                    className="p-1 px-2 text-[10px] font-bold uppercase tracking-wider bg-blue-500/10 text-blue-400 hover:bg-blue-500/20 rounded border border-blue-500/20 transition-colors"
-                                                    onClick={(e) => {
-                                                        e.stopPropagation();
-                                                        if (onSendToWorkarea) onSendToWorkarea();
-                                                    }}
-                                                    title="Set as Current Focus"
-                                                >
-                                                    Focus
-                                                </button>
-                                            )}
-                                        </>
-                                    )}
+
                                 </div>
                             </div>
                         </div>
