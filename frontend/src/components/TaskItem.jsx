@@ -263,7 +263,8 @@ export const TaskItem = forwardRef(({ task, onUpdate, showTags, showFolders, fol
     showCounts = false,
     agents = [],
     onToggleExpand, // [NEW] Callback for expansion tracking
-    onSearch // [NEW] Callback for chip search
+    onSearch, // [NEW] Callback for chip search
+    showPulse // [NEW] Pulse preference
 }, ref) => {
     const [expanded, setExpanded] = useState(defaultExpanded || false);
     const [isSubmitting, setIsSubmitting] = useState(false);
@@ -539,6 +540,13 @@ export const TaskItem = forwardRef(({ task, onUpdate, showTags, showFolders, fol
                             <ChevronRight size={16} strokeWidth={3} />
                         </div>
                     ) : null}
+
+                    {/* Priority Top Marker */}
+                    {localLabels.includes('Priority') && (
+                        <div className={`mr-1.5 text-red-500 font-bold text-[10px] uppercase tracking-wider shrink-0 ${showPulse ? 'animate-pulse' : ''}`}>
+                            Top
+                        </div>
+                    )}
 
                     <div
                         className={`p-1 text-gray-600 hover:text-gray-400 transition-colors ${expanded ? 'cursor-pointer' : 'cursor-grab active:cursor-grabbing'}`}

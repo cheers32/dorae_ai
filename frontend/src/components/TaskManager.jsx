@@ -64,6 +64,7 @@ export const TaskManager = () => {
     const [globalExpanded, setGlobalExpanded] = useState(() => localStorage.getItem('task_manager_global_expanded') === 'true');
     const [showFullTitles, setShowFullTitles] = useState(() => localStorage.getItem('task_manager_show_full_titles') === 'true');
     const [showPreview, setShowPreview] = useState(() => localStorage.getItem('task_manager_show_preview') === 'true');
+    const [showPulse, setShowPulse] = useState(() => localStorage.getItem('task_manager_show_pulse') === 'true');
     const [showDebugInfo, setShowDebugInfo] = useState(() => localStorage.getItem('task_manager_show_debug_info') === 'true');
     const [fontSize, setFontSize] = useState(() => {
         const saved = localStorage.getItem('task_list_font_size');
@@ -532,6 +533,10 @@ export const TaskManager = () => {
     }, [showPreview]);
 
     useEffect(() => {
+        localStorage.setItem('task_manager_show_pulse', showPulse);
+    }, [showPulse]);
+
+    useEffect(() => {
         localStorage.setItem('task_manager_show_debug_info', showDebugInfo);
     }, [showDebugInfo]);
 
@@ -676,9 +681,7 @@ export const TaskManager = () => {
             // Assuming we can pass it as 3rd arg or object: check api.js? 
             // Since tool access is limited to files I know... I should check API if possible?
             // User said "backend/app.py", but frontend `api.js` is the clearer contract.
-            // Let's assume I can pass an object or update `api` calls. 
-            // Wait, I can't check `api.js` easily without a tool call.
-            // But let's assume I need to pass it.
+            // Let's assume I can pass it.
             // Standardizing: createTask(title, labels, folderId)
             await api.createTask(newTaskTitle, labelsToApply, folderId);
 
@@ -1445,6 +1448,14 @@ export const TaskManager = () => {
                                                     </button>
 
                                                     <button
+                                                        onClick={() => { setShowPulse(!showPulse); setIsMenuOpen(false); }}
+                                                        className={`w-full px-4 py-2 text-left flex items-center gap-3 transition-colors hover:bg-white/5 ${showPulse ? 'text-blue-400' : 'text-gray-400'}`}
+                                                    >
+                                                        <Zap size={16} />
+                                                        <span className="text-xs font-medium">{showPulse ? 'Disable Pulse' : 'Enable Pulse'}</span>
+                                                    </button>
+
+                                                    <button
                                                         onClick={() => { setShowDebugInfo(!showDebugInfo); setIsMenuOpen(false); }}
                                                         className={`w-full px-4 py-2 text-left flex items-center gap-3 transition-colors hover:bg-white/5 ${showDebugInfo ? 'text-blue-400' : 'text-gray-400'}`}
                                                     >
@@ -1696,7 +1707,8 @@ export const TaskManager = () => {
                                                         onTaskClick={() => handleNavigateToTask(item)}
                                                         globalExpanded={globalExpanded}
                                                         showFullTitles={showFullTitles}
-                                                        showPreview={showPreview}
+                                                        showPreview={showPreview && !(globalExpanded || expandedTaskIds.has(item._id))}
+                                                        showPulse={showPulse}
                                                         showDebugInfo={showDebugInfo}
                                                         fontSize={fontSize}
                                                         timelineLimit={timelineLimit}
@@ -1821,6 +1833,7 @@ export const TaskManager = () => {
                                                                     className="bg-gray-900 border border-gray-800 rounded px-2 py-1 text-gray-300 focus:outline-none focus:border-blue-500/50"
                                                                 >
                                                                     <option value={10}>10</option>
+                                                                    <option value={20}>20</option>
                                                                     <option value={25}>25</option>
                                                                     <option value={50}>50</option>
                                                                     <option value={100}>100</option>

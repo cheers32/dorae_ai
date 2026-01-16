@@ -792,12 +792,14 @@ def analyze_folder_priority(folder_id):
                         )
                     )
                 else:
-                    # Remove Priority label if it exists (Cleanup)
-                    # Optional: Do we reset priority to medium? Maybe not, just remove label.
+                    # Remove Priority label and reset priority to medium (Override)
                     operations.append(
                         UpdateOne(
                             {"_id": task['_id']},
-                            {"$pull": {"labels": "Priority"}}
+                            {
+                                "$pull": {"labels": "Priority"},
+                                "$set": {"priority": "medium"}
+                            }
                         )
                     )
 
@@ -866,7 +868,10 @@ def analyze_all_active_priority():
                     operations.append(
                         UpdateOne(
                             {"_id": task['_id']},
-                            {"$pull": {"labels": "Priority"}}
+                            {
+                                "$pull": {"labels": "Priority"},
+                                "$set": {"priority": "medium"}
+                            }
                         )
                     )
 

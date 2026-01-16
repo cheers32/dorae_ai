@@ -138,10 +138,13 @@ class AIService:
         Analyze the following tasks and identify which ones should be considered "Top" priority.
         
         Criteria for "Top" Priority:
-        - Must be done immediately (Urgent).
-        - High impact or critical path items.
-        - "Fix" tasks for broken production items.
+        - **URGENT / EMERGENCY**: Tasks that convey a sense of immediate deadline, emergency, "ASAP", "Now", or "Immediate".
+        - **Critical Fixes**: "Fix" tasks for broken production items or blockers.
+        - **High Impact**: Critical path items that block other work.
         - Explicitly high leverage activities.
+        
+        **IMPORTANT**: If a task mentions "emergency", "urgent", "ASAP", or implies immediate action is required, it MUST be marked as Top priority.
+        **NOTE**: Ignore spelling errors or typos (e.g., "immeditately", "urgnet"). If the intent is urgent, mark it.
         
         Tasks:
         {tasks_text}
