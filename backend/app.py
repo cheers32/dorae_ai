@@ -641,7 +641,6 @@ def analyze_folder_importance(folder_id):
 
         # Run AI Analysis
         analysis_result = ai_service.analyze_importance(tasks)
-        print(f"DEBUG: AI Analysis Result: {analysis_result}")
         
         # Handle both list and dict return types for backward compatibility safety
         if isinstance(analysis_result, list):
@@ -688,28 +687,38 @@ def analyze_folder_importance(folder_id):
                     {"$set": {"color": notable_label_color}}
                 )
 
-            # Process Critical Tasks
-            for task_id in critical_ids:
-                operations.append(
-                    UpdateOne(
-                        {"_id": ObjectId(task_id)},
-                        {
-                            "$addToSet": {"labels": "Important"},
-                            "$pull": {"labels": "Notable"} # Upgrade Notable to Important if both present
-                        }
-                    )
-                )
+            # Convert ID lists to set of strings for fast lookup and safety
+            critical_set = set(str(uid) for uid in critical_ids)
+            # Remove any critical IDs from notable set to enforce priority
+            notable_set = set(str(uid) for uid in notable_ids) - critical_set
             
-            # Process Notable Tasks
-            for task_id in notable_ids:
-                # Only add "Notable" if not already "Important" (priority rule)
-                # But here we just add it, the frontend usually renders all. 
-                # However, cleaner data: if ID is in critical_ids, don't add Notable.
-                if task_id not in critical_ids:
+            # Iterate over ALL analyzed tasks to enforce state (Override previous markings)
+            for task in tasks:
+                t_id_str = str(task['_id'])
+                
+                if t_id_str in critical_set:
+                    # Mark as Critical (Important), remove Notable
+                    # Split into two ops to avoid conflict on 'labels' path
+                    operations.append(
+                        UpdateOne({"_id": task['_id']}, {"$pull": {"labels": "Notable"}})
+                    )
+                    operations.append(
+                        UpdateOne({"_id": task['_id']}, {"$addToSet": {"labels": "Important"}})
+                    )
+                elif t_id_str in notable_set:
+                    # Mark as Notable, remove Important
+                    operations.append(
+                        UpdateOne({"_id": task['_id']}, {"$pull": {"labels": "Important"}})
+                    )
+                    operations.append(
+                        UpdateOne({"_id": task['_id']}, {"$addToSet": {"labels": "Notable"}})
+                    )
+                else:
+                     # Not recognized as Critical or Notable -> Clear both labels
                      operations.append(
                         UpdateOne(
-                            {"_id": ObjectId(task_id)},
-                            {"$addToSet": {"labels": "Notable"}}
+                            {"_id": task['_id']},
+                            {"$pull": {"labels": {"$in": ["Important", "Notable"]}}}
                         )
                     )
 
@@ -739,7 +748,6 @@ def analyze_all_active_importance():
 
         # Run AI Analysis
         analysis_result = ai_service.analyze_importance(tasks)
-        print(f"DEBUG: Global AI Analysis Result: {analysis_result}")
         
         if isinstance(analysis_result, list):
             critical_ids = analysis_result
@@ -785,23 +793,36 @@ def analyze_all_active_importance():
                     {"$set": {"color": notable_label_color}}
                 )
 
-            for task_id in critical_ids:
-                operations.append(
-                    UpdateOne(
-                        {"_id": ObjectId(task_id)},
-                        {
-                            "$addToSet": {"labels": "Important"},
-                            "$pull": {"labels": "Notable"}
-                        }
+            # Convert ID lists to set of strings for fast lookup and safety
+            critical_set = set(str(uid) for uid in critical_ids)
+            notable_set = set(str(uid) for uid in notable_ids) - critical_set
+            
+            # Iterate over ALL analyzed tasks to enforce state
+            for task in tasks:
+                t_id_str = str(task['_id'])
+                
+                if t_id_str in critical_set:
+                    # Mark as Critical
+                    operations.append(
+                        UpdateOne({"_id": task['_id']}, {"$pull": {"labels": "Notable"}})
                     )
-                )
-
-            for task_id in notable_ids:
-                if task_id not in critical_ids:
+                    operations.append(
+                        UpdateOne({"_id": task['_id']}, {"$addToSet": {"labels": "Important"}})
+                    )
+                elif t_id_str in notable_set:
+                    # Mark as Notable
+                    operations.append(
+                        UpdateOne({"_id": task['_id']}, {"$pull": {"labels": "Important"}})
+                    )
+                    operations.append(
+                        UpdateOne({"_id": task['_id']}, {"$addToSet": {"labels": "Notable"}})
+                    )
+                else:
+                    # Clear both logic
                     operations.append(
                         UpdateOne(
-                            {"_id": ObjectId(task_id)},
-                            {"$addToSet": {"labels": "Notable"}}
+                            {"_id": task['_id']},
+                            {"$pull": {"labels": {"$in": ["Important", "Notable"]}}}
                         )
                     )
             
