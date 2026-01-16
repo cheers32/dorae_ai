@@ -372,10 +372,15 @@ export const AgentItem = ({ agent, onFocus, onDelete, isFocused, availableLabels
                                                         labelColor={labelColor}
                                                         onRemove={async () => {
                                                             // Unassign logic
-                                                            const currentIds = task.assigned_agent_ids || [];
-                                                            // Fallback for legacy if not array (though backend should handle now)
-                                                            // Filter out this agent
-                                                            const newIds = currentIds.filter(id => id !== agent._id);
+                                                            let currentIds = task.assigned_agent_ids || [];
+                                                            // Fallback for legacy
+                                                            if (currentIds.length === 0 && task.assigned_agent_id) {
+                                                                currentIds = [task.assigned_agent_id];
+                                                            }
+
+                                                            // Filter out this agent (ensure string comparison)
+                                                            const newIds = currentIds.filter(id => String(id) !== String(agent._id));
+
                                                             await api.updateTask(task._id, { assigned_agent_ids: newIds });
                                                             window.dispatchEvent(new CustomEvent('agent-updated'));
                                                             window.dispatchEvent(new CustomEvent('task-created')); // Trigger task list refresh

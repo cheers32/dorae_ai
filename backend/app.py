@@ -369,6 +369,10 @@ def update_task(task_id):
         if not current_task:
              return jsonify({"error": "Task not found"}), 404
 
+        # [FIX] Clear legacy 'assigned_agent_id' if we are updating 'assigned_agent_ids'
+        if 'assigned_agent_ids' in data:
+            update_fields['assigned_agent_id'] = None
+
         if 'status' in data:
             new_status = data['status']
             if new_status == 'Closed':
