@@ -1,7 +1,20 @@
 import React, { useState } from 'react';
 import { api } from '../api';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Brain, Cpu, MessageSquare, Zap, Target, Layers, Pencil, Trash2, Check, X, Clock, Plus } from 'lucide-react';
+import {
+    Brain,
+    Cpu,
+    MessageSquare,
+    Zap,
+    Pencil,
+    Trash2,
+    Check,
+    X,
+    Clock,
+    Plus,
+    ChevronUp,
+    ChevronDown,
+} from 'lucide-react';
 import { useDroppable, useDraggable, DndContext, PointerSensor, useSensor, useSensors } from '@dnd-kit/core';
 import { UpdatesTimeline } from './UpdatesTimeline';
 import ReactMarkdown from 'react-markdown';
@@ -25,7 +38,7 @@ const AVAILABLE_SKILLS = [
 ];
 
 // Draggable Task Chip Component
-const DraggableTaskChip = ({ task, labelColor, onUnassign }) => {
+const DraggableTaskChip = ({ task, labelColor }) => {
     const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
         id: `agent-task-${task._id}`,
         data: { task, type: 'agent-task-chip' }
@@ -62,12 +75,13 @@ const DraggableTaskChip = ({ task, labelColor, onUnassign }) => {
     );
 };
 
-export const AgentItem = ({ agent, onFocus, onEdit, onDelete, isFocused, availableLabels }) => {
+export const AgentItem = ({ agent, onFocus, onDelete, isFocused, availableLabels }) => {
     const { setNodeRef, isOver } = useDroppable({
         id: `agent-${agent._id}`,
         data: { type: 'agent', agent }
     });
 
+    const [expanded, setExpanded] = useState(false);
     const [showChat, setShowChat] = useState(false);
     const [chatInput, setChatInput] = useState('');
     const [chatMessages, setChatMessages] = useState([
@@ -81,8 +95,8 @@ export const AgentItem = ({ agent, onFocus, onEdit, onDelete, isFocused, availab
     const [localName, setLocalName] = useState(agent.name);
     const [isDeleting, setIsDeleting] = useState(false);
 
-    const [showNotes, setShowNotes] = useState(false); // [NEW]
-    const [showSkills, setShowSkills] = useState(false); // Skill management modal
+    const [showNotes, setShowNotes] = useState(false);
+    const [showSkills, setShowSkills] = useState(false);
     const chatEndRef = React.useRef(null);
 
     // Sync local state when agent prop changes
@@ -109,11 +123,9 @@ export const AgentItem = ({ agent, onFocus, onEdit, onDelete, isFocused, availab
         setIsChatLoading(true);
 
         try {
-            // Pass agent ID to filter tasks, but use default Gemini persona
             const data = await api.chatWithAI(userMsg, agent._id);
             setChatMessages(prev => [...prev, { role: 'ai', text: data.reply }]);
 
-            // If a task was created, refresh the task list and agent data
             if (data.task_created) {
                 window.dispatchEvent(new CustomEvent('task-created'));
                 window.dispatchEvent(new CustomEvent('agent-updated'));
@@ -135,7 +147,6 @@ export const AgentItem = ({ agent, onFocus, onEdit, onDelete, isFocused, availab
             });
             setLocalName(editedName);
             setIsEditing(false);
-            // Trigger refresh in parent
             window.dispatchEvent(new CustomEvent('agent-updated'));
         } catch (err) {
             console.error(err);
@@ -175,14 +186,11 @@ export const AgentItem = ({ agent, onFocus, onEdit, onDelete, isFocused, availab
 
     const handleTaskChipDragEnd = async (event) => {
         const { active, over } = event;
-
-        // If dropped outside (no over target), unassign the task
         if (!over && active.data.current?.type === 'agent-task-chip') {
             const task = active.data.current.task;
             try {
                 await api.updateTask(task._id, { assigned_agent_id: null });
                 await api.addUpdate(task._id, `Unassigned from agent: ${agent.name}`, 'execution');
-                // Trigger refresh
                 window.dispatchEvent(new CustomEvent('agent-updated'));
             } catch (err) {
                 console.error('Failed to unassign task:', err);
@@ -190,424 +198,275 @@ export const AgentItem = ({ agent, onFocus, onEdit, onDelete, isFocused, availab
         }
     };
 
-
-
     return (
         <motion.div
             layout
             ref={setNodeRef}
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.95 }}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
             className={`
-                relative p-5 rounded-2xl border transition-all duration-300 group
-                ${isFocused
-                    ? 'bg-white/[0.03] border-white/5 shadow-inner'
-                    : 'bg-white/5 border-white/10 hover:border-white/20 hover:bg-white/10'
+                group transition-all duration-200 bg-transparent
+                ${expanded
+                    ? 'mb-4 rounded-xl bg-blue-500/5 border-blue-500/30 border shadow-lg'
+                    : 'border-b border-white/5 border-l-4 border-l-transparent hover:bg-white/[0.03]'
                 }
-                ${isOver ? 'ring-2 ring-blue-400 bg-blue-500/20 scale-[1.02]' : ''}
+                ${isOver ? 'ring-2 ring-blue-400 bg-blue-500/20' : ''}
             `}
         >
-
-
-            <div className="flex items-start justify-between mb-4">
-                <div className="flex items-center gap-4">
-                    <div className={`
-                        p-3 rounded-xl flex items-center justify-center
-                        bg-gradient-to-br from-purple-500/20 to-blue-500/20 text-blue-300
-                    `}>
-                        <Brain size={24} />
-                    </div>
-                    <div>
-                        <div>
-                            {isEditing ? (
-                                <div className="flex flex-col gap-2 min-w-[200px]">
-                                    <input
-                                        type="text"
-                                        value={editedName}
-                                        onChange={(e) => setEditedName(e.target.value)}
-                                        className="text-lg font-bold text-white tracking-tight bg-white/5 border border-blue-500/50 rounded px-2 py-1 focus:outline-none focus:border-blue-500 w-full"
-                                        placeholder="Agent Name"
-                                    />
-                                    <input
-                                        type="text"
-                                        value={editedRole}
-                                        onChange={(e) => setEditedRole(e.target.value)}
-                                        className="text-sm font-medium text-gray-400 bg-white/5 border border-blue-500/50 rounded px-2 py-1 focus:outline-none focus:border-blue-500 w-full"
-                                        placeholder="Agent Role"
-                                    />
-                                </div>
-                            ) : (
-                                <>
-                                    <h3 className="text-lg font-bold text-white tracking-tight">{localName}</h3>
-                                    <p className="text-sm text-gray-400 font-medium">{agent.role}</p>
-                                </>
-                            )}
-                        </div>
-                    </div>
+            {/* Header / Row */}
+            <div
+                className="flex items-center gap-4 cursor-pointer px-4 py-3 select-none"
+                onClick={() => setExpanded(!expanded)}
+            >
+                {/* Expand Icon */}
+                <div className={`p-1 text-gray-600 hover:text-gray-400 transition-colors`}>
+                    {expanded ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
                 </div>
 
+                {/* Agent Icon */}
+                <div className={`
+                    p-1.5 rounded-lg flex items-center justify-center shrink-0
+                    ${isFocused ? 'bg-blue-500/20 text-blue-300' : 'bg-white/5 text-gray-500 group-hover:bg-white/10 group-hover:text-gray-300'}
+                `}>
+                    <Brain size={18} />
+                </div>
+
+                {/* Name & Role */}
+                <div className="flex-1 min-w-0 flex items-center gap-3">
+                    {isEditing ? (
+                        <div className="flex items-center gap-2 flex-1" onClick={e => e.stopPropagation()}>
+                            <input
+                                type="text"
+                                value={editedName}
+                                onChange={(e) => setEditedName(e.target.value)}
+                                className="bg-black/40 border border-blue-500/50 rounded px-2 py-0.5 text-white text-sm font-medium focus:outline-none w-32"
+                                placeholder="Name"
+                            />
+                            <input
+                                type="text"
+                                value={editedRole}
+                                onChange={(e) => setEditedRole(e.target.value)}
+                                className="bg-black/40 border border-blue-500/50 rounded px-2 py-0.5 text-gray-400 text-xs focus:outline-none flex-1"
+                                placeholder="Role"
+                            />
+                        </div>
+                    ) : (
+                        <div className="flex items-baseline gap-3 truncate">
+                            <h3 className="text-sm font-medium text-gray-200">{localName}</h3>
+                            <span className="text-xs text-gray-500">{agent.role}</span>
+                        </div>
+                    )}
+                </div>
+
+                {/* Status/Badge */}
                 <div className="flex items-center gap-3">
-                    <div className="opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-3">
+                    <div className="flex items-center gap-1.5 px-2 py-0.5 rounded text-[10px] uppercase font-bold tracking-wider bg-white/5 text-gray-500">
+                        <Zap size={10} />
+                        <span>{agent.skills?.length || 0} Skills</span>
+                    </div>
+
+                    {/* Actions */}
+                    <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity" onClick={e => e.stopPropagation()}>
                         {isDeleting ? (
                             <div className="flex items-center gap-1">
-                                <button
-                                    className="p-1.5 text-gray-500 hover:text-gray-300 transition-colors"
-                                    onClick={(e) => { e.stopPropagation(); setIsDeleting(false); }}
-                                    title="Cancel"
-                                >
+                                <button className="p-1 text-gray-500 hover:text-gray-300 transition-colors" onClick={() => setIsDeleting(false)}>
                                     <X size={14} />
                                 </button>
-                                <button
-                                    className="p-1.5 text-green-400 hover:text-green-300 transition-colors bg-green-400/10 rounded"
-                                    onClick={confirmDelete}
-                                    title="Confirm Delete"
-                                >
+                                <button className="p-1 text-green-400 hover:text-green-300 transition-colors" onClick={confirmDelete}>
+                                    <Check size={14} />
+                                </button>
+                            </div>
+                        ) : isEditing ? (
+                            <div className="flex items-center gap-1">
+                                <button className="p-1 text-gray-500 hover:text-gray-300 transition-colors" onClick={() => { setIsEditing(false); setEditedName(localName); }}>
+                                    <X size={14} />
+                                </button>
+                                <button className="p-1 text-green-400 hover:text-green-300 transition-colors" onClick={handleSaveProfile}>
                                     <Check size={14} />
                                 </button>
                             </div>
                         ) : (
-                            isEditing ? (
-                                <div className="flex items-center gap-1">
-                                    <button
-                                        className="p-1.5 text-gray-500 hover:text-gray-300 transition-colors"
-                                        onClick={() => { setIsEditing(false); setEditedName(localName); }}
-                                        title="Cancel"
-                                    >
-                                        <X size={14} />
-                                    </button>
-                                    <button
-                                        className="p-1.5 text-green-400 hover:text-green-300 transition-colors bg-green-400/10 rounded"
-                                        onClick={handleSaveProfile}
-                                        title="Save Profile"
-                                    >
-                                        <Check size={14} />
-                                    </button>
-                                </div>
-                            ) : (
-                                <>
-                                    <button
-                                        onClick={() => setIsEditing(true)}
-                                        className="p-1.5 text-gray-500 hover:text-blue-400 transition-colors"
-                                        title="Edit Profile"
-                                    >
-                                        <Pencil size={14} />
-                                    </button>
-                                    <button
-                                        onClick={(e) => { e.stopPropagation(); setIsDeleting(true); }}
-                                        className="p-1.5 text-gray-500 hover:text-red-400 transition-colors"
-                                        title="Delete Agent"
-                                    >
-                                        <Trash2 size={14} />
-                                    </button>
-                                </>
-                            )
+                            <>
+                                <button
+                                    onClick={() => onFocus(agent)}
+                                    className={`
+                                        p-1 rounded text-[10px] font-bold uppercase tracking-wider border transition-colors
+                                        ${isFocused
+                                            ? 'bg-red-500/10 text-red-400 border-red-500/20 hover:bg-red-500/20'
+                                            : 'bg-blue-500/10 text-blue-400 border-blue-500/20 hover:bg-blue-500/20'
+                                        }
+                                    `}
+                                >
+                                    {isFocused ? 'Unfocus' : 'Focus'}
+                                </button>
+                                <button onClick={() => setIsEditing(true)} className="p-1 text-gray-500 hover:text-blue-400 transition-colors">
+                                    <Pencil size={14} />
+                                </button>
+                                <button onClick={() => setIsDeleting(true)} className="p-1 text-gray-500 hover:text-red-400 transition-colors">
+                                    <Trash2 size={14} />
+                                </button>
+                            </>
                         )}
-                        <button
-                            onClick={() => onFocus(agent)}
-                            className={`
-                                px-3 py-1.5 rounded-lg text-xs font-bold uppercase tracking-wider transition-all border
-                                ${isFocused
-                                    ? 'bg-red-500/10 text-red-400 hover:bg-red-500/20 border-red-500/20'
-                                    : 'bg-white/5 text-gray-400 hover:bg-blue-500 hover:text-white border-transparent'
-                                }
-                            `}
-                        >
-                            {isFocused ? 'Unfocus' : 'Focus'}
-                        </button>
-                    </div>
-
-                    <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-white/5 border border-white/10 text-[10px] font-medium uppercase tracking-widest text-gray-400">
-                        <span>Active Skills</span>
-                        <span className="w-px h-3 bg-white/10 mx-0.5"></span>
-                        <span className="flex items-center gap-1 text-blue-400">
-                            <Zap size={10} />
-                            {agent.skills?.length || 0}
-                        </span>
                     </div>
                 </div>
             </div>
 
-            {isEditing ? (
-                <div className="mb-6">
-                    <textarea
-                        value={editedDescription}
-                        onChange={(e) => setEditedDescription(e.target.value)}
-                        placeholder="Enter system instructions / description for this agent..."
-                        rows={3}
-                        className="w-full bg-white/5 border border-blue-500/50 rounded-lg px-3 py-2 text-sm text-gray-300 focus:outline-none focus:border-blue-500 leading-relaxed custom-scrollbar"
-                    />
-                </div>
-            ) : (
-                (!agent.active_tasks || agent.active_tasks.length === 0) && (
-                    <p className="text-sm text-gray-400 mb-6 leading-relaxed">
-                        {agent.description || "Ready to assist with your tasks. Drag tasks here to assign."}
-                    </p>
-                )
-            )}
-
-            {/* Assigned Tasks Chips */}
-            {agent.active_tasks && agent.active_tasks.length > 0 && (
-                <DndContext sensors={sensors} onDragEnd={handleTaskChipDragEnd}>
-                    <div className="flex flex-wrap gap-2 mb-4">
-                        {agent.active_tasks.map(task => {
-                            const labelColor = availableLabels?.find(l => l.name === task.labels?.[0])?.color || '#3B82F6';
-                            return (
-                                <DraggableTaskChip
-                                    key={task._id}
-                                    task={task}
-                                    labelColor={labelColor}
-                                />
-                            );
-                        })}
-                    </div>
-                </DndContext>
-            )}
-
-            <div className="space-y-3">
-
-                <div className="grid grid-cols-2 gap-2">
-                    {/* Context Chat Toggle */}
-                    <button
-                        onClick={() => setShowChat(!showChat)}
-                        className={`
-                            p-2 rounded-lg border flex items-center gap-2 transition-all
-                            ${showChat
-                                ? 'bg-purple-500/20 border-purple-500/50 text-purple-300'
-                                : 'bg-black/20 border-white/5 text-gray-300 hover:bg-white/5 hover:border-white/10'
-                            }
-                        `}
-                    >
-                        <MessageSquare size={14} className={showChat ? "text-purple-300" : "text-purple-400"} />
-                        <span className="text-xs">Context Chat</span>
-                    </button>
-
-                    {/* Notes Toggle */}
-                    <button
-                        onClick={() => setShowNotes(!showNotes)}
-                        className={`
-                            p-2 rounded-lg border flex items-center gap-2 transition-all
-                            ${showNotes
-                                ? 'bg-yellow-500/20 border-yellow-500/50 text-yellow-300'
-                                : 'bg-black/20 border-white/5 text-gray-300 hover:bg-white/5 hover:border-white/10'
-                            }
-                        `}
-                    >
-                        <Pencil size={14} className={showNotes ? "text-yellow-300" : "text-yellow-400"} />
-                        <span className="text-xs">Notes ({agent.notes?.length || 0})</span>
-                    </button>
-
-                    <button
-                        onClick={() => setShowSkills(!showSkills)}
-                        className={`
-                            col-span-2 border rounded-lg p-2 flex items-center justify-center gap-2 transition-all
-                            ${showSkills
-                                ? 'border-green-500/50 bg-green-500/20 text-green-300'
-                                : 'border-dashed border-white/10 text-gray-600 hover:text-gray-400 hover:border-white/20 cursor-pointer group/skill'
-                            }
-                        `}
-                    >
-                        <Cpu size={14} />
-                        <span className="text-xs">{showSkills ? 'Close Skills' : 'Add AI Skill'}</span>
-                    </button>
-                </div>
-            </div>
-
-            {/* Inline Notes Window */}
+            {/* Expanded Content */}
             <AnimatePresence>
-                {showNotes && (
+                {expanded && (
                     <motion.div
-                        initial={{ height: 0, opacity: 0, marginTop: 0 }}
-                        animate={{ height: 'auto', opacity: 1, marginTop: 16 }}
-                        exit={{ height: 0, opacity: 0, marginTop: 0 }}
-                        className="bg-black/40 rounded-xl border border-white/10 overflow-hidden"
+                        initial={{ height: 0, opacity: 0 }}
+                        animate={{ height: 'auto', opacity: 1 }}
+                        exit={{ height: 0, opacity: 0 }}
                     >
-                        <div className="p-4 custom-scrollbar">
-                            <UpdatesTimeline
-                                items={agent.notes || []}
-                                onAdd={async (content) => {
-                                    await api.addAgentNote(agent._id, content);
-                                    window.dispatchEvent(new CustomEvent('agent-updated'));
-                                }}
-                                onEdit={async (id, content) => {
-                                    await api.updateAgentNote(agent._id, id, content);
-                                    window.dispatchEvent(new CustomEvent('agent-updated'));
-                                }}
-                                onDelete={async (id) => {
-                                    await api.deleteAgentNote(agent._id, id);
-                                    window.dispatchEvent(new CustomEvent('agent-updated'));
-                                }}
-                                placeholder="Add a persistent instruction or memory..."
-                            />
-                        </div>
-                    </motion.div>
-                )}
-            </AnimatePresence>
-
-            {/* AI Skills Management Modal */}
-            <AnimatePresence>
-                {showSkills && (
-                    <motion.div
-                        initial={{ height: 0, opacity: 0, marginTop: 0 }}
-                        animate={{ height: 'auto', opacity: 1, marginTop: 16 }}
-                        exit={{ height: 0, opacity: 0, marginTop: 0 }}
-                        className="bg-black/40 rounded-xl border border-white/10 overflow-hidden"
-                    >
-                        <div className="p-4">
-                            <div className="flex items-center justify-between mb-4">
-                                <h4 className="text-sm font-bold text-white flex items-center gap-2">
-                                    <Zap size={14} className="text-yellow-400" />
-                                    Available AI Skills
-                                </h4>
-                                <span className="text-xs text-gray-500">
-                                    {agent.skills?.length || 0} enabled
-                                </span>
+                        <div className="px-4 pb-4 pt-0 border-t border-white/5 bg-black/20">
+                            {/* Description / Instructions */}
+                            <div className="py-4">
+                                {isEditing ? (
+                                    <textarea
+                                        value={editedDescription}
+                                        onChange={(e) => setEditedDescription(e.target.value)}
+                                        placeholder="System instructions..."
+                                        rows={3}
+                                        className="w-full bg-black/40 border border-blue-500/50 rounded-lg px-3 py-2 text-sm text-gray-300 focus:outline-none"
+                                    />
+                                ) : (
+                                    <p className="text-sm text-gray-400 italic">
+                                        {agent.description || "No system instructions set."}
+                                    </p>
+                                )}
                             </div>
 
-                            <div className="space-y-2">
-                                {AVAILABLE_SKILLS.map(skill => {
-                                    const isEnabled = agent.skills?.includes(skill.id);
-                                    const IconComponent = skill.icon;
+                            {/* Assigned Tasks */}
+                            {agent.active_tasks && agent.active_tasks.length > 0 && (
+                                <div className="mb-4">
+                                    <h4 className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Assigned Tasks</h4>
+                                    <DndContext sensors={sensors} onDragEnd={handleTaskChipDragEnd}>
+                                        <div className="flex flex-wrap gap-2">
+                                            {agent.active_tasks.map(task => {
+                                                const labelColor = availableLabels?.find(l => l.name === task.labels?.[0])?.color || '#3B82F6';
+                                                return <DraggableTaskChip key={task._id} task={task} labelColor={labelColor} />;
+                                            })}
+                                        </div>
+                                    </DndContext>
+                                </div>
+                            )}
 
-                                    return (
-                                        <button
-                                            key={skill.id}
-                                            onClick={() => handleToggleSkill(skill.id)}
-                                            className={`
-                                                w-full p-3 rounded-lg border transition-all text-left
-                                                ${isEnabled
-                                                    ? `bg-${skill.color}-500/20 border-${skill.color}-500/50 hover:bg-${skill.color}-500/30`
-                                                    : 'bg-white/5 border-white/10 hover:bg-white/10 hover:border-white/20'
-                                                }
-                                            `}
-                                        >
-                                            <div className="flex items-start justify-between">
-                                                <div className="flex items-start gap-3">
-                                                    <div className={`
-                                                        p-2 rounded-lg
-                                                        ${isEnabled
-                                                            ? `bg-${skill.color}-500/30 text-${skill.color}-300`
-                                                            : 'bg-white/10 text-gray-400'
-                                                        }
-                                                    `}>
-                                                        <IconComponent size={16} />
-                                                    </div>
-                                                    <div>
-                                                        <div className="flex items-center gap-2">
-                                                            <span className={`
-                                                                text-sm font-bold
-                                                                ${isEnabled ? 'text-white' : 'text-gray-300'}
-                                                            `}>
-                                                                {skill.name}
-                                                            </span>
-                                                            {isEnabled && (
-                                                                <span className={`
-                                                                    px-2 py-0.5 rounded-full text-[10px] font-bold uppercase
-                                                                    bg-${skill.color}-500/30 text-${skill.color}-300
-                                                                `}>
-                                                                    Active
-                                                                </span>
-                                                            )}
-                                                        </div>
-                                                        <p className="text-xs text-gray-400 mt-1">
-                                                            {skill.description}
-                                                        </p>
-                                                    </div>
-                                                </div>
-
+                            {/* Tools / Features Grid */}
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-2">
+                                {/* Chat */}
+                                <div className="border border-white/5 rounded-lg bg-black/20 overflow-hidden flex flex-col h-[300px]">
+                                    <div className="p-3 border-b border-white/5 flex items-center gap-2 bg-white/5">
+                                        <MessageSquare size={14} className="text-purple-400" />
+                                        <span className="text-xs font-bold text-gray-300 uppercase tracking-wider">Chat</span>
+                                    </div>
+                                    <div className="flex-1 overflow-y-auto p-3 space-y-3 custom-scrollbar">
+                                        {chatMessages.map((msg, i) => (
+                                            <div key={i} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
                                                 <div className={`
-                                                    w-10 h-5 rounded-full transition-all border
-                                                    ${isEnabled
-                                                        ? `bg-${skill.color}-500 border-${skill.color}-400`
-                                                        : 'bg-gray-700 border-gray-600'
+                                                    max-w-[85%] rounded-lg px-3 py-2 text-xs leading-relaxed
+                                                    ${msg.role === 'user'
+                                                        ? 'bg-blue-500/20 text-blue-100 border border-blue-500/20'
+                                                        : 'bg-white/5 text-gray-300 border border-white/5'
                                                     }
-                                                    relative
                                                 `}>
-                                                    <div className={`
-                                                        absolute top-0.5 w-4 h-4 bg-white rounded-full shadow-lg transition-all
-                                                        ${isEnabled ? 'right-0.5' : 'left-0.5'}
-                                                    `} />
+                                                    <ReactMarkdown>{msg.text}</ReactMarkdown>
                                                 </div>
                                             </div>
-                                        </button>
-                                    );
-                                })}
-                            </div>
-
-                            <div className="mt-4 p-3 bg-blue-500/10 border border-blue-500/20 rounded-lg">
-                                <p className="text-xs text-blue-300 flex items-start gap-2">
-                                    <Zap size={12} className="mt-0.5 flex-shrink-0" />
-                                    <span>
-                                        Toggle skills to unlock new capabilities for this agent. Each skill adds API endpoints and autonomous actions.
-                                    </span>
-                                </p>
-                            </div>
-                        </div>
-                    </motion.div>
-                )}
-            </AnimatePresence>
-
-            {/* Inline Chat Window */}
-            <AnimatePresence>
-                {showChat && (
-                    <motion.div
-                        initial={{ height: 0, opacity: 0, marginTop: 0 }}
-                        animate={{ height: 'auto', opacity: 1, marginTop: 16 }}
-                        exit={{ height: 0, opacity: 0, marginTop: 0 }}
-                        className="bg-black/40 rounded-xl border border-white/10 overflow-hidden"
-                    >
-                        <div className="h-48 overflow-y-auto p-4 space-y-3 custom-scrollbar">
-                            {chatMessages.map((msg, i) => (
-                                <div key={i} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-                                    <div className={`
-                                        max-w-[85%] rounded-lg px-3 py-2 text-xs leading-relaxed
-                                        ${msg.role === 'user'
-                                            ? 'bg-blue-500/20 text-blue-100 border border-blue-500/20'
-                                            : 'bg-white/5 text-gray-300 border border-white/5'
-                                        }
-                                        prose prose-invert prose-xs max-w-none
-                                        [&_p]:mb-1 [&_p:last-child]:mb-0
-                                        [&_ul]:list-disc [&_ul]:ml-4 [&_ul]:mb-1
-                                        [&_ol]:list-decimal [&_ol]:ml-4 [&_ol]:mb-1
-                                        [&_code]:bg-white/10 [&_code]:px-1 [&_code]:rounded
-                                        [&_strong]:text-white [&_strong]:font-bold
-                                    `}>
-                                        <ReactMarkdown>{msg.text}</ReactMarkdown>
+                                        ))}
+                                        {isChatLoading && (
+                                            <div className="flex justify-start">
+                                                <div className="bg-white/5 rounded-lg px-3 py-2 border border-white/5">
+                                                    <span className="animate-pulse text-gray-500 text-xs">Thinking...</span>
+                                                </div>
+                                            </div>
+                                        )}
+                                        <div ref={chatEndRef} />
                                     </div>
+                                    <form onSubmit={handleSendMessage} className="p-2 border-t border-white/5 bg-black/20">
+                                        <input
+                                            type="text"
+                                            value={chatInput}
+                                            onChange={(e) => setChatInput(e.target.value)}
+                                            placeholder="Message agent..."
+                                            className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-1.5 text-xs text-white focus:outline-none focus:border-purple-500/50"
+                                        />
+                                    </form>
                                 </div>
-                            ))}
-                            {isChatLoading && (
-                                <div className="flex justify-start">
-                                    <div className="bg-white/5 rounded-lg px-3 py-2 border border-white/5">
-                                        <div className="flex gap-1">
-                                            <span className="w-1 h-1 bg-gray-500 rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></span>
-                                            <span className="w-1 h-1 bg-gray-500 rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></span>
-                                            <span className="w-1 h-1 bg-gray-500 rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></span>
+
+                                {/* Skills & Notes */}
+                                <div className="space-y-4">
+                                    {/* Skills */}
+                                    <div className="border border-white/5 rounded-lg bg-black/20 overflow-hidden">
+                                        <div className="p-3 border-b border-white/5 flex items-center justify-between bg-white/5">
+                                            <div className="flex items-center gap-2">
+                                                <Cpu size={14} className="text-green-400" />
+                                                <span className="text-xs font-bold text-gray-300 uppercase tracking-wider">Skills</span>
+                                            </div>
+                                        </div>
+                                        <div className="p-3 space-y-2">
+                                            {AVAILABLE_SKILLS.map(skill => {
+                                                const isEnabled = agent.skills?.includes(skill.id);
+                                                return (
+                                                    <div key={skill.id}
+                                                        onClick={() => handleToggleSkill(skill.id)}
+                                                        className={`
+                                                            flex items-center justify-between p-2 rounded cursor-pointer transition-colors border
+                                                            ${isEnabled ? 'bg-green-500/10 border-green-500/20' : 'bg-white/5 border-white/5 hover:bg-white/10'}
+                                                        `}
+                                                    >
+                                                        <div className="flex items-center gap-2">
+                                                            <skill.icon size={14} className={isEnabled ? 'text-green-400' : 'text-gray-500'} />
+                                                            <span className={`text-xs ${isEnabled ? 'text-green-100' : 'text-gray-400'}`}>{skill.name}</span>
+                                                        </div>
+                                                        <div className={`
+                                                            w-6 h-3 rounded-full relative transition-colors
+                                                            ${isEnabled ? 'bg-green-500' : 'bg-gray-700'}
+                                                        `}>
+                                                            <div className={`absolute top-0.5 w-2 h-2 bg-white rounded-full transition-all ${isEnabled ? 'right-0.5' : 'left-0.5'}`} />
+                                                        </div>
+                                                    </div>
+                                                )
+                                            })}
+                                        </div>
+                                    </div>
+
+                                    {/* Notes */}
+                                    <div className="border border-white/5 rounded-lg bg-black/20 overflow-hidden flex flex-col h-[150px]">
+                                        <div className="p-3 border-b border-white/5 flex items-center gap-2 bg-white/5">
+                                            <Pencil size={14} className="text-yellow-400" />
+                                            <span className="text-xs font-bold text-gray-300 uppercase tracking-wider">Memory / Notes</span>
+                                        </div>
+                                        <div className="flex-1 overflow-y-auto p-2 custom-scrollbar">
+                                            <UpdatesTimeline
+                                                items={agent.notes || []}
+                                                onAdd={async (content) => {
+                                                    await api.addAgentNote(agent._id, content);
+                                                    window.dispatchEvent(new CustomEvent('agent-updated'));
+                                                }}
+                                                onEdit={async (id, content) => {
+                                                    await api.updateAgentNote(agent._id, id, content);
+                                                    window.dispatchEvent(new CustomEvent('agent-updated'));
+                                                }}
+                                                onDelete={async (id) => {
+                                                    await api.deleteAgentNote(agent._id, id);
+                                                    window.dispatchEvent(new CustomEvent('agent-updated'));
+                                                }}
+                                                placeholder="Add memory..."
+                                            />
                                         </div>
                                     </div>
                                 </div>
-                            )}
-                            <div ref={chatEndRef} />
+                            </div>
                         </div>
-                        <form onSubmit={handleSendMessage} className="p-2 border-t border-white/10 bg-black/20">
-                            <input
-                                type="text"
-                                value={chatInput}
-                                onChange={(e) => setChatInput(e.target.value)}
-                                placeholder="Type a message..."
-                                className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-1.5 text-xs text-white focus:outline-none focus:border-purple-500/50 transition-colors placeholder:text-gray-600"
-                            />
-                        </form>
                     </motion.div>
                 )}
             </AnimatePresence>
 
-            {/* Drag Target Indicator */}
+            {/* Drag Overlay */}
             {isOver && (
-                <div className="absolute inset-0 bg-blue-500/20 backdrop-blur-sm rounded-2xl flex items-center justify-center z-50 animate-pulse">
-                    <div className="bg-black/80 px-4 py-2 rounded-full border border-blue-500 text-blue-400 font-bold shadow-xl">
-                        Drop to Assign
-                    </div>
+                <div className="absolute inset-0 bg-blue-500/10 backdrop-blur-[1px] rounded-xl flex items-center justify-center z-50 pointer-events-none border-2 border-blue-500 border-dashed">
                 </div>
             )}
         </motion.div>
