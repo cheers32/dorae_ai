@@ -524,46 +524,48 @@ export const TaskItem = forwardRef(({ task, onUpdate, showTags, showFolders, fol
                         paddingBottom: `${Math.max(1, fontSize - 11)}px`
                     }}
                 >
-                    {/* Gmail-style Importance Marker */}
-                    {localLabels.includes('Important') ? (
-                        <div
-                            className="mr-1 text-yellow-500 shrink-0"
-                            title="Important"
-                        >
-                            <ChevronsRight size={16} strokeWidth={3} />
-                        </div>
-                    ) : localLabels.includes('Notable') ? (
-                        <div
-                            className="mr-1 text-amber-300 shrink-0"
-                            title="Notable"
-                        >
-                            <ChevronRight size={16} strokeWidth={3} />
-                        </div>
-                    ) : null}
+                    <div className="flex items-center gap-1">
+                        {/* Gmail-style Importance Marker */}
+                        {localLabels.includes('Important') ? (
+                            <div
+                                className="text-yellow-500 shrink-0"
+                                title="Important"
+                            >
+                                <ChevronsRight size={16} strokeWidth={3} />
+                            </div>
+                        ) : localLabels.includes('Notable') ? (
+                            <div
+                                className="text-amber-300 shrink-0"
+                                title="Notable"
+                            >
+                                <ChevronRight size={16} strokeWidth={3} />
+                            </div>
+                        ) : null}
 
-                    {/* Priority Top Marker */}
-                    {localLabels.includes('Priority') && (
-                        <div className={`mr-1.5 text-red-500 font-bold text-[10px] uppercase tracking-wider shrink-0 ${showPulse ? 'animate-pulse' : ''}`}>
-                            Top
-                        </div>
-                    )}
+                        {/* Priority Top Marker */}
+                        {localLabels.includes('Priority') && (
+                            <div className={`text-red-500 font-bold text-[10px] uppercase tracking-wider shrink-0 ${showPulse ? 'animate-pulse' : ''}`}>
+                                Top
+                            </div>
+                        )}
 
-                    <div
-                        className={`p-1 text-gray-600 hover:text-gray-400 transition-colors ${expanded ? 'cursor-pointer' : 'cursor-grab active:cursor-grabbing'}`}
-                        onClick={(e) => {
-                            if (expanded || globalExpanded) {
-                                e.stopPropagation();
-                                if (globalExpanded) {
-                                    // If global is on, individual collapse toggle works on local state
-                                    // but UI might stay expanded.
-                                    // Actually, if global is on, we should probably just allow local toggle to change local state.
+                        <div
+                            className={`p-1 text-gray-600 hover:text-gray-400 transition-colors ${expanded ? 'cursor-pointer' : 'cursor-grab active:cursor-grabbing'}`}
+                            onClick={(e) => {
+                                if (expanded || globalExpanded) {
+                                    e.stopPropagation();
+                                    if (globalExpanded) {
+                                        // If global is on, individual collapse toggle works on local state
+                                        // but UI might stay expanded.
+                                        // Actually, if global is on, we should probably just allow local toggle to change local state.
+                                    }
+                                    setExpanded(false);
+                                    if (onToggleExpand) onToggleExpand(task._id, false);
                                 }
-                                setExpanded(false);
-                                if (onToggleExpand) onToggleExpand(task._id, false);
-                            }
-                        }}
-                    >
-                        {expanded || globalExpanded ? <ChevronUp size={16} /> : <GripVertical size={16} />}
+                            }}
+                        >
+                            {expanded || globalExpanded ? <ChevronUp size={16} /> : <GripVertical size={16} />}
+                        </div>
                     </div>
                     <div className="relative flex items-center justify-center">
                         <div

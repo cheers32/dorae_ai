@@ -1273,35 +1273,41 @@ export const TaskManager = () => {
                                         }}
                                         className="relative w-full"
                                     >
-                                        <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                                            <Plus size={18} className="text-gray-400 group-focus-within:text-blue-400 transition-colors" />
+                                        <div
+                                            className="flex items-center w-full bg-white/5 border border-white/5 rounded-xl px-4 py-2 focus-within:bg-white/10 focus-within:border-blue-500/50 focus-within:ring-4 focus-within:ring-blue-500/10 transition-all shadow-inner cursor-text"
+                                            onClick={() => newTaskTextareaRef.current?.focus()}
+                                        >
+                                            <Plus size={18} className="text-gray-400 group-focus-within:text-blue-400 transition-colors shrink-0 mr-3" />
+                                            <textarea
+                                                ref={newTaskTextareaRef}
+                                                rows={1}
+                                                placeholder={selectedFolder ? `Add task to ${stats.folders[selectedFolder] ? folders.find(f => f._id === selectedFolder)?.name : 'folder'}...` : selectedLabel ? `Add task to ${selectedLabel}...` : "What needs to be done?"}
+                                                value={newTaskTitle}
+                                                onChange={(e) => setNewTaskTitle(e.target.value)}
+                                                onKeyDown={(e) => {
+                                                    if (e.key === 'Enter' && !e.shiftKey) {
+                                                        e.preventDefault();
+                                                        handleCreateTask(e);
+                                                    } else if (e.key === 'Escape') {
+                                                        setNewTaskTitle('');
+                                                        e.currentTarget.blur();
+                                                    }
+                                                }}
+                                                className="flex-1 bg-transparent border-none outline-none text-sm text-gray-200 placeholder:text-gray-500 resize-none overflow-hidden py-0 leading-normal"
+                                            />
+                                            {newTaskTitle && (
+                                                <button
+                                                    type="button"
+                                                    onClick={(e) => {
+                                                        e.stopPropagation(); // Prevent wrapper click
+                                                        setNewTaskTitle('');
+                                                    }}
+                                                    className="shrink-0 ml-2 flex items-center text-gray-500 hover:text-gray-300 transition-colors"
+                                                >
+                                                    <X size={16} />
+                                                </button>
+                                            )}
                                         </div>
-                                        <textarea
-                                            ref={newTaskTextareaRef}
-                                            rows={1}
-                                            placeholder={selectedFolder ? `Add task to ${stats.folders[selectedFolder] ? folders.find(f => f._id === selectedFolder)?.name : 'folder'}...` : selectedLabel ? `Add task to ${selectedLabel}...` : "What needs to be done?"}
-                                            value={newTaskTitle}
-                                            onChange={(e) => setNewTaskTitle(e.target.value)}
-                                            onKeyDown={(e) => {
-                                                if (e.key === 'Enter' && !e.shiftKey) {
-                                                    e.preventDefault();
-                                                    handleCreateTask(e);
-                                                } else if (e.key === 'Escape') {
-                                                    setNewTaskTitle('');
-                                                    e.currentTarget.blur();
-                                                }
-                                            }}
-                                            className="w-full bg-white/5 border border-white/5 rounded-xl py-2 pl-12 pr-10 text-sm text-gray-200 placeholder:text-gray-500 focus:outline-none focus:bg-white/10 focus:border-blue-500/50 focus:ring-4 focus:ring-blue-500/10 transition-all shadow-inner resize-none overflow-hidden"
-                                        />
-                                        {newTaskTitle && (
-                                            <button
-                                                type="button"
-                                                onClick={() => setNewTaskTitle('')}
-                                                className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-500 hover:text-gray-300 transition-colors"
-                                            >
-                                                <X size={16} />
-                                            </button>
-                                        )}
                                     </form>
                                 )}
                             </div>
