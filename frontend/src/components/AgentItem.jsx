@@ -89,13 +89,13 @@ const DraggableTaskChip = ({ task, labelColor, onRemove }) => {
     );
 };
 
-export const AgentItem = ({ agent, onFocus, onDelete, isFocused, availableLabels, timelineLimit = 3, attachmentLimit = 5 }) => {
+export const AgentItem = ({ agent, onFocus, onDelete, isFocused, availableLabels, timelineLimit = 3, attachmentLimit = 5, defaultExpanded, onToggleExpand }) => {
     const { setNodeRef, isOver } = useDroppable({
         id: `agent-${agent._id}`,
         data: { type: 'agent', agent }
     });
 
-    const [expanded, setExpanded] = useState(false);
+    const [expanded, setExpanded] = useState(defaultExpanded || false);
     const [showChat, setShowChat] = useState(false);
     const [chatInput, setChatInput] = useState('');
     const [chatMessages, setChatMessages] = useState([
@@ -120,6 +120,13 @@ export const AgentItem = ({ agent, onFocus, onDelete, isFocused, availableLabels
         setEditedRole(agent.role);
         setEditedDescription(agent.description || '');
     }, [agent.name, agent.role, agent.description]);
+
+    // [NEW] Sync expanded state if defaultExpanded changes explicitly
+    React.useEffect(() => {
+        if (defaultExpanded !== undefined) {
+            setExpanded(defaultExpanded);
+        }
+    }, [defaultExpanded]);
 
     React.useEffect(() => {
         if (showChat && chatEndRef.current) {
@@ -231,7 +238,11 @@ export const AgentItem = ({ agent, onFocus, onDelete, isFocused, availableLabels
             {/* Header / Row */}
             <div
                 className="flex items-center gap-4 cursor-pointer pr-4 select-none"
-                onClick={() => setExpanded(!expanded)}
+                onClick={() => {
+                    const newState = !expanded;
+                    setExpanded(newState);
+                    if (onToggleExpand) onToggleExpand(agent._id, newState);
+                }}
             >
                 <div
                     className="px-4 flex items-center gap-4 flex-1 min-w-0"

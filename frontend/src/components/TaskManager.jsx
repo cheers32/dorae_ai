@@ -33,6 +33,8 @@ export const TaskManager = () => {
     const [searchQuery, setSearchQuery] = useState('');
     const [shouldFocusSearch, setShouldFocusSearch] = useState(false);
     const [preSearchState, setPreSearchState] = useState(null);
+    const [expandedTaskIds, setExpandedTaskIds] = useState(new Set()); // [NEW] Track expanded tasks
+    const [expandedAgentIds, setExpandedAgentIds] = useState(new Set()); // [NEW] Track expanded agents
 
     const [labels, setLabels] = useState([]);
     const [folders, setFolders] = useState([]);
@@ -1162,7 +1164,14 @@ export const TaskManager = () => {
                                             value={searchQuery}
                                             onFocus={() => {
                                                 if (activeTab !== 'all') {
-                                                    setPreSearchState({ tab: activeTab, label: selectedLabel, folder: selectedFolder });
+                                                    setPreSearchState({
+                                                        tab: activeTab,
+                                                        label: selectedLabel,
+                                                        folder: selectedFolder,
+                                                        folder: selectedFolder,
+                                                        expandedIds: Array.from(expandedTaskIds),
+                                                        expandedAgentIds: Array.from(expandedAgentIds) // Save expanded agent state
+                                                    });
                                                     setShouldFocusSearch(true);
                                                     changeView('all');
                                                 }
@@ -1173,6 +1182,14 @@ export const TaskManager = () => {
                                                     setSearchQuery('');
                                                     if (preSearchState) {
                                                         changeView(preSearchState.tab, preSearchState.label, preSearchState.folder);
+                                                        // Restore expanded items
+                                                        if (preSearchState.expandedIds && preSearchState.expandedIds.length > 0) {
+                                                            setExpandedTaskIds(new Set(preSearchState.expandedIds));
+                                                        }
+                                                        // Restore expanded agents
+                                                        if (preSearchState.expandedAgentIds && preSearchState.expandedAgentIds.length > 0) {
+                                                            setExpandedAgentIds(new Set(preSearchState.expandedAgentIds));
+                                                        }
                                                         setPreSearchState(null);
                                                     }
                                                     e.currentTarget.blur();
@@ -1246,7 +1263,14 @@ export const TaskManager = () => {
                                             placeholder="Search"
                                             value={searchQuery}
                                             onFocus={() => {
-                                                setPreSearchState({ tab: activeTab, label: selectedLabel, folder: selectedFolder });
+                                                setPreSearchState({
+                                                    tab: activeTab,
+                                                    label: selectedLabel,
+                                                    folder: selectedFolder,
+                                                    folder: selectedFolder,
+                                                    expandedIds: Array.from(expandedTaskIds),
+                                                    expandedAgentIds: Array.from(expandedAgentIds)
+                                                });
                                                 setShouldFocusSearch(true);
                                                 changeView('all');
                                             }}
@@ -1256,6 +1280,14 @@ export const TaskManager = () => {
                                                     setSearchQuery('');
                                                     if (preSearchState) {
                                                         changeView(preSearchState.tab, preSearchState.label, preSearchState.folder);
+                                                        // Restore expanded items
+                                                        if (preSearchState.expandedIds && preSearchState.expandedIds.length > 0) {
+                                                            setExpandedTaskIds(new Set(preSearchState.expandedIds));
+                                                        }
+                                                        // Restore expanded agents
+                                                        if (preSearchState.expandedAgentIds && preSearchState.expandedAgentIds.length > 0) {
+                                                            setExpandedAgentIds(new Set(preSearchState.expandedAgentIds));
+                                                        }
                                                         setPreSearchState(null);
                                                     }
                                                     e.currentTarget.blur();
@@ -1540,6 +1572,15 @@ export const TaskManager = () => {
                                                                 onFocus={() => handleFocusAgent(item)}
                                                                 availableLabels={labels}
                                                                 timelineLimit={timelineLimit}
+                                                                defaultExpanded={expandedAgentIds.has(item._id)}
+                                                                onToggleExpand={(agentId, isExpanded) => {
+                                                                    setExpandedAgentIds(prev => {
+                                                                        const newSet = new Set(prev);
+                                                                        if (isExpanded) newSet.add(agentId);
+                                                                        else newSet.delete(agentId);
+                                                                        return newSet;
+                                                                    });
+                                                                }}
                                                             // Add compact prop if needed
                                                             />
                                                         </div>
@@ -1595,6 +1636,15 @@ export const TaskManager = () => {
                                     timelineLimit={timelineLimit}
                                     agents={agents}
                                     onAgentsUpdate={fetchAgents}
+                                    expandedIds={expandedAgentIds}
+                                    onToggleExpand={(agentId, isExpanded) => {
+                                        setExpandedAgentIds(prev => {
+                                            const newSet = new Set(prev);
+                                            if (isExpanded) newSet.add(agentId);
+                                            else newSet.delete(agentId);
+                                            return newSet;
+                                        });
+                                    }}
                                 />
                             </div>
                         ) : (
@@ -1642,7 +1692,15 @@ export const TaskManager = () => {
                                                                 availableLabels={labels}
                                                                 onSendToWorkarea={() => handleSendToWorkarea(task)}
                                                                 isWorkarea={false}
-                                                                defaultExpanded={autoExpandTaskId === task._id}
+                                                                defaultExpanded={autoExpandTaskId === task._id || expandedTaskIds.has(task._id)}
+                                                                onToggleExpand={(taskId, isExpanded) => {
+                                                                    setExpandedTaskIds(prev => {
+                                                                        const newSet = new Set(prev);
+                                                                        if (isExpanded) newSet.add(taskId);
+                                                                        else newSet.delete(taskId);
+                                                                        return newSet;
+                                                                    });
+                                                                }}
                                                                 onAttachmentClick={handleNavigateToTask}
                                                                 globalExpanded={globalExpanded}
                                                                 showFullTitles={showFullTitles}

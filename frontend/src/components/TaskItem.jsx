@@ -254,7 +254,8 @@ export const TaskItem = forwardRef(({ task, onUpdate, showTags, showFolders, fol
     timelineLimit = 3,
     attachmentLimit = 5,
     showCounts = false,
-    agents = []
+    agents = [],
+    onToggleExpand // [NEW] Callback for expansion tracking
 }, ref) => {
     const [expanded, setExpanded] = useState(defaultExpanded || false);
     const [isSubmitting, setIsSubmitting] = useState(false);
@@ -305,8 +306,10 @@ export const TaskItem = forwardRef(({ task, onUpdate, showTags, showFolders, fol
 
     // Auto-expand when defaultExpanded changes to true
     useEffect(() => {
-        if (defaultExpanded === true) {
-            setExpanded(true);
+        // [MODIFIED] Respect external control for both true/false if needed, 
+        // but primarily ensuring we sync if parent says "expand this".
+        if (defaultExpanded !== undefined) {
+            setExpanded(defaultExpanded);
         }
     }, [defaultExpanded]);
 
@@ -498,7 +501,11 @@ export const TaskItem = forwardRef(({ task, onUpdate, showTags, showFolders, fol
         >
             <div
                 className="flex items-center gap-4 cursor-pointer pr-4 select-none"
-                onClick={() => setExpanded(!expanded)}
+                onClick={() => {
+                    const newState = !expanded;
+                    setExpanded(newState);
+                    if (onToggleExpand) onToggleExpand(task._id, newState);
+                }}
                 {...(expanded || globalExpanded ? {} : dragHandleProps)}
             >
                 <div
@@ -519,6 +526,7 @@ export const TaskItem = forwardRef(({ task, onUpdate, showTags, showFolders, fol
                                     // Actually, if global is on, we should probably just allow local toggle to change local state.
                                 }
                                 setExpanded(false);
+                                if (onToggleExpand) onToggleExpand(task._id, false);
                             }
                         }}
                     >
