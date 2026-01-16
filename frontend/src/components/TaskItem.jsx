@@ -182,7 +182,8 @@ const parseUTCDate = (dateString) => {
 export const TaskItem = forwardRef(({ task, onUpdate, showTags, showFolders, folders, style, dragHandleProps, isOverlay, availableLabels = [], onSendToWorkarea, onRemoveFromWorkarea, isWorkarea, defaultExpanded, onAttachmentClick, onTaskClick, globalExpanded, showFullTitles, showPreview, showDebugInfo,
     fontSize = 12,
     timelineLimit = 3,
-    attachmentLimit = 5
+    attachmentLimit = 5,
+    showCounts = false
 }, ref) => {
     const [expanded, setExpanded] = useState(defaultExpanded || false);
     const [isSubmitting, setIsSubmitting] = useState(false);
@@ -565,6 +566,27 @@ export const TaskItem = forwardRef(({ task, onUpdate, showTags, showFolders, fol
                                                 })}
                                             </SortableContext>
                                         </DndContext>
+                                    )}
+                                </div>
+                            )}
+
+                            {/* [NEW] Show Counts */}
+                            {showCounts && !expanded && !globalExpanded && (
+                                <div className="flex items-center gap-3 ml-3 shrink-0">
+                                    {task.updates && task.updates.length > 0 && (
+                                        <div className="flex items-center gap-1 text-gray-500" title={`${task.updates.length} updates`}>
+                                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                                <circle cx="12" cy="12" r="10" />
+                                                <polyline points="12 6 12 12 16 14" />
+                                            </svg>
+                                            <span className="text-[10px] font-medium">{task.updates.length}</span>
+                                        </div>
+                                    )}
+                                    {localAttachments && localAttachments.length > 0 && (
+                                        <div className="flex items-center gap-1 text-gray-500" title={`${localAttachments.length} attachments`}>
+                                            <Paperclip size={10} />
+                                            <span className="text-[10px] font-medium">{localAttachments.length}</span>
+                                        </div>
                                     )}
                                 </div>
                             )}

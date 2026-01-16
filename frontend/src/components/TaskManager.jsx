@@ -45,6 +45,7 @@ export const TaskManager = () => {
     const [showFolders, setShowFolders] = useState(() => localStorage.getItem('task_manager_show_folders') === 'true');
     const [isCreating, setIsCreating] = useState(false);
     const [isCreatingAgent, setIsCreatingAgent] = useState(false);
+    const [showCounts, setShowCounts] = useState(() => localStorage.getItem('task_manager_show_counts') === 'true');
     const [activeId, setActiveId] = useState(null);
     const [globalExpanded, setGlobalExpanded] = useState(() => localStorage.getItem('task_manager_global_expanded') === 'true');
     const [showFullTitles, setShowFullTitles] = useState(() => localStorage.getItem('task_manager_show_full_titles') === 'true');
@@ -75,18 +76,14 @@ export const TaskManager = () => {
         const saved = localStorage.getItem('timelineLimit');
         return saved ? parseInt(saved, 10) : 3;
     });
-    const [attachmentLimit, setAttachmentLimit] = useState(() => {
-        const saved = localStorage.getItem('attachmentLimit');
-        return saved ? parseInt(saved, 10) : 5;
-    });
+
+    useEffect(() => {
+        localStorage.setItem('task_manager_show_counts', showCounts);
+    }, [showCounts]);
 
     useEffect(() => {
         localStorage.setItem('timelineLimit', timelineLimit);
     }, [timelineLimit]);
-
-    useEffect(() => {
-        localStorage.setItem('attachmentLimit', attachmentLimit);
-    }, [attachmentLimit]);
 
     const [isGeminiOpen, setIsGeminiOpen] = useState(false);
     const [sortBy, setSortBy] = useState('manual'); // 'manual', 'date', 'title'
@@ -1388,29 +1385,6 @@ export const TaskManager = () => {
                                                 </div>
                                             </div>
 
-                                            {/* Attachment Limit */}
-                                            <div className="px-4 py-2 flex items-center justify-between">
-                                                <div className="flex items-center gap-3 text-gray-400">
-                                                    <Paperclip size={16} />
-                                                    <span className="text-xs font-medium">Attachments</span>
-                                                </div>
-                                                <div className="flex items-center bg-gray-900 border border-gray-800 rounded-lg overflow-hidden h-7">
-                                                    <button
-                                                        onClick={() => setAttachmentLimit(prev => Math.max(1, prev - 1))}
-                                                        className="px-2 hover:bg-white/10 text-gray-400 hover:text-white border-r border-gray-800 h-full flex items-center"
-                                                    >
-                                                        <Minus size={12} />
-                                                    </button>
-                                                    <span className="px-2 text-xs text-gray-300 min-w-[20px] text-center">{attachmentLimit}</span>
-                                                    <button
-                                                        onClick={() => setAttachmentLimit(prev => Math.min(10, prev + 1))}
-                                                        className="px-2 hover:bg-white/10 text-gray-400 hover:text-white border-l border-gray-800 h-full flex items-center"
-                                                    >
-                                                        <Plus size={12} />
-                                                    </button>
-                                                </div>
-                                            </div>
-
                                             {activeTab !== 'assistant' && tasks.length > 0 && (
                                                 <div className="px-4 py-2 flex items-center justify-between">
                                                     <div className="flex items-center gap-3 text-gray-400">
@@ -1433,6 +1407,17 @@ export const TaskManager = () => {
                                                     </div>
                                                 </div>
                                             )}
+
+                                            {/* Show Count Toggle */}
+                                            <button
+                                                onClick={() => setShowCounts(!showCounts)}
+                                                className="w-full px-4 py-2 text-left flex items-center justify-between transition-colors hover:bg-white/5"
+                                            >
+                                                <span className="text-xs font-medium text-gray-400">Show Counts</span>
+                                                <div className={`w-8 h-4 rounded-full relative transition-colors ${showCounts ? 'bg-blue-500' : 'bg-gray-700'}`}>
+                                                    <div className={`absolute top-0.5 w-3 h-3 bg-white rounded-full transition-all ${showCounts ? 'right-0.5' : 'left-0.5'}`} />
+                                                </div>
+                                            </button>
 
                                             {activeTab === 'trash' && tasks.length > 0 && (
                                                 <>
@@ -1503,7 +1488,6 @@ export const TaskManager = () => {
                                                                 onFocus={() => handleFocusAgent(item)}
                                                                 availableLabels={labels}
                                                                 timelineLimit={timelineLimit}
-                                                                attachmentLimit={attachmentLimit}
                                                             // Add compact prop if needed
                                                             />
                                                         </div>
@@ -1535,7 +1519,7 @@ export const TaskManager = () => {
                                                         showDebugInfo={showDebugInfo}
                                                         fontSize={fontSize}
                                                         timelineLimit={timelineLimit}
-                                                        attachmentLimit={attachmentLimit}
+                                                        showCounts={showCounts}
                                                     />
                                                 );
                                             })}
@@ -1556,7 +1540,6 @@ export const TaskManager = () => {
                                     isCreating={isCreatingAgent}
                                     setIsCreating={setIsCreatingAgent}
                                     timelineLimit={timelineLimit}
-                                    attachmentLimit={attachmentLimit}
                                 />
                             </div>
                         ) : (
@@ -1612,7 +1595,7 @@ export const TaskManager = () => {
                                                                 showDebugInfo={showDebugInfo}
                                                                 fontSize={fontSize}
                                                                 timelineLimit={timelineLimit}
-                                                                attachmentLimit={attachmentLimit}
+                                                                showCounts={showCounts}
                                                             />
                                                         ))}
                                                     </div>
@@ -1653,6 +1636,7 @@ export const TaskManager = () => {
                                 onUpdate={() => { }}
                                 availableLabels={labels}
                                 showDebugInfo={showDebugInfo}
+                                showCounts={showCounts}
                             />
                         ) : (activeId && activeId.toString().startsWith('workarea-task-')) ? (
                             <TaskItem
@@ -1665,6 +1649,7 @@ export const TaskManager = () => {
                                 availableLabels={labels}
                                 isWorkarea={true}
                                 showDebugInfo={showDebugInfo}
+                                showCounts={showCounts}
                             />
                         ) : null}
                     </DragOverlay >,

@@ -4,7 +4,7 @@ import { AgentItem } from './AgentItem';
 import { api } from '../api';
 import { Plus, Search, Sparkles } from 'lucide-react';
 
-export const AgentList = ({ onFocusAgent, focusedAgentId, availableLabels, isCreating, setIsCreating, timelineLimit, attachmentLimit }) => {
+export const AgentList = ({ onFocusAgent, focusedAgentId, availableLabels, isCreating, setIsCreating, timelineLimit }) => {
     const [agents, setAgents] = useState([]);
     const [isLoading, setIsLoading] = useState(true);
     const [newAgentName, setNewAgentName] = useState('');
@@ -112,7 +112,6 @@ export const AgentList = ({ onFocusAgent, focusedAgentId, availableLabels, isCre
                             isFocused={focusedAgentId === agent._id}
                             availableLabels={availableLabels}
                             timelineLimit={timelineLimit}
-                            attachmentLimit={attachmentLimit}
                         />
                     ))}
                 </div>
