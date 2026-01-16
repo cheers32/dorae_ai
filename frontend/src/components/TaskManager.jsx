@@ -694,6 +694,22 @@ export const TaskManager = () => {
         }
     };
 
+    const handleClearSearch = () => {
+        setSearchQuery('');
+        if (preSearchState) {
+            changeView(preSearchState.tab, preSearchState.label, preSearchState.folder);
+            // Restore expanded items
+            if (preSearchState.expandedIds && preSearchState.expandedIds.length > 0) {
+                setExpandedTaskIds(new Set(preSearchState.expandedIds));
+            }
+            // Restore expanded agents
+            if (preSearchState.expandedAgentIds && preSearchState.expandedAgentIds.length > 0) {
+                setExpandedAgentIds(new Set(preSearchState.expandedAgentIds));
+            }
+            setPreSearchState(null);
+        }
+    };
+
 
 
     const handleSendToWorkarea = (task) => {
@@ -1187,19 +1203,7 @@ export const TaskManager = () => {
                                             onChange={(e) => setSearchQuery(e.target.value)}
                                             onKeyDown={(e) => {
                                                 if (e.key === 'Escape') {
-                                                    setSearchQuery('');
-                                                    if (preSearchState) {
-                                                        changeView(preSearchState.tab, preSearchState.label, preSearchState.folder);
-                                                        // Restore expanded items
-                                                        if (preSearchState.expandedIds && preSearchState.expandedIds.length > 0) {
-                                                            setExpandedTaskIds(new Set(preSearchState.expandedIds));
-                                                        }
-                                                        // Restore expanded agents
-                                                        if (preSearchState.expandedAgentIds && preSearchState.expandedAgentIds.length > 0) {
-                                                            setExpandedAgentIds(new Set(preSearchState.expandedAgentIds));
-                                                        }
-                                                        setPreSearchState(null);
-                                                    }
+                                                    handleClearSearch();
                                                     e.currentTarget.blur();
                                                 }
                                             }}
@@ -1208,7 +1212,7 @@ export const TaskManager = () => {
                                         {searchQuery && (
                                             <button
                                                 type="button"
-                                                onClick={() => setSearchQuery('')}
+                                                onClick={handleClearSearch}
                                                 className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-500 hover:text-gray-300 transition-colors"
                                             >
                                                 <X size={16} />
@@ -1285,19 +1289,7 @@ export const TaskManager = () => {
                                             onChange={(e) => setSearchQuery(e.target.value)}
                                             onKeyDown={(e) => {
                                                 if (e.key === 'Escape') {
-                                                    setSearchQuery('');
-                                                    if (preSearchState) {
-                                                        changeView(preSearchState.tab, preSearchState.label, preSearchState.folder);
-                                                        // Restore expanded items
-                                                        if (preSearchState.expandedIds && preSearchState.expandedIds.length > 0) {
-                                                            setExpandedTaskIds(new Set(preSearchState.expandedIds));
-                                                        }
-                                                        // Restore expanded agents
-                                                        if (preSearchState.expandedAgentIds && preSearchState.expandedAgentIds.length > 0) {
-                                                            setExpandedAgentIds(new Set(preSearchState.expandedAgentIds));
-                                                        }
-                                                        setPreSearchState(null);
-                                                    }
+                                                    handleClearSearch();
                                                     e.currentTarget.blur();
                                                 }
                                             }}
@@ -1305,7 +1297,7 @@ export const TaskManager = () => {
                                         />
                                         {searchQuery && (
                                             <button
-                                                onClick={() => setSearchQuery('')}
+                                                onClick={handleClearSearch}
                                                 className="absolute right-2 flex items-center text-gray-500 hover:text-gray-300"
                                             >
                                                 <X size={14} />
@@ -1654,6 +1646,7 @@ export const TaskManager = () => {
                                             return newSet;
                                         });
                                     }}
+                                    onSearch={handleChipSearch}
                                 />
                             </div>
                         ) : (
