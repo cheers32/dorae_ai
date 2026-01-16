@@ -6,7 +6,7 @@ import { ChatInterface } from './ChatInterface';
 import { AgentList } from './AgentList';
 import { AgentItem } from './AgentItem';
 import { GeminiPanel, GeminiIcon } from './GeminiPanel';
-import { Search, Plus, Home as HomeIcon, Tag as TagIcon, ArrowLeft, ArrowRight, Trash2, X, ChevronsUpDown, ChevronsDownUp, Type, MessageSquare, ZoomIn, ZoomOut, MoreVertical, SlidersHorizontal, Settings2, Bug, Calendar, ArrowDownAZ, GripVertical, Folder, Sparkles, Clock, Paperclip, Minus } from 'lucide-react';
+import { Search, Plus, Home as HomeIcon, Tag as TagIcon, ArrowLeft, ArrowRight, Trash2, X, ChevronsUpDown, ChevronsDownUp, Type, MessageSquare, ZoomIn, ZoomOut, MoreVertical, SlidersHorizontal, Settings2, Bug, Calendar, ArrowDownAZ, GripVertical, Folder, Sparkles, Zap, Clock, Paperclip, Minus } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import {
@@ -1461,26 +1461,49 @@ export const TaskManager = () => {
                                             </div>
 
                                             {(selectedFolder || activeTab === 'active' || activeTab === 'all') && (
-                                                <button
-                                                    onClick={async () => {
-                                                        setIsMenuOpen(false);
-                                                        try {
-                                                            if (selectedFolder) {
-                                                                await api.runFolderImportance(selectedFolder);
-                                                            } else {
-                                                                await api.runGlobalImportance();
+                                                <>
+                                                    <button
+                                                        onClick={async () => {
+                                                            setIsMenuOpen(false);
+                                                            try {
+                                                                if (selectedFolder) {
+                                                                    await api.runFolderImportance(selectedFolder);
+                                                                } else {
+                                                                    await api.runGlobalImportance();
+                                                                }
+                                                                fetchTasks(false);
+                                                                fetchStats();
+                                                            } catch (err) {
+                                                                console.error("Failed to run importance analysis", err);
                                                             }
-                                                            fetchTasks(false);
-                                                            fetchStats();
-                                                        } catch (err) {
-                                                            console.error("Failed to run importance analysis", err);
-                                                        }
-                                                    }}
-                                                    className="w-full px-4 py-2 text-left flex items-center gap-3 transition-colors hover:bg-white/5 text-purple-400"
-                                                >
-                                                    <Sparkles size={16} />
-                                                    <span className="text-xs font-medium">Run Importance Analysis</span>
-                                                </button>
+                                                        }}
+                                                        className="w-full px-4 py-2 text-left flex items-center gap-3 transition-colors hover:bg-white/5 text-purple-400"
+                                                    >
+                                                        <Sparkles size={16} />
+                                                        <span className="text-xs font-medium">Run Importance Analysis</span>
+                                                    </button>
+
+                                                    <button
+                                                        onClick={async () => {
+                                                            setIsMenuOpen(false);
+                                                            try {
+                                                                if (selectedFolder) {
+                                                                    await api.runFolderPriority(selectedFolder);
+                                                                } else {
+                                                                    await api.runGlobalPriority();
+                                                                }
+                                                                fetchTasks(false);
+                                                                fetchStats();
+                                                            } catch (err) {
+                                                                console.error("Failed to run priority check", err);
+                                                            }
+                                                        }}
+                                                        className="w-full px-4 py-2 text-left flex items-center gap-3 transition-colors hover:bg-white/5 text-red-400"
+                                                    >
+                                                        <Zap size={16} />
+                                                        <span className="text-xs font-medium">Run Priority Check</span>
+                                                    </button>
+                                                </>
                                             )}
 
                                             <div className="h-px bg-gray-800 my-2 mx-2"></div>

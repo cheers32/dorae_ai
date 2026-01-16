@@ -735,6 +735,153 @@ def analyze_folder_importance(folder_id):
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
+@app.route('/api/folders/<folder_id>/analyze_priority', methods=['POST'])
+def analyze_folder_priority(folder_id):
+    try:
+        # Verify folder exists
+        folder = folders_collection.find_one({"_id": ObjectId(folder_id)})
+        if not folder:
+            return jsonify({"error": "Folder not found"}), 404
+
+        # Fetch active tasks in folder
+        tasks = list(tasks_collection.find({
+            "folderId": folder_id,
+            "status": {"$nin": ["Deleted", "deleted", "Closed", "completed", "Archived", "archived"]}
+        }))
+
+        if not tasks:
+            return jsonify({"message": "No active tasks in folder", "top_priority_count": 0}), 200
+
+        # Run AI Analysis
+        top_ids = ai_service.analyze_priority(tasks)
+        
+        updated_count = 0
+        if top_ids is not None: # check for None to avoid clearing if error
+            from pymongo import UpdateOne
+            operations = []
+            
+            # Ensure "Priority" Label exists (Red)
+            priority_label_color = "#ef4444"
+            existing_label = labels_collection.find_one({"name": "Priority"})
+            if not existing_label:
+                labels_collection.insert_one({
+                    "name": "Priority",
+                    "color": priority_label_color,
+                    "created_at": datetime.utcnow().isoformat(),
+                    "order": 0
+                })
+            elif existing_label.get('color') != priority_label_color:
+                 labels_collection.update_one(
+                    {"_id": existing_label["_id"]},
+                    {"$set": {"color": priority_label_color}}
+                )
+            
+            top_set = set(str(uid) for uid in top_ids)
+            
+            for task in tasks:
+                t_id_str = str(task['_id'])
+                if t_id_str in top_set:
+                    # Mark as Priority, Set Priority High
+                    operations.append(
+                        UpdateOne(
+                            {"_id": task['_id']},
+                            {
+                                "$addToSet": {"labels": "Priority"},
+                                "$set": {"priority": "high"}
+                            }
+                        )
+                    )
+                else:
+                    # Remove Priority label if it exists (Cleanup)
+                    # Optional: Do we reset priority to medium? Maybe not, just remove label.
+                    operations.append(
+                        UpdateOne(
+                            {"_id": task['_id']},
+                            {"$pull": {"labels": "Priority"}}
+                        )
+                    )
+
+            if operations:
+                result = tasks_collection.bulk_write(operations)
+                updated_count = result.modified_count
+
+        return jsonify({
+            "message": "Priority analysis complete", 
+            "top_priority_count": len(top_ids) if top_ids else 0,
+            "updated_count": updated_count
+        }), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+@app.route('/api/tasks/analyze_priority', methods=['POST'])
+def analyze_all_active_priority():
+    try:
+        # Fetch ALL active tasks
+        tasks = list(tasks_collection.find({
+            "status": {"$nin": ["Deleted", "deleted", "Closed", "completed", "Archived", "archived"]}
+        }))
+
+        if not tasks:
+            return jsonify({"message": "No active tasks found", "top_priority_count": 0}), 200
+
+        # Run AI Analysis
+        top_ids = ai_service.analyze_priority(tasks)
+        
+        updated_count = 0
+        if top_ids is not None:
+            from pymongo import UpdateOne
+            operations = []
+            
+            # Ensure "Priority" Label exists (Red)
+            priority_label_color = "#ef4444"
+            existing_label = labels_collection.find_one({"name": "Priority"})
+            if not existing_label:
+                labels_collection.insert_one({
+                    "name": "Priority",
+                    "color": priority_label_color,
+                    "created_at": datetime.utcnow().isoformat(),
+                    "order": 0
+                })
+            elif existing_label.get('color') != priority_label_color:
+                 labels_collection.update_one(
+                    {"_id": existing_label["_id"]},
+                    {"$set": {"color": priority_label_color}}
+                )
+            
+            top_set = set(str(uid) for uid in top_ids)
+            
+            for task in tasks:
+                t_id_str = str(task['_id'])
+                if t_id_str in top_set:
+                    operations.append(
+                        UpdateOne(
+                            {"_id": task['_id']},
+                            {
+                                "$addToSet": {"labels": "Priority"},
+                                "$set": {"priority": "high"}
+                            }
+                        )
+                    )
+                else:
+                    operations.append(
+                        UpdateOne(
+                            {"_id": task['_id']},
+                            {"$pull": {"labels": "Priority"}}
+                        )
+                    )
+
+            if operations:
+                result = tasks_collection.bulk_write(operations)
+                updated_count = result.modified_count
+
+        return jsonify({
+            "message": "Priority analysis complete", 
+            "top_priority_count": len(top_ids) if top_ids else 0,
+            "updated_count": updated_count
+        }), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
 @app.route('/api/tasks/analyze_importance', methods=['POST'])
 def analyze_all_active_importance():
     try:

@@ -257,8 +257,24 @@ export const api = {
         return res.json();
     },
 
+    runFolderPriority: async (folderId) => {
+        const res = await fetch(`${API_BASE}/folders/${folderId}/analyze_priority`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' }
+        });
+        return res.json();
+    },
+
     runGlobalImportance: async () => {
         const res = await fetch(`${API_BASE}/tasks/analyze_importance`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' }
+        });
+        return res.json();
+    },
+
+    runGlobalPriority: async () => {
+        const res = await fetch(`${API_BASE}/tasks/analyze_priority`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' }
         });

@@ -122,6 +122,54 @@ class AIService:
             print(f"AI Analysis Error: {e}")
             return []
 
+    def analyze_priority(self, tasks):
+        if not self.client:
+            print("AI Service: Missing API Key")
+            return []
+
+        if not tasks:
+            return []
+
+        tasks_text = ""
+        for t in tasks:
+            tasks_text += f"- ID: {t['_id']}, Title: {t.get('title', 'Untitled')}, Status: {t.get('status', 'Active')}, Priority: {t.get('priority', 'medium')}\n"
+
+        prompt = f"""
+        Analyze the following tasks and identify which ones should be considered "Top" priority.
+        
+        Criteria for "Top" Priority:
+        - Must be done immediately (Urgent).
+        - High impact or critical path items.
+        - "Fix" tasks for broken production items.
+        - Explicitly high leverage activities.
+        
+        Tasks:
+        {tasks_text}
+        
+        Return a JSON object with a list of IDs for Top priority tasks:
+        {{
+            "top_priority_task_ids": ["id1", "id2"]
+        }}
+        """
+        
+        try:
+            response = self.client.models.generate_content(
+                model='gemini-2.0-flash-exp', 
+                contents=prompt,
+                config={
+                    'response_mime_type': 'application/json'
+                }
+            )
+            
+            if hasattr(response, 'parsed') and response.parsed:
+                return response.parsed.get('top_priority_task_ids', [])
+            
+            data = json.loads(response.text)
+            return data.get('top_priority_task_ids', [])
+        except Exception as e:
+            print(f"AI Priority Analysis Error: {e}")
+            return []
+
     def chat_with_task_context(self, user_message, tasks_context, agent_context=None):
         if not self.client:
             return "I can't help you with that right now because the API key is missing."
