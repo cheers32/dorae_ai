@@ -686,6 +686,14 @@ export const TaskManager = () => {
         }
     };
 
+    const handleChipSearch = (query) => {
+        setSearchQuery(query);
+        setActiveTab('all');
+        if (searchInputRef.current) {
+            searchInputRef.current.focus();
+        }
+    };
+
 
 
     const handleSendToWorkarea = (task) => {
@@ -1614,6 +1622,7 @@ export const TaskManager = () => {
                                                         timelineLimit={timelineLimit}
                                                         showCounts={showCounts}
                                                         agents={agents}
+                                                        onSearch={handleChipSearch}
                                                     />
                                                 );
                                             })}
@@ -1710,6 +1719,7 @@ export const TaskManager = () => {
                                                                 timelineLimit={timelineLimit}
                                                                 showCounts={showCounts}
                                                                 agents={agents}
+                                                                onSearch={handleChipSearch}
                                                             />
                                                         ))}
                                                     </div>

@@ -24,7 +24,7 @@ import { DndContext, closestCenter, PointerSensor, useSensor, useSensors } from 
 
 
 
-const SortableLabel = ({ labelName, color, onDelete }) => {
+const SortableLabel = ({ labelName, color, onDelete, onSearch }) => {
     const {
         attributes,
         listeners,
@@ -51,15 +51,18 @@ const SortableLabel = ({ labelName, color, onDelete }) => {
             ref={setNodeRef}
             {...attributes}
             {...listeners}
-            className="inline-flex items-center gap-1.5 px-2 py-1 rounded border uppercase tracking-wider font-semibold text-[10px] group/label transition-colors"
+            className="inline-flex items-center gap-1.5 px-2 py-1 rounded border uppercase tracking-wider font-semibold text-[10px] group/label transition-colors hover:opacity-80 cursor-pointer"
             style={style}
-            onClick={(e) => e.stopPropagation()}
+            onClick={(e) => {
+                e.stopPropagation();
+                if (onSearch) onSearch(labelName);
+            }}
             onPointerDown={(e) => {
                 if (listeners && listeners.onPointerDown) {
                     listeners.onPointerDown(e);
                 }
-                e.preventDefault();
-                e.stopPropagation();
+                // e.preventDefault(); // allow click
+                // e.stopPropagation();
             }}
         >
             {labelName}
@@ -68,7 +71,7 @@ const SortableLabel = ({ labelName, color, onDelete }) => {
 };
 
 
-const SortableAttachment = ({ attachment, onDelete, availableLabels, onClick }) => {
+const SortableAttachment = ({ attachment, onDelete, availableLabels, onClick, onSearch }) => {
     const {
         attributes,
         listeners,
@@ -101,7 +104,9 @@ const SortableAttachment = ({ attachment, onDelete, availableLabels, onClick }) 
             {...listeners}
             className="flex items-center gap-2 bg-white/5 border border-white/10 rounded-lg px-2 pl-3 py-1.5 text-xs text-gray-300 group/chip hover:bg-white/10 transition-colors cursor-pointer active:cursor-grabbing pr-1.5"
             onClick={(e) => {
-                if (!isDragging && onClick) {
+                if (onSearch) {
+                    onSearch(attachment.title);
+                } else if (!isDragging && onClick) {
                     onClick(attachment);
                 }
             }}
@@ -255,7 +260,8 @@ export const TaskItem = forwardRef(({ task, onUpdate, showTags, showFolders, fol
     attachmentLimit = 5,
     showCounts = false,
     agents = [],
-    onToggleExpand // [NEW] Callback for expansion tracking
+    onToggleExpand, // [NEW] Callback for expansion tracking
+    onSearch // [NEW] Callback for chip search
 }, ref) => {
     const [expanded, setExpanded] = useState(defaultExpanded || false);
     const [isSubmitting, setIsSubmitting] = useState(false);
@@ -629,8 +635,12 @@ export const TaskItem = forwardRef(({ task, onUpdate, showTags, showFolders, fol
                                     {/* Folder Chip */}
                                     {showFolders && task.folderId && folders && (
                                         <div
-                                            className="inline-flex items-center gap-1.5 px-2 py-1 rounded border uppercase tracking-wider font-semibold text-[10px] group/folder transition-colors bg-white/5 border-white/10 text-gray-400"
-                                            onClick={(e) => e.stopPropagation()}
+                                            className="inline-flex items-center gap-1.5 px-2 py-1 rounded border uppercase tracking-wider font-semibold text-[10px] group/folder transition-colors bg-white/5 border-white/10 text-gray-400 hover:bg-white/10 cursor-pointer"
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                const folderName = folders.find(f => f._id === task.folderId)?.name;
+                                                if (folderName && onSearch) onSearch(folderName);
+                                            }}
                                         >
                                             <Folder size={10} className="text-gray-500" />
                                             {folders.find(f => f._id === task.folderId)?.name || 'Unknown'}
@@ -660,6 +670,7 @@ export const TaskItem = forwardRef(({ task, onUpdate, showTags, showFolders, fol
                                                                 await api.updateTask(task._id, { labels: newLabels });
                                                                 onUpdate();
                                                             }}
+                                                            onSearch={onSearch}
                                                         />
                                                     );
                                                 })}
@@ -676,7 +687,11 @@ export const TaskItem = forwardRef(({ task, onUpdate, showTags, showFolders, fol
                                                 return (
                                                     <div
                                                         key={agentId}
-                                                        className="group/chip inline-flex items-center gap-1.5 px-2 py-1 rounded-full border border-blue-500/20 bg-blue-500/10 text-blue-400 text-[10px] font-medium pr-1.5"
+                                                        className="group/chip inline-flex items-center gap-1.5 px-2 py-1 rounded-full border border-blue-500/20 bg-blue-500/10 text-blue-400 text-[10px] font-medium pr-1.5 cursor-pointer hover:bg-blue-500/20 transition-colors"
+                                                        onClick={(e) => {
+                                                            e.stopPropagation();
+                                                            if (onSearch) onSearch(agent.name);
+                                                        }}
                                                     >
                                                         <Bot size={10} />
                                                         {agent.name}
@@ -849,6 +864,7 @@ export const TaskItem = forwardRef(({ task, onUpdate, showTags, showFolders, fol
                                                         availableLabels={availableLabels}
                                                         onClick={onAttachmentClick}
                                                         onDelete={() => handleUnlinkAttachment(att._id)}
+                                                        onSearch={onSearch}
                                                     />
                                                 ))}
                                             </DndContext>
