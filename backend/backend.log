@@ -1,0 +1,62 @@
+Connected to MongoDB
+[TimerSkill] Restoring 0 timers from DB...
+ * Serving Flask app 'app'
+ * Debug mode: on
+[31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on http://127.0.0.1:5001
+[33mPress CTRL+C to quit[0m
+127.0.0.1 - - [15/Jan/2026 21:58:51] "POST /api/traffic HTTP/1.1" 200 -
+127.0.0.1 - - [15/Jan/2026 21:58:51] "POST /api/traffic HTTP/1.1" 200 -
+127.0.0.1 - - [15/Jan/2026 21:58:51] "GET /api/agents HTTP/1.1" 200 -
+127.0.0.1 - - [15/Jan/2026 21:58:51] "GET /api/tasks?status=Active&folderId=null HTTP/1.1" 200 -
+127.0.0.1 - - [15/Jan/2026 21:58:51] "GET /api/labels HTTP/1.1" 200 -
+127.0.0.1 - - [15/Jan/2026 21:58:51] "GET /api/folders HTTP/1.1" 200 -
+127.0.0.1 - - [15/Jan/2026 21:58:51] "GET /api/labels HTTP/1.1" 200 -
+127.0.0.1 - - [15/Jan/2026 21:58:51] "GET /api/folders HTTP/1.1" 200 -
+127.0.0.1 - - [15/Jan/2026 21:58:51] "GET /api/tasks?status=Active&folderId=null HTTP/1.1" 200 -
+127.0.0.1 - - [15/Jan/2026 21:58:51] "GET /api/agents HTTP/1.1" 200 -
+127.0.0.1 - - [15/Jan/2026 21:58:52] "GET /api/stats HTTP/1.1" 200 -
+127.0.0.1 - - [15/Jan/2026 21:58:52] "GET /api/stats HTTP/1.1" 200 -
+127.0.0.1 - - [15/Jan/2026 21:58:53] "GET /api/stats HTTP/1.1" 200 -
+127.0.0.1 - - [15/Jan/2026 21:58:53] "GET /api/stats HTTP/1.1" 200 -
+127.0.0.1 - - [15/Jan/2026 21:58:56] "GET /api/tasks?folderId=696682ce49d57eafec556c38 HTTP/1.1" 200 -
+127.0.0.1 - - [15/Jan/2026 21:58:57] "GET /api/stats HTTP/1.1" 200 -
+127.0.0.1 - - [15/Jan/2026 21:59:06] "GET /api/tasks?status=Active&folderId=null HTTP/1.1" 200 -
+127.0.0.1 - - [15/Jan/2026 21:59:06] "GET /api/stats HTTP/1.1" 200 -
+127.0.0.1 - - [15/Jan/2026 22:00:28] "PUT /api/tasks/6969a78c3672dde04d7c204f HTTP/1.1" 200 -
+127.0.0.1 - - [15/Jan/2026 22:00:28] "GET /api/tasks?status=Active&folderId=null HTTP/1.1" 200 -
+127.0.0.1 - - [15/Jan/2026 22:00:29] "GET /api/stats HTTP/1.1" 200 -
+127.0.0.1 - - [15/Jan/2026 22:00:36] "PUT /api/tasks/6969a78c3672dde04d7c204f HTTP/1.1" 200 -
+127.0.0.1 - - [15/Jan/2026 22:00:36] "GET /api/tasks?status=Active&folderId=null HTTP/1.1" 200 -
+127.0.0.1 - - [15/Jan/2026 22:00:37] "GET /api/stats HTTP/1.1" 200 -
+127.0.0.1 - - [15/Jan/2026 22:00:58] "POST /api/traffic HTTP/1.1" 200 -
+127.0.0.1 - - [15/Jan/2026 22:00:58] "POST /api/traffic HTTP/1.1" 200 -
+127.0.0.1 - - [15/Jan/2026 22:00:59] "POST /api/traffic HTTP/1.1" 200 -
+127.0.0.1 - - [15/Jan/2026 22:00:59] "GET /api/folders?user_email=weiteng32@gmail.com HTTP/1.1" 200 -
+127.0.0.1 - - [15/Jan/2026 22:00:59] "GET /api/labels?user_email=weiteng32@gmail.com HTTP/1.1" 200 -
+127.0.0.1 - - [15/Jan/2026 22:00:59] "GET /api/tasks?user_email=weiteng32@gmail.com&status=Active&folderId=null HTTP/1.1" 200 -
+127.0.0.1 - - [15/Jan/2026 22:00:59] "GET /api/labels?user_email=weiteng32@gmail.com HTTP/1.1" 200 -
+127.0.0.1 - - [15/Jan/2026 22:00:59] "GET /api/folders?user_email=weiteng32@gmail.com HTTP/1.1" 200 -
+127.0.0.1 - - [15/Jan/2026 22:00:59] "GET /api/tasks?user_email=weiteng32@gmail.com&status=Active&folderId=null HTTP/1.1" 200 -
+127.0.0.1 - - [15/Jan/2026 22:00:59] "GET /api/agents?user_email=weiteng32@gmail.com HTTP/1.1" 200 -
+127.0.0.1 - - [15/Jan/2026 22:00:59] "GET /api/agents?user_email=weiteng32@gmail.com HTTP/1.1" 200 -
+127.0.0.1 - - [15/Jan/2026 22:00:59] "GET /api/tasks/6969434d328a18eba3678b0d HTTP/1.1" 200 -
+127.0.0.1 - - [15/Jan/2026 22:00:59] "GET /api/tasks/6969434d328a18eba3678b0d HTTP/1.1" 200 -
+127.0.0.1 - - [15/Jan/2026 22:01:00] "GET /api/stats?user_email=weiteng32@gmail.com HTTP/1.1" 200 -
+127.0.0.1 - - [15/Jan/2026 22:01:01] "GET /api/stats?user_email=weiteng32@gmail.com HTTP/1.1" 200 -
+127.0.0.1 - - [15/Jan/2026 22:01:02] "GET /api/stats?user_email=weiteng32@gmail.com HTTP/1.1" 200 -
+127.0.0.1 - - [15/Jan/2026 22:01:02] "GET /api/stats?user_email=weiteng32@gmail.com HTTP/1.1" 200 -
+127.0.0.1 - - [15/Jan/2026 22:01:04] "PUT /api/tasks/6969434d328a18eba3678b0d HTTP/1.1" 200 -
+127.0.0.1 - - [15/Jan/2026 22:01:04] "GET /api/tasks/6969434d328a18eba3678b0d HTTP/1.1" 200 -
+127.0.0.1 - - [15/Jan/2026 22:01:04] "GET /api/tasks?user_email=weiteng32@gmail.com&status=Active&folderId=null HTTP/1.1" 200 -
+127.0.0.1 - - [15/Jan/2026 22:01:05] "GET /api/stats?user_email=weiteng32@gmail.com HTTP/1.1" 200 -
+127.0.0.1 - - [15/Jan/2026 22:01:05] "PUT /api/tasks/6969434d328a18eba3678b0d HTTP/1.1" 200 -
+127.0.0.1 - - [15/Jan/2026 22:01:05] "GET /api/tasks?user_email=weiteng32@gmail.com&status=Active&folderId=null HTTP/1.1" 200 -
+127.0.0.1 - - [15/Jan/2026 22:01:05] "GET /api/tasks/6969434d328a18eba3678b0d HTTP/1.1" 200 -
+127.0.0.1 - - [15/Jan/2026 22:01:06] "GET /api/stats?user_email=weiteng32@gmail.com HTTP/1.1" 200 -
+127.0.0.1 - - [15/Jan/2026 22:01:06] "PUT /api/tasks/6969434d328a18eba3678b0d HTTP/1.1" 200 -
+127.0.0.1 - - [15/Jan/2026 22:01:06] "GET /api/tasks/6969434d328a18eba3678b0d HTTP/1.1" 200 -
+127.0.0.1 - - [15/Jan/2026 22:01:06] "GET /api/tasks?user_email=weiteng32@gmail.com&status=Active&folderId=null HTTP/1.1" 200 -
+127.0.0.1 - - [15/Jan/2026 22:01:07] "GET /api/stats?user_email=weiteng32@gmail.com HTTP/1.1" 200 -
+127.0.0.1 - - [15/Jan/2026 22:01:43] "GET /api/tasks?user_email=weiteng32@gmail.com&status=Active&folderId=null HTTP/1.1" 200 -
+127.0.0.1 - - [15/Jan/2026 22:01:55] "GET /api/stats?user_email=weiteng32@gmail.com HTTP/1.1" 200 -

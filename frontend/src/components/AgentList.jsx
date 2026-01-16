@@ -10,11 +10,11 @@ export const AgentList = ({ onFocusAgent, focusedAgentId, availableLabels, isCre
     const handleCreateAgent = async (e) => {
         e.preventDefault();
         try {
-            await api.createAgent({
-                name: newAgentName || "New Assistant",
-                role: "General helper",
-                description: "I can help you with your tasks."
-            });
+            await api.createAgent(
+                newAgentName || "New Assistant",
+                "General helper",
+                "I can help you with your tasks."
+            );
             onAgentsUpdate();
             setIsCreating(false);
             setNewAgentName('');

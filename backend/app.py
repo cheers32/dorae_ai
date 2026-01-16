@@ -360,9 +360,13 @@ def update_task(task_id):
         update_fields = {}
         allowed_fields = ['title', 'priority', 'category', 'status', 'importance', 'labels', 'folderId', 'attachments', 'assigned_agent_ids']
         
+        print(f"DEBUG: update_task {task_id} received data: {data}")
+
         for field in allowed_fields:
             if field in data:
                 update_fields[field] = data[field]
+                
+        print(f"DEBUG: update_task constructed fields: {update_fields}")
                 
         # Fetch current task to check status
         current_task = tasks_collection.find_one({"_id": ObjectId(task_id)})
