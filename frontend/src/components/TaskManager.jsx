@@ -798,6 +798,29 @@ export const TaskManager = () => {
                     console.error("Failed to tag task from sidebar", err);
                 }
             }
+        }
+
+        // [NEW] Case 1b: Dragging Sidebar Folder -> Agent
+        if (activeId.startsWith('sidebar-folder-') && overId.startsWith('agent-')) {
+            const folderId = active.data.current.folderId;
+            const agentId = over.data.current.agent._id;
+
+            try {
+                const res = await api.assignFolderToAgent(folderId, agentId);
+
+                // Show success feedback (toast or refresh)
+                // For now, just refresh tasks + agents + stats
+                fetchTasks(false);
+                fetchStats();
+                fetchAgents();
+
+                // If the agent is expanded, we might want to refresh it specifically or ensuring it shows the new tasks
+                window.dispatchEvent(new CustomEvent('agent-updated'));
+
+            } catch (err) {
+                console.error("Failed to assign folder to agent", err);
+            }
+
             setActiveId(null);
             return;
         }

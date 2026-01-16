@@ -799,6 +799,8 @@ def delete_label(label_id):
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
+# --- Folder Endpoints ---
+
 @app.route('/api/folders', methods=['GET'])
 def get_folders():
     try:
@@ -808,10 +810,10 @@ def get_folders():
             query['user_email'] = user_email
         else:
             query['$or'] = [{'user_email': None}, {'user_email': {'$exists': False}}]
-            
+        
         # Sort by order (asc) then created_at (desc)
         folders = list(folders_collection.find(query).sort([('order', 1), ('created_at', -1)]))
-        return jsonify([serialize_doc(f) for f in folders]), 200
+        return jsonify([serialize_doc(folder) for folder in folders]), 200
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
@@ -822,14 +824,13 @@ def create_folder():
         if not data or 'name' not in data:
             return jsonify({"error": "Folder name is required"}), 400
         
-        # Get count for default order
         count = folders_collection.count_documents({})
 
         new_folder = {
             "name": data['name'],
             "user_email": data.get('user_email'),
             "created_at": datetime.utcnow().isoformat(),
-            "order": count # Add default order
+            "order": count
         }
         
         result = folders_collection.insert_one(new_folder)
@@ -861,40 +862,86 @@ def reorder_folders():
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
-@app.route('/api/folders/<folder_id>', methods=['DELETE'])
-def delete_folder(folder_id):
-    try:
-        # Check if folder has items
-        count = tasks_collection.count_documents({
-            'folderId': folder_id,
-            'status': {'$nin': ['Deleted', 'deleted']}
-        })
-        
-        if count > 0:
-            return jsonify({"error": "Cannot delete folder with active tasks"}), 400
-
-        result = folders_collection.delete_one({"_id": ObjectId(folder_id)})
-        return jsonify({"message": "Folder deleted"}), 200
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
-
 @app.route('/api/folders/<folder_id>', methods=['PUT'])
 def update_folder(folder_id):
     try:
         data = request.json
-        if 'name' not in data:
-             return jsonify({"error": "Name is required"}), 400
-             
+        update_fields = {}
+        
+        if 'name' in data:
+            update_fields['name'] = data['name']
+            
+        if not update_fields:
+            return jsonify({"error": "No fields to update"}), 400
+        
         result = folders_collection.update_one(
             {"_id": ObjectId(folder_id)},
-            {"$set": {"name": data['name']}}
+            {"$set": update_fields}
         )
+        
         if result.matched_count == 0:
             return jsonify({"error": "Folder not found"}), 404
             
         return jsonify({"message": "Folder updated"}), 200
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+
+@app.route('/api/folders/<folder_id>', methods=['DELETE'])
+def delete_folder(folder_id):
+    try:
+        # Also need to unset folderId from tasks
+        tasks_collection.update_many(
+            {"folderId": folder_id},
+            {"$unset": {"folderId": ""}}
+        )
+        
+        result = folders_collection.delete_one({"_id": ObjectId(folder_id)})
+        return jsonify({"message": "Folder deleted"}), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+# [NEW] Bulk Assign Folder to Agent
+@app.route('/api/folders/<folder_id>/assign_agent', methods=['POST'])
+def assign_folder_to_agent(folder_id):
+    try:
+        data = request.json
+        agent_id = data.get('agentId')
+        
+        if not agent_id:
+            return jsonify({"error": "AgentId is required"}), 400
+            
+        # Verify agent exists
+        agent = agents_collection.find_one({"_id": ObjectId(agent_id)})
+        if not agent:
+            return jsonify({"error": "Agent not found"}), 404
+            
+        # Verify folder exists (optional, but good practice)
+        folder = folders_collection.find_one({"_id": ObjectId(folder_id)})
+        if not folder:
+            return jsonify({"error": "Folder not found"}), 404
+
+        # Add agent_id to assigned_agent_ids for all active tasks in this folder
+        # We use $addToSet to avoid duplicates
+        result = tasks_collection.update_many(
+            {
+                "folderId": folder_id,
+                "status": {"$nin": ["Closed", "completed", "Deleted", "deleted", "Archived", "archived"]}
+            },
+            {
+                "$addToSet": {"assigned_agent_ids": str(agent_id)}
+            }
+        )
+        
+        return jsonify({
+            "message": f"Assigned {result.modified_count} tasks to agent",
+            "modified_count": result.modified_count
+        }), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+
+
 
 # --- Agent Endpoints ---
 
