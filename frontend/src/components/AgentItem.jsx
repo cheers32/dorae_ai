@@ -13,8 +13,9 @@ import {
     Clock,
     Plus,
     ChevronUp,
-    ChevronDown,
+    GripVertical,
     ListTodo,
+    Bot
 } from 'lucide-react';
 import { useDroppable, useDraggable, DndContext, PointerSensor, useSensor, useSensors } from '@dnd-kit/core';
 import { UpdatesTimeline } from './UpdatesTimeline';
@@ -108,8 +109,8 @@ export const AgentItem = ({ agent, onFocus, onDelete, isFocused, availableLabels
     const [localName, setLocalName] = useState(agent.name);
     const [isDeleting, setIsDeleting] = useState(false);
 
-    const [showNotes, setShowNotes] = useState(false);
-    const [showSkills, setShowSkills] = useState(false);
+    const matchTaskItemPadding = { paddingTop: '5px', paddingBottom: '5px' }; // Approximate match to TaskItem's dynamic padding
+
     const chatEndRef = React.useRef(null);
 
     // Sync local state when agent prop changes
@@ -222,71 +223,89 @@ export const AgentItem = ({ agent, onFocus, onDelete, isFocused, availableLabels
                 group transition-all duration-200 bg-transparent
                 ${expanded
                     ? 'mb-4 rounded-xl bg-blue-500/5 border-blue-500/30 border shadow-lg'
-                    : 'border-b border-white/5 border-l-4 border-l-transparent hover:bg-white/[0.03]'
+                    : 'border-b border-white/5 border-l border-l-transparent hover:bg-white/[0.03]'
                 }
                 ${isOver ? 'ring-2 ring-blue-400 bg-blue-500/20' : ''}
             `}
         >
             {/* Header / Row */}
             <div
-                className="flex items-center gap-4 cursor-pointer px-4 py-3 select-none"
+                className="flex items-center gap-4 cursor-pointer pr-4 select-none"
                 onClick={() => setExpanded(!expanded)}
             >
-                {/* Expand Icon */}
-                <div className={`p-1 text-gray-600 hover:text-gray-400 transition-colors`}>
-                    {expanded ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
-                </div>
-
-                {/* Agent Icon */}
-                <div className={`
-                    p-1.5 rounded-lg flex items-center justify-center shrink-0
-                    ${isFocused ? 'bg-blue-500/20 text-blue-300' : 'bg-white/5 text-gray-500 group-hover:bg-white/10 group-hover:text-gray-300'}
-                `}>
-                    <Brain size={18} />
-                </div>
-
-                {/* Name & Role */}
-                <div className="flex-1 min-w-0 flex items-center gap-3">
-                    {isEditing ? (
-                        <div className="flex items-center gap-2 flex-1" onClick={e => e.stopPropagation()}>
-                            <input
-                                type="text"
-                                value={editedName}
-                                onChange={(e) => setEditedName(e.target.value)}
-                                className="bg-black/40 border border-blue-500/50 rounded px-2 py-0.5 text-white text-sm font-medium focus:outline-none w-32"
-                                placeholder="Name"
-                            />
-                            <input
-                                type="text"
-                                value={editedRole}
-                                onChange={(e) => setEditedRole(e.target.value)}
-                                className="bg-black/40 border border-blue-500/50 rounded px-2 py-0.5 text-gray-400 text-xs focus:outline-none flex-1"
-                                placeholder="Role"
-                            />
-                        </div>
-                    ) : (
-                        <div className="flex items-baseline gap-3 truncate">
-                            <h3 className="text-sm font-medium text-gray-200">{localName}</h3>
-                            <span className="text-xs text-gray-500">{agent.role}</span>
-                        </div>
-                    )}
-                </div>
-
-                {/* Status/Badge */}
-                <div className="flex items-center gap-3">
-                    <div className="flex items-center gap-1.5 px-2 py-0.5 rounded text-[10px] uppercase font-bold tracking-wider bg-white/5 text-gray-500">
-                        <Zap size={10} />
-                        <span>{agent.skills?.length || 0} Skills</span>
+                <div
+                    className="px-4 flex items-center gap-4 flex-1 min-w-0"
+                    style={matchTaskItemPadding}
+                >
+                    {/* Grip/Expand Icon */}
+                    <div className={`p-1 text-gray-600 hover:text-gray-400 transition-colors ${expanded ? 'cursor-pointer' : 'cursor-grab active:cursor-grabbing'}`}>
+                        {expanded ? <ChevronUp size={16} /> : <GripVertical size={16} />}
                     </div>
-                    {agent.active_tasks?.length > 0 && (
-                        <div className="flex items-center gap-1.5 px-2 py-0.5 rounded text-[10px] uppercase font-bold tracking-wider bg-blue-500/10 text-blue-400">
-                            <ListTodo size={10} />
-                            <span>{agent.active_tasks.length} Tasks</span>
-                        </div>
-                    )}
 
+                    {/* Agent Icon (Analogous to Status Dot) */}
+                    <div className="relative flex items-center justify-center">
+                        <div className={`
+                            p-1.5 rounded-lg flex items-center justify-center shrink-0 transition-transform active:scale-95
+                            ${isFocused
+                                ? 'bg-blue-500/20 text-blue-300 shadow-[0_0_10px_rgba(59,130,246,0.3)]'
+                                : 'bg-white/5 text-gray-500 group-hover:bg-white/10 group-hover/text-gray-300'
+                            }
+                        `}>
+                            <Brain size={14} />
+                        </div>
+                    </div>
+
+                    {/* Name & Role */}
+                    <div className="flex-1 min-w-0 flex items-center gap-2">
+                        {isEditing ? (
+                            <div className="flex items-center gap-2 flex-1" onClick={e => e.stopPropagation()}>
+                                <input
+                                    type="text"
+                                    value={editedName}
+                                    onChange={(e) => setEditedName(e.target.value)}
+                                    className="bg-black/40 border border-blue-500/50 rounded px-2 py-0.5 text-white text-sm font-medium focus:outline-none w-32"
+                                    placeholder="Name"
+                                />
+                                <input
+                                    type="text"
+                                    value={editedRole}
+                                    onChange={(e) => setEditedRole(e.target.value)}
+                                    className="bg-black/40 border border-blue-500/50 rounded px-2 py-0.5 text-gray-400 text-xs focus:outline-none flex-1"
+                                    placeholder="Role"
+                                />
+                            </div>
+                        ) : (
+                            <h3 className={`font-medium text-left truncate ${expanded ? 'text-gray-200' : 'text-gray-400'}`} style={{ fontSize: '12px', lineHeight: '1.4' }}>
+                                {localName}
+                                <span className="text-gray-600 font-normal ml-2 text-[11px]">
+                                    <span className="text-gray-700 mr-1">-</span>
+                                    {agent.role}
+                                </span>
+                            </h3>
+                        )}
+
+                        {/* Status/Badge */}
+                        {!expanded && (
+                            <div className="flex items-center gap-3 ml-2">
+                                <div className="flex items-center gap-1.5 px-2 py-0.5 rounded text-[10px] uppercase font-bold tracking-wider text-gray-600 bg-white/5">
+                                    <Zap size={10} />
+                                    <span>{agent.skills?.length || 0}</span>
+                                </div>
+                                {agent.active_tasks?.length > 0 && (
+                                    <div className="flex items-center gap-1.5 px-2 py-0.5 rounded text-[10px] uppercase font-bold tracking-wider text-blue-500/70 bg-blue-500/5">
+                                        <ListTodo size={10} />
+                                        <span>{agent.active_tasks.length}</span>
+                                    </div>
+                                )}
+                            </div>
+                        )}
+                    </div>
+                </div>
+
+                {/* Right Actions */}
+                <div className="flex items-center gap-4">
                     {/* Actions */}
-                    <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity" onClick={e => e.stopPropagation()}>
+                    <div className={`flex items-center gap-2 transition-opacity ${expanded ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`} onClick={e => e.stopPropagation()}>
                         {isDeleting ? (
                             <div className="flex items-center gap-1">
                                 <button className="p-1 text-gray-500 hover:text-gray-300 transition-colors" onClick={() => setIsDeleting(false)}>
@@ -310,7 +329,7 @@ export const AgentItem = ({ agent, onFocus, onDelete, isFocused, availableLabels
                                 <button
                                     onClick={() => onFocus(agent)}
                                     className={`
-                                        p-1 rounded text-[10px] font-bold uppercase tracking-wider border transition-colors
+                                        p-1 px-2 rounded text-[10px] font-bold uppercase tracking-wider border transition-colors
                                         ${isFocused
                                             ? 'bg-red-500/10 text-red-400 border-red-500/20 hover:bg-red-500/20'
                                             : 'bg-blue-500/10 text-blue-400 border-blue-500/20 hover:bg-blue-500/20'
@@ -319,12 +338,16 @@ export const AgentItem = ({ agent, onFocus, onDelete, isFocused, availableLabels
                                 >
                                     {isFocused ? 'Unfocus' : 'Focus'}
                                 </button>
-                                <button onClick={() => setIsEditing(true)} className="p-1 text-gray-500 hover:text-blue-400 transition-colors">
-                                    <Pencil size={14} />
-                                </button>
-                                <button onClick={() => setIsDeleting(true)} className="p-1 text-gray-500 hover:text-red-400 transition-colors">
-                                    <Trash2 size={14} />
-                                </button>
+                                {expanded && (
+                                    <>
+                                        <button onClick={() => setIsEditing(true)} className="p-1 text-gray-500 hover:text-blue-400 transition-colors">
+                                            <Pencil size={14} />
+                                        </button>
+                                        <button onClick={() => setIsDeleting(true)} className="p-1 text-gray-500 hover:text-red-400 transition-colors">
+                                            <Trash2 size={14} />
+                                        </button>
+                                    </>
+                                )}
                             </>
                         )}
                     </div>
@@ -373,12 +396,9 @@ export const AgentItem = ({ agent, onFocus, onDelete, isFocused, availableLabels
                                                         onRemove={async () => {
                                                             // Unassign logic
                                                             let currentIds = task.assigned_agent_ids || [];
-                                                            // Fallback for legacy
                                                             if (currentIds.length === 0 && task.assigned_agent_id) {
                                                                 currentIds = [task.assigned_agent_id];
                                                             }
-
-                                                            // Filter out this agent (ensure string comparison)
                                                             const newIds = currentIds.filter(id => String(id) !== String(agent._id));
 
                                                             await api.updateTask(task._id, { assigned_agent_ids: newIds });

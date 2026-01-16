@@ -33,7 +33,7 @@ export const AgentList = ({ onFocusAgent, focusedAgentId, availableLabels, isCre
     };
 
     return (
-        <div className="px-6 pb-20 max-w-4xl mx-auto">
+        <div className="px-6 pb-20">
             {isCreating && (
                 <div className="mb-6 bg-gray-900/50 border border-gray-800 rounded-xl p-4 animate-in fade-in slide-in-from-top-4">
                     <form onSubmit={handleCreateAgent} className="flex gap-4">
