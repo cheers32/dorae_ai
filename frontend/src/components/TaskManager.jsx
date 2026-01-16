@@ -6,7 +6,7 @@ import { ChatInterface } from './ChatInterface';
 import { AgentList } from './AgentList';
 import { AgentItem } from './AgentItem';
 import { GeminiPanel, GeminiIcon } from './GeminiPanel';
-import { Search, Plus, Home as HomeIcon, Tag as TagIcon, ArrowLeft, ArrowRight, Trash2, X, ChevronsUpDown, ChevronsDownUp, Type, MessageSquare, ZoomIn, ZoomOut, MoreVertical, SlidersHorizontal, Settings2, Bug, Calendar, ArrowDownAZ, GripVertical, Folder, Sparkles, Zap, Clock, Paperclip, Minus } from 'lucide-react';
+import { Search, Plus, Home as HomeIcon, Tag as TagIcon, ArrowLeft, ArrowRight, Trash2, X, ChevronsUpDown, ChevronsDownUp, Type, MessageSquare, ZoomIn, ZoomOut, MoreVertical, SlidersHorizontal, Settings2, Bug, Calendar, ArrowDownAZ, GripVertical, Folder, Sparkles, Zap, Clock, Paperclip, Minus, Copy } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import {
@@ -1520,6 +1520,27 @@ export const TaskManager = () => {
                                                         <Zap size={16} />
                                                         <span className="text-xs font-medium">Run Priority Check</span>
                                                     </button>
+
+                                                    <button
+                                                        onClick={async () => {
+                                                            setIsMenuOpen(false);
+                                                            try {
+                                                                if (selectedFolder) {
+                                                                    await api.runFolderDuplicate(selectedFolder);
+                                                                } else {
+                                                                    await api.runGlobalDuplicate();
+                                                                }
+                                                                fetchTasks(false);
+                                                                fetchStats();
+                                                            } catch (err) {
+                                                                console.error("Failed to run duplicate check", err);
+                                                            }
+                                                        }}
+                                                        className="w-full px-4 py-2 text-left flex items-center gap-3 transition-colors hover:bg-white/5 text-gray-400"
+                                                    >
+                                                        <Copy size={16} />
+                                                        <span className="text-xs font-medium">Run Duplicate Check</span>
+                                                    </button>
                                                 </>
                                             )}
 
@@ -1820,6 +1841,7 @@ export const TaskManager = () => {
                                                                     showCounts={showCounts}
                                                                     agents={agents}
                                                                     onSearch={handleChipSearch}
+                                                                    showPulse={showPulse}
                                                                 />
                                                             ))}
                                                         </div>

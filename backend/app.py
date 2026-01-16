@@ -887,6 +887,148 @@ def analyze_all_active_priority():
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
+@app.route('/api/folders/<folder_id>/analyze_duplicates', methods=['POST'])
+def analyze_folder_duplicates(folder_id):
+    try:
+        # Verify folder exists
+        folder = folders_collection.find_one({"_id": ObjectId(folder_id)})
+        if not folder:
+            return jsonify({"error": "Folder not found"}), 404
+
+        # Fetch active tasks in folder
+        tasks = list(tasks_collection.find({
+            "folderId": folder_id,
+            "status": {"$nin": ["Deleted", "deleted", "Closed", "completed", "Archived", "archived"]}
+        }))
+
+        if not tasks:
+            return jsonify({"message": "No active tasks in folder", "duplicate_count": 0}), 200
+
+        # Run AI Analysis
+        duplicate_ids = ai_service.analyze_duplicates(tasks)
+        
+        updated_count = 0
+        if duplicate_ids:
+            from pymongo import UpdateOne
+            operations = []
+            
+            # Ensure "Duplicate" Label exists (Neutral/Gray)
+            duplicate_label_color = "#9ca3af" # Gray-400
+            existing_label = labels_collection.find_one({"name": "Duplicate"})
+            if not existing_label:
+                labels_collection.insert_one({
+                    "name": "Duplicate",
+                    "color": duplicate_label_color,
+                    "created_at": datetime.utcnow().isoformat(),
+                    "order": 2
+                })
+            elif existing_label.get('color') != duplicate_label_color:
+                 labels_collection.update_one(
+                    {"_id": existing_label["_id"]},
+                    {"$set": {"color": duplicate_label_color}}
+                )
+            
+            dup_set = set(str(uid) for uid in duplicate_ids)
+            
+            for task in tasks:
+                t_id_str = str(task['_id'])
+                if t_id_str in dup_set:
+                    # Mark as Duplicate
+                    operations.append(
+                        UpdateOne(
+                            {"_id": task['_id']},
+                            {"$addToSet": {"labels": "Duplicate"}}
+                        )
+                    )
+                else:
+                    # Remove Duplicate label (if previously marked but now confirmed unique/original)
+                    # Note: We might NOT want to aggressively remove if running on subset?
+                    # But since we run on all folder tasks, it should be safe to reset status for this folder context.
+                    operations.append(
+                        UpdateOne(
+                            {"_id": task['_id']},
+                            {"$pull": {"labels": "Duplicate"}}
+                        )
+                    )
+
+            if operations:
+                result = tasks_collection.bulk_write(operations)
+                updated_count = result.modified_count
+
+        return jsonify({
+            "message": "Duplicate analysis complete", 
+            "duplicate_count": len(duplicate_ids) if duplicate_ids else 0,
+            "updated_count": updated_count
+        }), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+@app.route('/api/tasks/analyze_duplicates', methods=['POST'])
+def analyze_all_active_duplicates():
+    try:
+        # Fetch ALL active tasks
+        tasks = list(tasks_collection.find({
+            "status": {"$nin": ["Deleted", "deleted", "Closed", "completed", "Archived", "archived"]}
+        }))
+
+        if not tasks:
+            return jsonify({"message": "No active tasks found", "duplicate_count": 0}), 200
+
+        # Run AI Analysis
+        duplicate_ids = ai_service.analyze_duplicates(tasks)
+        
+        updated_count = 0
+        if duplicate_ids:
+            from pymongo import UpdateOne
+            operations = []
+            
+            # Ensure "Duplicate" Label exists (Neutral/Gray)
+            duplicate_label_color = "#9ca3af" # Gray-400
+            existing_label = labels_collection.find_one({"name": "Duplicate"})
+            if not existing_label:
+                labels_collection.insert_one({
+                    "name": "Duplicate",
+                    "color": duplicate_label_color,
+                    "created_at": datetime.utcnow().isoformat(),
+                    "order": 2
+                })
+            elif existing_label.get('color') != duplicate_label_color:
+                 labels_collection.update_one(
+                    {"_id": existing_label["_id"]},
+                    {"$set": {"color": duplicate_label_color}}
+                )
+            
+            dup_set = set(str(uid) for uid in duplicate_ids)
+            
+            for task in tasks:
+                t_id_str = str(task['_id'])
+                if t_id_str in dup_set:
+                    operations.append(
+                        UpdateOne(
+                            {"_id": task['_id']},
+                            {"$addToSet": {"labels": "Duplicate"}}
+                        )
+                    )
+                else:
+                     operations.append(
+                        UpdateOne(
+                            {"_id": task['_id']},
+                            {"$pull": {"labels": "Duplicate"}}
+                        )
+                    )
+
+            if operations:
+                result = tasks_collection.bulk_write(operations)
+                updated_count = result.modified_count
+
+        return jsonify({
+            "message": "Duplicate analysis complete", 
+            "duplicate_count": len(duplicate_ids) if duplicate_ids else 0,
+            "updated_count": updated_count
+        }), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
 @app.route('/api/tasks/analyze_importance', methods=['POST'])
 def analyze_all_active_importance():
     try:

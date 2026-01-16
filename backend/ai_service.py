@@ -173,6 +173,55 @@ class AIService:
             print(f"AI Priority Analysis Error: {e}")
             return []
 
+    def analyze_duplicates(self, tasks):
+        if not self.client:
+            print("AI Service: Missing API Key")
+            return []
+
+        if not tasks or len(tasks) < 2:
+            return []
+
+        tasks_text = ""
+        for t in tasks:
+            tasks_text += f"- ID: {t['_id']}, Title: {t.get('title', 'Untitled')}, Status: {t.get('status', 'Active')}\n"
+
+        prompt = f"""
+        Analyze the following tasks and identify DUPLICATES.
+        
+        Criteria for "Duplicate":
+        - Tasks that are semantically identical or extremely similar (e.g., "Buy Milk" vs "Buy Milk for home").
+        - Tasks that represent the exact same unit of work.
+        - Be conservative: If unsure, do NOT mark as duplicate.
+        
+        Tasks:
+        {tasks_text}
+        
+        Return a JSON object with a list of IDs for the tasks that are *redundant* versions (i.e., keep one as original, mark the others as duplicates).
+        
+        Example:
+        {{
+            "duplicate_task_ids": ["id2", "id4"]
+        }}
+        """
+        
+        try:
+            response = self.client.models.generate_content(
+                model='gemini-2.0-flash-exp', 
+                contents=prompt,
+                config={
+                    'response_mime_type': 'application/json'
+                }
+            )
+            
+            if hasattr(response, 'parsed') and response.parsed:
+                return response.parsed.get('duplicate_task_ids', [])
+            
+            data = json.loads(response.text)
+            return data.get('duplicate_task_ids', [])
+        except Exception as e:
+            print(f"AI Duplicate Analysis Error: {e}")
+            return []
+
     def chat_with_task_context(self, user_message, tasks_context, agent_context=None):
         if not self.client:
             return "I can't help you with that right now because the API key is missing."

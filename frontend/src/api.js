@@ -281,6 +281,22 @@ export const api = {
         return res.json();
     },
 
+    runFolderDuplicate: async (folderId) => {
+        const res = await fetch(`${API_BASE}/folders/${folderId}/analyze_duplicates`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' }
+        });
+        return res.json();
+    },
+
+    runGlobalDuplicate: async () => {
+        const res = await fetch(`${API_BASE}/tasks/analyze_duplicates`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' }
+        });
+        return res.json();
+    },
+
     chatWithAI: async (message, agentId = null) => {
         const body = { message, user_email: getUserEmail() };
         if (agentId) {
