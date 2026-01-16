@@ -27,6 +27,7 @@ export const UpdatesTimeline = ({
     const [editingId, setEditingId] = useState(null);
     const [editContent, setEditContent] = useState('');
     const [deletingId, setDeletingId] = useState(null);
+    const [showAll, setShowAll] = useState(false);
 
     const newUpdateTextareaRef = useRef(null);
     const updateTextareaRef = useRef(null);
@@ -54,6 +55,8 @@ export const UpdatesTimeline = ({
         try {
             await onAdd(newDetail);
             setNewDetail('');
+            // Ensure we see the new item
+            setShowAll(true);
         } catch (err) {
             console.error(err);
         }
@@ -77,9 +80,34 @@ export const UpdatesTimeline = ({
         }
     };
 
+    const visibleItems = showAll ? items : items.slice(-3);
+    const hiddenCount = items.length - visibleItems.length;
+
     return (
         <div className={`space-y-1 ${className}`}>
-            {items.map((item) => (
+            {hiddenCount > 0 && (
+                <div className="flex justify-center mb-4">
+                    <button
+                        onClick={() => setShowAll(true)}
+                        className="text-xs font-medium text-gray-500 hover:text-blue-400 bg-gray-900/50 hover:bg-gray-800 rounded-full px-3 py-1 transition-all border border-gray-800 hover:border-blue-500/30"
+                    >
+                        Show {hiddenCount} previous updates
+                    </button>
+                </div>
+            )}
+
+            {showAll && items.length > 3 && (
+                <div className="flex justify-center mb-2">
+                    <button
+                        onClick={() => setShowAll(false)}
+                        className="text-xs font-medium text-gray-500 hover:text-gray-300 transition-colors"
+                    >
+                        Show less
+                    </button>
+                </div>
+            )}
+
+            {visibleItems.map((item) => (
                 <div key={item.id} className="flex gap-4 group/item text-sm">
                     <div className="w-24 text-xs text-gray-400 text-right pt-0.5 font-mono shrink-0">
                         {format(parseUTCDate(item.timestamp), 'MMM d, HH:mm')}
