@@ -15,7 +15,8 @@ import {
     ChevronUp,
     GripVertical,
     ListTodo,
-    Bot
+    Bot,
+    Folder
 } from 'lucide-react';
 import { useDroppable, useDraggable, DndContext, PointerSensor, useSensor, useSensors } from '@dnd-kit/core';
 import { UpdatesTimeline } from './UpdatesTimeline';
@@ -393,6 +394,39 @@ export const AgentItem = ({ agent, onFocus, onDelete, isFocused, availableLabels
                                     </p>
                                 )}
                             </div>
+
+
+                            {/* [NEW] Assigned Folders */}
+                            {agent.assigned_folders && agent.assigned_folders.length > 0 && (
+                                <div className="mb-4">
+                                    <h4 className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Assigned Folders</h4>
+                                    <div className="flex flex-wrap gap-2">
+                                        {agent.assigned_folders.map(folder => (
+                                            <div
+                                                key={folder._id}
+                                                className="border border-blue-500/30 bg-blue-500/10 px-2.5 py-1 rounded-lg text-xs font-medium flex items-center gap-1.5 shadow-sm text-blue-200 group/chip"
+                                            >
+                                                <Folder size={12} className="text-blue-400" />
+                                                <span className="truncate max-w-[150px]">{folder.name}</span>
+                                                <button
+                                                    className="ml-0.5 p-0.5 rounded-full hover:bg-white/10 text-blue-400 hover:text-white transition-colors opacity-0 group-hover/chip:opacity-100"
+                                                    onClick={async (e) => {
+                                                        e.stopPropagation();
+                                                        try {
+                                                            await api.unassignFolderFromAgent(folder._id, agent._id);
+                                                            window.dispatchEvent(new CustomEvent('agent-updated'));
+                                                        } catch (err) {
+                                                            console.error("Failed to unassign folder", err);
+                                                        }
+                                                    }}
+                                                >
+                                                    <X size={10} />
+                                                </button>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+                            )}
 
                             {/* Assigned Tasks */}
                             {agent.active_tasks && agent.active_tasks.length > 0 && (

@@ -900,9 +900,17 @@ def delete_folder(folder_id):
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
-# [NEW] Bulk Assign Folder to Agent
-@app.route('/api/folders/<folder_id>/assign_agent', methods=['POST'])
-def assign_folder_to_agent(folder_id):
+
+
+
+
+
+
+# --- Agent Endpoints ---
+
+# [NEW] Bulk Assign Folder to Agent (Modified to be explicit folder assignment)
+@app.route('/api/folders/<folder_id>/assign_agent', methods=['POST', 'DELETE'])
+def manage_folder_assignment(folder_id):
     try:
         data = request.json
         agent_id = data.get('agentId')
@@ -915,35 +923,33 @@ def assign_folder_to_agent(folder_id):
         if not agent:
             return jsonify({"error": "Agent not found"}), 404
             
-        # Verify folder exists (optional, but good practice)
+        # Verify folder exists
         folder = folders_collection.find_one({"_id": ObjectId(folder_id)})
         if not folder:
             return jsonify({"error": "Folder not found"}), 404
 
-        # Add agent_id to assigned_agent_ids for all active tasks in this folder
-        # We use $addToSet to avoid duplicates
-        result = tasks_collection.update_many(
-            {
-                "folderId": folder_id,
-                "status": {"$nin": ["Closed", "completed", "Deleted", "deleted", "Archived", "archived"]}
-            },
-            {
-                "$addToSet": {"assigned_agent_ids": str(agent_id)}
-            }
-        )
-        
-        return jsonify({
-            "message": f"Assigned {result.modified_count} tasks to agent",
-            "modified_count": result.modified_count
-        }), 200
+        if request.method == 'POST':
+            # Add folder_id to agent's assigned_folder_ids
+            result = agents_collection.update_one(
+                {"_id": ObjectId(agent_id)},
+                {"$addToSet": {"assigned_folder_ids": str(folder_id)}}
+            )
+            return jsonify({"message": "Folder assigned to agent"}), 200
+            
+        elif request.method == 'DELETE':
+            # Remove folder_id from agent's assigned_folder_ids
+            result = agents_collection.update_one(
+                {"_id": ObjectId(agent_id)},
+                {"$pull": {"assigned_folder_ids": str(folder_id)}}
+            )
+            return jsonify({"message": "Folder unassigned from agent"}), 200
+
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
-
-
-
-
 # --- Agent Endpoints ---
+
+@app.route('/api/agents', methods=['GET'])
 
 @app.route('/api/agents', methods=['GET'])
 def get_agents():
@@ -956,22 +962,38 @@ def get_agents():
             query['$or'] = [{'user_email': None}, {'user_email': {'$exists': False}}]
             
         # Sort by created_at (desc)
-        # Sort by created_at (desc)
         agents = list(agents_collection.find(query).sort('created_at', -1))
         
-        # [NEW] Attach active tasks to each agent
+        # [NEW] Attach active tasks AND assigned folders to each agent
         for agent in agents:
-            # Find Active tasks assigned to this agent
             agent_id = str(agent['_id'])
-            # assigned_agent_id should be string in task
-            tasks = list(tasks_collection.find({
+            
+            # Get assigned folder IDs
+            assigned_folder_ids = agent.get('assigned_folder_ids', [])
+            
+            # 1. Active Tasks (Individual Assignments)
+            # EXCLUDE tasks that are in the assigned folders to avoid duplication in UI
+            tasks_query = {
                 '$or': [
                     {'assigned_agent_id': agent_id},
                     {'assigned_agent_ids': agent_id}
                 ],
                 'status': {'$nin': ['Closed', 'completed', 'Deleted', 'deleted']}
-            }, {'title': 1, 'status': 1, 'labels': 1, 'assigned_agent_ids': 1}))
+            }
+            
+            if assigned_folder_ids:
+                tasks_query['folderId'] = {'$nin': assigned_folder_ids}
+
+            tasks = list(tasks_collection.find(tasks_query, {'title': 1, 'status': 1, 'labels': 1, 'assigned_agent_ids': 1}))
             agent['active_tasks'] = [serialize_doc(t) for t in tasks]
+            
+            # 2. Assigned Folders
+            if assigned_folder_ids:
+                folder_ids = [ObjectId(fid) for fid in assigned_folder_ids]
+                folders = list(folders_collection.find({"_id": {"$in": folder_ids}}))
+                agent['assigned_folders'] = [serialize_doc(f) for f in folders]
+            else:
+                agent['assigned_folders'] = []
 
         return jsonify([serialize_doc(a) for a in agents]), 200
     except Exception as e:

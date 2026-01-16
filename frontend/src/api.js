@@ -89,6 +89,15 @@ export const api = {
         return res.json();
     },
 
+    unassignFolderFromAgent: async (folderId, agentId) => {
+        const res = await fetch(`${API_BASE}/folders/${folderId}/assign_agent`, {
+            method: 'DELETE',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ agentId }),
+        });
+        return res.json();
+    },
+
     getLabels: async () => {
         const query = new URLSearchParams();
         const userEmail = getUserEmail();
