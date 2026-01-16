@@ -1414,142 +1414,145 @@ export const TaskManager = () => {
                         </div>
                     </header>
 
-                    {/* [NEW] Workarea Section (Persistent across views) */}
-                    <AnimatePresence>
-                        {workareaTasks.length > 0 && (
-                            <>
-                                <motion.div
-                                    initial={{ height: 0, opacity: 0 }}
-                                    animate={{ height: 'auto', opacity: 1 }}
-                                    exit={{ height: 0, opacity: 0 }}
-                                    className="bg-white/[0.03] border-b border-white/5 relative flex flex-col shrink-0"
-                                >
-                                    <div className="px-6 py-3 bg-white/[0.02] backdrop-blur border-white/5 flex items-center justify-between sticky top-0 z-10">
-                                        <h2 className="text-sm font-bold uppercase tracking-widest text-blue-400">Current Focus</h2>
-                                    </div>
-                                    <div className="px-6 py-4">
-                                        {workareaTasks.map(item => {
-                                            if (item.type === 'agent') {
-                                                return (
-                                                    <div key={`workarea-agent-${item._id}`} className="mb-2">
-                                                        <AgentItem
-                                                            agent={item}
-                                                            isFocused={true}
-                                                            onFocus={() => handleFocusAgent(item)}
-                                                            availableLabels={labels}
-                                                        // Add compact prop if needed
-                                                        />
-                                                    </div>
-                                                );
-                                            }
-                                            // Default to Task
-                                            return (
-                                                <SortableTaskItem
-                                                    key={`workarea-${item._id}`}
-                                                    id={`workarea-task-${item._id}`}
-                                                    task={item}
-                                                    onUpdate={() => {
-                                                        fetchTasks(false);
-                                                        fetchStats();
-                                                        refreshWorkareaTask(item._id);
-                                                    }}
-                                                    showTags={true}
-                                                    showFolders={showFolders}
-                                                    folders={folders}
-                                                    availableLabels={labels}
-                                                    isWorkarea={true}
-                                                    defaultExpanded={item._forceExpanded}
-                                                    onRemoveFromWorkarea={() => handleRemoveFromWorkarea(item._id)}
-                                                    onAttachmentClick={handleNavigateToTask}
-                                                    onTaskClick={() => handleNavigateToTask(item)}
-                                                    globalExpanded={globalExpanded}
-                                                    showFullTitles={showFullTitles}
-                                                    showPreview={showPreview}
-                                                    showDebugInfo={showDebugInfo}
-                                                    fontSize={fontSize}
-                                                />
-                                            );
-                                        })}
-                                    </div>
-                                </motion.div>
-
-                                <div className="h-px bg-white/5 my-6 mx-6"></div>
-                            </>
-                        )}
-                    </AnimatePresence>
-
-                    {activeTab === 'assistant' ? (
-                        <div className="flex-1 overflow-hidden">
-                            <AgentList
-                                onFocusAgent={handleFocusAgent}
-                                focusedAgentId={focusedAgentId}
-                                availableLabels={labels}
-                                isCreating={isCreatingAgent}
-                                setIsCreating={setIsCreatingAgent}
-                            />
-                        </div>
-                    ) : (
-                        <div className="flex-1 flex flex-col px-6 pb-8 overflow-hidden">
-                            {error ? (
-                                <div className="flex-1 flex flex-col items-center justify-center text-center">
-                                    <div className="bg-red-500/10 text-red-400 p-6 rounded-2xl border border-red-500/20 max-w-md">
-                                        <h3 className="text-xl font-semibold mb-2">Unavailable</h3>
-                                        <p className="mb-6 text-sm opacity-80">{error}</p>
-                                        <button
-                                            onClick={() => fetchTasks(true)}
-                                            className="bg-red-500 hover:bg-red-600 text-white px-6 py-2 rounded-xl text-sm font-medium transition-colors"
-                                        >
-                                            Retry Connection
-                                        </button>
-                                    </div>
-                                </div>
-                            ) : (
+                    {/* Main Scrollable Area */}
+                    <div className="flex-1 overflow-y-auto custom-scrollbar relative">
+                        {/* [NEW] Workarea Section (Persistent across views) */}
+                        <AnimatePresence>
+                            {workareaTasks.length > 0 && (
                                 <>
-                                    <div className="flex-1 overflow-y-auto pr-2 scrollbar-hide">
-                                        {loading ? (
-                                            null
-                                        ) : tasks.length === 0 ? (
-                                            <div className="text-center py-20 bg-gray-900/50 rounded-2xl border border-gray-800/50 border-dashed">
-                                                <p className="text-gray-500 text-lg">No {activeTab} tasks found.</p>
-                                            </div>
-                                        ) : (
-                                            <SortableContext
-                                                items={visibleTasks.map(t => t._id)}
-                                                strategy={verticalListSortingStrategy}
-                                            >
-                                                <div>
-                                                    {visibleTasks.map(task => (
-                                                        <SortableTaskItem
-                                                            key={task._id}
-                                                            id={task._id}
-                                                            task={task}
-                                                            onUpdate={() => {
-                                                                fetchTasks(false);
-                                                                fetchStats();
-                                                            }}
-                                                            showTags={showTags}
-                                                            showFolders={showFolders}
-                                                            folders={folders}
-                                                            availableLabels={labels}
-                                                            onSendToWorkarea={() => handleSendToWorkarea(task)}
-                                                            isWorkarea={false}
-                                                            defaultExpanded={autoExpandTaskId === task._id}
-                                                            onAttachmentClick={handleNavigateToTask}
-                                                            globalExpanded={globalExpanded}
-                                                            showFullTitles={showFullTitles}
-                                                            showPreview={showPreview}
-                                                            showDebugInfo={showDebugInfo}
-                                                            fontSize={fontSize}
-                                                        />
-                                                    ))}
-                                                </div>
-                                            </SortableContext>
-                                        )}
-                                    </div>
+                                    <motion.div
+                                        initial={{ height: 0, opacity: 0 }}
+                                        animate={{ height: 'auto', opacity: 1 }}
+                                        exit={{ height: 0, opacity: 0 }}
+                                        className="bg-white/[0.03] border-b border-white/5 relative flex flex-col shrink-0"
+                                    >
+                                        <div className="px-6 py-3 bg-white/[0.02] backdrop-blur border-white/5 flex items-center justify-between sticky top-0 z-10">
+                                            <h2 className="text-sm font-bold uppercase tracking-widest text-blue-400">Current Focus</h2>
+                                        </div>
+                                        <div className="px-6 py-4">
+                                            {workareaTasks.map(item => {
+                                                if (item.type === 'agent') {
+                                                    return (
+                                                        <div key={`workarea-agent-${item._id}`} className="mb-2">
+                                                            <AgentItem
+                                                                agent={item}
+                                                                isFocused={true}
+                                                                onFocus={() => handleFocusAgent(item)}
+                                                                availableLabels={labels}
+                                                            // Add compact prop if needed
+                                                            />
+                                                        </div>
+                                                    );
+                                                }
+                                                // Default to Task
+                                                return (
+                                                    <SortableTaskItem
+                                                        key={`workarea-${item._id}`}
+                                                        id={`workarea-task-${item._id}`}
+                                                        task={item}
+                                                        onUpdate={() => {
+                                                            fetchTasks(false);
+                                                            fetchStats();
+                                                            refreshWorkareaTask(item._id);
+                                                        }}
+                                                        showTags={true}
+                                                        showFolders={showFolders}
+                                                        folders={folders}
+                                                        availableLabels={labels}
+                                                        isWorkarea={true}
+                                                        defaultExpanded={item._forceExpanded}
+                                                        onRemoveFromWorkarea={() => handleRemoveFromWorkarea(item._id)}
+                                                        onAttachmentClick={handleNavigateToTask}
+                                                        onTaskClick={() => handleNavigateToTask(item)}
+                                                        globalExpanded={globalExpanded}
+                                                        showFullTitles={showFullTitles}
+                                                        showPreview={showPreview}
+                                                        showDebugInfo={showDebugInfo}
+                                                        fontSize={fontSize}
+                                                    />
+                                                );
+                                            })}
+                                        </div>
+                                    </motion.div>
+
+                                    <div className="h-px bg-white/5 my-6 mx-6"></div>
                                 </>
                             )}
-                        </div>
-                    )}
+                        </AnimatePresence>
+
+                        {activeTab === 'assistant' ? (
+                            <div className="min-h-0">
+                                <AgentList
+                                    onFocusAgent={handleFocusAgent}
+                                    focusedAgentId={focusedAgentId}
+                                    availableLabels={labels}
+                                    isCreating={isCreatingAgent}
+                                    setIsCreating={setIsCreatingAgent}
+                                />
+                            </div>
+                        ) : (
+                            <div className="flex flex-col px-6 pb-8 min-h-0">
+                                {error ? (
+                                    <div className="flex flex-col items-center justify-center text-center py-12">
+                                        <div className="bg-red-500/10 text-red-400 p-6 rounded-2xl border border-red-500/20 max-w-md">
+                                            <h3 className="text-xl font-semibold mb-2">Unavailable</h3>
+                                            <p className="mb-6 text-sm opacity-80">{error}</p>
+                                            <button
+                                                onClick={() => fetchTasks(true)}
+                                                className="bg-red-500 hover:bg-red-600 text-white px-6 py-2 rounded-xl text-sm font-medium transition-colors"
+                                            >
+                                                Retry Connection
+                                            </button>
+                                        </div>
+                                    </div>
+                                ) : (
+                                    <>
+                                        <div className="pr-2">
+                                            {loading ? (
+                                                null
+                                            ) : tasks.length === 0 ? (
+                                                <div className="text-center py-20 bg-gray-900/50 rounded-2xl border border-gray-800/50 border-dashed">
+                                                    <p className="text-gray-500 text-lg">No {activeTab} tasks found.</p>
+                                                </div>
+                                            ) : (
+                                                <SortableContext
+                                                    items={visibleTasks.map(t => t._id)}
+                                                    strategy={verticalListSortingStrategy}
+                                                >
+                                                    <div>
+                                                        {visibleTasks.map(task => (
+                                                            <SortableTaskItem
+                                                                key={task._id}
+                                                                id={task._id}
+                                                                task={task}
+                                                                onUpdate={() => {
+                                                                    fetchTasks(false);
+                                                                    fetchStats();
+                                                                }}
+                                                                showTags={showTags}
+                                                                showFolders={showFolders}
+                                                                folders={folders}
+                                                                availableLabels={labels}
+                                                                onSendToWorkarea={() => handleSendToWorkarea(task)}
+                                                                isWorkarea={false}
+                                                                defaultExpanded={autoExpandTaskId === task._id}
+                                                                onAttachmentClick={handleNavigateToTask}
+                                                                globalExpanded={globalExpanded}
+                                                                showFullTitles={showFullTitles}
+                                                                showPreview={showPreview}
+                                                                showDebugInfo={showDebugInfo}
+                                                                fontSize={fontSize}
+                                                            />
+                                                        ))}
+                                                    </div>
+                                                </SortableContext>
+                                            )}
+                                        </div>
+                                    </>
+                                )}
+                            </div>
+                        )}
+                    </div>
 
 
                 </main>
