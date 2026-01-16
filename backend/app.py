@@ -358,7 +358,7 @@ def update_task(task_id):
         data = request.json
         update_fields = {}
         update_fields = {}
-        allowed_fields = ['title', 'priority', 'category', 'status', 'importance', 'labels', 'folderId', 'attachments', 'assigned_agent_id']
+        allowed_fields = ['title', 'priority', 'category', 'status', 'importance', 'labels', 'folderId', 'attachments', 'assigned_agent_ids']
         
         for field in allowed_fields:
             if field in data:
@@ -432,7 +432,8 @@ def create_task():
             "category": "General", # Default
             "labels": data.get('labels', []), # Use provided labels or empty array
             "folderId": data.get('folderId'),
-            "assigned_agent_id": None, # [NEW]
+            "folderId": data.get('folderId'),
+            "assigned_agent_ids": [], # [NEW]
             "user_email": data.get('user_email'), # Associate with user
             "updates": [{ # Initial update for task creation
                 "id": str(uuid.uuid4()),
@@ -619,7 +620,7 @@ def chat():
         
         # If agent_id is provided, only fetch tasks assigned to this agent
         if agent_id:
-            query['assigned_agent_id'] = agent_id
+            query['assigned_agent_ids'] = agent_id
             
         cursor = tasks_collection.find(query).sort('created_at', -1)
         tasks = list(cursor)

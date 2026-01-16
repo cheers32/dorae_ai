@@ -141,6 +141,28 @@ export const TaskManager = () => {
         labels: {}
     });
 
+    // Agents State
+    const [agents, setAgents] = useState([]);
+    const fetchAgents = async () => {
+        try {
+            const data = await api.getAgents();
+            setAgents(data);
+        } catch (err) {
+            console.error('Failed to load agents', err);
+        }
+    };
+
+    useEffect(() => {
+        fetchAgents();
+        window.addEventListener('agent-updated', fetchAgents);
+        // Refresh when task assigned/created (though tasks update via other means, agent content might change)
+        window.addEventListener('task-created', fetchAgents);
+        return () => {
+            window.removeEventListener('agent-updated', fetchAgents);
+            window.removeEventListener('task-created', fetchAgents);
+        };
+    }, []);
+
     const [focusedAgentId, setFocusedAgentId] = useState(() => {
         try {
             const saved = localStorage.getItem('workareaTasks');
@@ -1520,6 +1542,7 @@ export const TaskManager = () => {
                                                         fontSize={fontSize}
                                                         timelineLimit={timelineLimit}
                                                         showCounts={showCounts}
+                                                        agents={agents}
                                                     />
                                                 );
                                             })}
@@ -1540,6 +1563,8 @@ export const TaskManager = () => {
                                     isCreating={isCreatingAgent}
                                     setIsCreating={setIsCreatingAgent}
                                     timelineLimit={timelineLimit}
+                                    agents={agents}
+                                    onAgentsUpdate={fetchAgents}
                                 />
                             </div>
                         ) : (
@@ -1596,6 +1621,7 @@ export const TaskManager = () => {
                                                                 fontSize={fontSize}
                                                                 timelineLimit={timelineLimit}
                                                                 showCounts={showCounts}
+                                                                agents={agents}
                                                             />
                                                         ))}
                                                     </div>
@@ -1637,6 +1663,7 @@ export const TaskManager = () => {
                                 availableLabels={labels}
                                 showDebugInfo={showDebugInfo}
                                 showCounts={showCounts}
+                                agents={agents}
                             />
                         ) : (activeId && activeId.toString().startsWith('workarea-task-')) ? (
                             <TaskItem
@@ -1650,6 +1677,7 @@ export const TaskManager = () => {
                                 isWorkarea={true}
                                 showDebugInfo={showDebugInfo}
                                 showCounts={showCounts}
+                                agents={agents}
                             />
                         ) : null}
                     </DragOverlay >,

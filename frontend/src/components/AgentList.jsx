@@ -4,43 +4,18 @@ import { AgentItem } from './AgentItem';
 import { api } from '../api';
 import { Plus, Search, Sparkles } from 'lucide-react';
 
-export const AgentList = ({ onFocusAgent, focusedAgentId, availableLabels, isCreating, setIsCreating, timelineLimit }) => {
-    const [agents, setAgents] = useState([]);
-    const [isLoading, setIsLoading] = useState(true);
+export const AgentList = ({ onFocusAgent, focusedAgentId, availableLabels, isCreating, setIsCreating, timelineLimit, agents, onAgentsUpdate }) => {
     const [newAgentName, setNewAgentName] = useState('');
-    const [error, setError] = useState(null);
-
-    const fetchAgents = async () => {
-        try {
-            const data = await api.getAgents();
-            setAgents(data);
-        } catch (err) {
-            console.error(err);
-            setError('Failed to load agents');
-        } finally {
-            setIsLoading(false);
-        }
-    };
-
-    useEffect(() => {
-        fetchAgents();
-        window.addEventListener('agent-updated', fetchAgents);
-        window.addEventListener('task-created', fetchAgents); // Refresh when task assigned/created
-        return () => {
-            window.removeEventListener('agent-updated', fetchAgents);
-            window.removeEventListener('task-created', fetchAgents);
-        };
-    }, []);
 
     const handleCreateAgent = async (e) => {
         e.preventDefault();
         try {
-            const newAgent = await api.createAgent({
+            await api.createAgent({
                 name: newAgentName || "New Assistant",
                 role: "General helper",
                 description: "I can help you with your tasks."
             });
-            setAgents([...agents, newAgent]);
+            onAgentsUpdate();
             setIsCreating(false);
             setNewAgentName('');
         } catch (err) {
@@ -51,7 +26,7 @@ export const AgentList = ({ onFocusAgent, focusedAgentId, availableLabels, isCre
     const handleDeleteAgent = async (id) => {
         try {
             await api.deleteAgent(id);
-            setAgents(agents.filter(a => a._id !== id));
+            onAgentsUpdate();
         } catch (err) {
             console.error(err);
         }
@@ -93,11 +68,7 @@ export const AgentList = ({ onFocusAgent, focusedAgentId, availableLabels, isCre
                 </div>
             )}
 
-            {isLoading ? (
-                <div className="flex items-center justify-center py-12">
-                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
-                </div>
-            ) : agents.length === 0 ? (
+            {agents.length === 0 ? (
                 <div className="text-center py-12">
                     <p className="text-gray-500">No AI assistants found.</p>
                 </div>

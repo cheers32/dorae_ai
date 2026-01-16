@@ -11,7 +11,9 @@ import {
     Paperclip,
     Folder,
     Tag,
-    CheckCircle
+    CheckCircle,
+    Bot,
+    Plus
 } from 'lucide-react';
 import { api } from '../api';
 import { UpdatesTimeline } from './UpdatesTimeline';
@@ -172,6 +174,62 @@ const LabelPicker = ({ availableLabels, selectedLabels, onToggle, onClose, trigg
     );
 };
 
+const AgentPicker = ({ availableAgents, selectedAgentIds, onToggle, onClose, triggerRef }) => {
+    const pickerRef = useRef(null);
+
+    useEffect(() => {
+        const handleClickOutside = (event) => {
+            const isClickOnTrigger = triggerRef?.current && triggerRef.current.contains(event.target);
+            if (pickerRef.current && !pickerRef.current.contains(event.target) && !isClickOnTrigger) {
+                onClose();
+            }
+        };
+
+        const handleKeyDown = (event) => {
+            if (event.key === 'Escape') {
+                onClose();
+            }
+        };
+
+        document.addEventListener('mousedown', handleClickOutside);
+        window.addEventListener('keydown', handleKeyDown);
+        return () => {
+            document.removeEventListener('mousedown', handleClickOutside);
+            window.removeEventListener('keydown', handleKeyDown);
+        };
+    }, [onClose, triggerRef]);
+
+    return (
+        <div
+            ref={pickerRef}
+            className="absolute left-0 top-full mt-2 z-[100] bg-[#1a1d24] border border-white/10 rounded-lg shadow-2xl p-2 min-w-[200px] max-h-[300px] overflow-y-auto"
+            onClick={(e) => e.stopPropagation()}
+        >
+            <div className="space-y-0.5">
+                {availableAgents.map(agent => {
+                    const isSelected = selectedAgentIds.includes(agent._id);
+                    return (
+                        <button
+                            key={agent._id}
+                            onClick={() => onToggle(agent._id)}
+                            className={`w-full flex items-center gap-2 px-2 py-1.5 rounded hover:bg-white/5 transition-colors text-xs text-left ${isSelected ? 'text-white' : 'text-gray-400'}`}
+                        >
+                            <Bot size={14} className="text-gray-500" />
+                            <span className="flex-1 truncate">{agent.name}</span>
+                            {isSelected && <Check size={12} className="text-blue-500" />}
+                        </button>
+                    );
+                })}
+            </div>
+            {availableAgents.length === 0 && (
+                <div className="px-2 py-4 text-center text-gray-500 text-xs italic">
+                    No agents available
+                </div>
+            )}
+        </div>
+    );
+};
+
 const parseUTCDate = (dateString) => {
     if (!dateString) return new Date();
     // Ensure the date string ends with Z to trigger UTC parsing
@@ -183,7 +241,8 @@ export const TaskItem = forwardRef(({ task, onUpdate, showTags, showFolders, fol
     fontSize = 12,
     timelineLimit = 3,
     attachmentLimit = 5,
-    showCounts = false
+    showCounts = false,
+    agents = []
 }, ref) => {
     const [expanded, setExpanded] = useState(defaultExpanded || false);
     const [isSubmitting, setIsSubmitting] = useState(false);
@@ -191,12 +250,32 @@ export const TaskItem = forwardRef(({ task, onUpdate, showTags, showFolders, fol
     const [editedTitle, setEditedTitle] = useState(task.title);
     const [localLabels, setLocalLabels] = useState(task.labels || []);
     const [localAttachments, setLocalAttachments] = useState(task.attachments || []);
+    // Initial assigned_agent_ids might be null if old record, default to empty
+    // Also support backward compatibility if assigned_agent_id (singular) exists
+    const [localAssignedAgentIds, setLocalAssignedAgentIds] = useState(() => {
+        if (task.assigned_agent_ids) return task.assigned_agent_ids;
+        if (task.assigned_agent_id) return [task.assigned_agent_id];
+        return [];
+    });
+
     const [showLabelPicker, setShowLabelPicker] = useState(false);
+    const [showAgentPicker, setShowAgentPicker] = useState(false);
     const triggerRef = useRef(null);
+    const agentTriggerRef = useRef(null);
     const localRef = useRef(null); // Local ref to track the DOM element
     const textareaRef = useRef(null);
 
-    // Sync refs
+    useEffect(() => {
+        setLocalLabels(task.labels || []);
+        setLocalAttachments(task.attachments || []);
+        if (task.assigned_agent_ids) {
+            setLocalAssignedAgentIds(task.assigned_agent_ids);
+        } else if (task.assigned_agent_id) {
+            setLocalAssignedAgentIds([task.assigned_agent_id]);
+        } else {
+            setLocalAssignedAgentIds([]);
+        }
+    }, [task]);
     useEffect(() => {
         if (ref) {
             if (typeof ref === 'function') ref(localRef.current);
@@ -567,6 +646,57 @@ export const TaskItem = forwardRef(({ task, onUpdate, showTags, showFolders, fol
                                             </SortableContext>
                                         </DndContext>
                                     )}
+
+                                    {/* Assigned Agents Chips & Picker */}
+                                    {(expanded || isWorkarea) && (
+                                        <div className="flex items-center gap-1">
+                                            {localAssignedAgentIds.map(agentId => {
+                                                const agent = agents.find(a => a._id === agentId);
+                                                if (!agent) return null;
+                                                return (
+                                                    <div
+                                                        key={agentId}
+                                                        className="inline-flex items-center gap-1.5 px-2 py-1 rounded-full border border-blue-500/20 bg-blue-500/10 text-blue-400 text-[10px] font-medium"
+                                                    >
+                                                        <Bot size={10} />
+                                                        {agent.name}
+                                                    </div>
+                                                );
+                                            })}
+
+                                            <div className="relative">
+                                                <button
+                                                    ref={agentTriggerRef}
+                                                    onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        setShowAgentPicker(!showAgentPicker);
+                                                    }}
+                                                    className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-white/5 border border-white/10 text-gray-400 hover:bg-white/10 hover:text-gray-200 transition-colors"
+                                                    title="Assign Agent"
+                                                >
+                                                    <Plus size={10} />
+                                                </button>
+                                                <AnimatePresence>
+                                                    {showAgentPicker && (
+                                                        <AgentPicker
+                                                            availableAgents={agents}
+                                                            selectedAgentIds={localAssignedAgentIds}
+                                                            triggerRef={agentTriggerRef}
+                                                            onToggle={async (agentId) => {
+                                                                const newIds = localAssignedAgentIds.includes(agentId)
+                                                                    ? localAssignedAgentIds.filter(id => id !== agentId)
+                                                                    : [...localAssignedAgentIds, agentId];
+                                                                setLocalAssignedAgentIds(newIds);
+                                                                await api.updateTask(task._id, { assigned_agent_ids: newIds });
+                                                                onUpdate();
+                                                            }}
+                                                            onClose={() => setShowAgentPicker(false)}
+                                                        />
+                                                    )}
+                                                </AnimatePresence>
+                                            </div>
+                                        </div>
+                                    )}
                                 </div>
                             )}
 
@@ -586,6 +716,12 @@ export const TaskItem = forwardRef(({ task, onUpdate, showTags, showFolders, fol
                                         <div className="flex items-center gap-1 text-gray-500" title={`${localAttachments.length} attachments`}>
                                             <Paperclip size={10} />
                                             <span className="text-[10px] font-medium">{localAttachments.length}</span>
+                                        </div>
+                                    )}
+                                    {localAssignedAgentIds && localAssignedAgentIds.length > 0 && (
+                                        <div className="flex items-center gap-1 text-gray-500" title={`${localAssignedAgentIds.length} agents assigned`}>
+                                            <Bot size={10} />
+                                            <span className="text-[10px] font-medium">{localAssignedAgentIds.length}</span>
                                         </div>
                                     )}
                                 </div>
