@@ -347,7 +347,7 @@ export const TaskItem = forwardRef(({ task, onUpdate, showTags, showFolders, fol
             await new Promise(resolve => setTimeout(resolve, 800));
 
             // Close the task
-            await api.closeTask(task._id);
+            await api.updateTask(task._id, { status: 'Closed' });
             onUpdate();
         } catch (err) {
             console.error("Failed to complete task", err);
