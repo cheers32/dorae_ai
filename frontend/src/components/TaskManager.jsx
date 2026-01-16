@@ -31,6 +31,7 @@ import { createPortal } from 'react-dom';
 export const TaskManager = () => {
     const [tasks, setTasks] = useState([]);
     const [searchQuery, setSearchQuery] = useState('');
+    const [shouldFocusSearch, setShouldFocusSearch] = useState(false);
 
     const [labels, setLabels] = useState([]);
     const [folders, setFolders] = useState([]);
@@ -476,6 +477,14 @@ export const TaskManager = () => {
         fetchTasks(true);
         fetchStats();
     }, [activeTab, selectedLabel, selectedFolder]);
+
+    // [NEW] Auto-focus search when switching to 'all' for search purposes
+    useEffect(() => {
+        if (shouldFocusSearch && activeTab === 'all' && searchInputRef.current) {
+            searchInputRef.current.focus();
+            setShouldFocusSearch(false);
+        }
+    }, [activeTab, shouldFocusSearch]);
 
     // Save workarea tasks to localStorage whenever they change
     useEffect(() => {
@@ -1150,6 +1159,12 @@ export const TaskManager = () => {
                                             type="text"
                                             placeholder={`Search ${activeTab === 'trash' ? 'deleted' : activeTab === 'closed' ? 'closed' : 'all'} tasks...`}
                                             value={searchQuery}
+                                            onFocus={() => {
+                                                if (activeTab !== 'all') {
+                                                    setShouldFocusSearch(true);
+                                                    changeView('all');
+                                                }
+                                            }}
                                             onChange={(e) => setSearchQuery(e.target.value)}
                                             onKeyDown={(e) => {
                                                 if (e.key === 'Escape') {
@@ -1224,6 +1239,10 @@ export const TaskManager = () => {
                                             type="text"
                                             placeholder="Search"
                                             value={searchQuery}
+                                            onFocus={() => {
+                                                setShouldFocusSearch(true);
+                                                changeView('all');
+                                            }}
                                             onChange={(e) => setSearchQuery(e.target.value)}
                                             onKeyDown={(e) => {
                                                 if (e.key === 'Escape') {
