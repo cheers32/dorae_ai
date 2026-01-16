@@ -249,6 +249,22 @@ export const api = {
         return res.json();
     },
 
+    runFolderImportance: async (folderId) => {
+        const res = await fetch(`${API_BASE}/folders/${folderId}/analyze_importance`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' }
+        });
+        return res.json();
+    },
+
+    runGlobalImportance: async () => {
+        const res = await fetch(`${API_BASE}/tasks/analyze_importance`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' }
+        });
+        return res.json();
+    },
+
     chatWithAI: async (message, agentId = null) => {
         const body = { message, user_email: getUserEmail() };
         if (agentId) {

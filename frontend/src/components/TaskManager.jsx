@@ -1352,6 +1352,8 @@ export const TaskManager = () => {
                             )}
 
 
+
+
                             <div className="relative" ref={menuRef}>
                                 <button
                                     onClick={() => setIsMenuOpen(!isMenuOpen)}
@@ -1450,6 +1452,35 @@ export const TaskManager = () => {
                                                         <span className="text-xs font-medium">{showDebugInfo ? 'Hide Debug Info' : 'Show Debug Info'}</span>
                                                     </button>
                                                 </>
+                                            )}
+
+                                            <div className="h-px bg-gray-800 my-2 mx-2"></div>
+
+                                            <div className="px-3 py-1.5 mb-1">
+                                                <span className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">Actions</span>
+                                            </div>
+
+                                            {(selectedFolder || activeTab === 'active') && (
+                                                <button
+                                                    onClick={async () => {
+                                                        setIsMenuOpen(false);
+                                                        try {
+                                                            if (selectedFolder) {
+                                                                await api.runFolderImportance(selectedFolder);
+                                                            } else {
+                                                                await api.runGlobalImportance();
+                                                            }
+                                                            fetchTasks(false);
+                                                            fetchStats();
+                                                        } catch (err) {
+                                                            console.error("Failed to run importance analysis", err);
+                                                        }
+                                                    }}
+                                                    className="w-full px-4 py-2 text-left flex items-center gap-3 transition-colors hover:bg-white/5 text-purple-400"
+                                                >
+                                                    <Sparkles size={16} />
+                                                    <span className="text-xs font-medium">Run Importance Analysis</span>
+                                                </button>
                                             )}
 
                                             <div className="h-px bg-gray-800 my-2 mx-2"></div>
@@ -1852,7 +1883,8 @@ export const TaskManager = () => {
                         ) : null}
                     </DragOverlay >,
                     document.body
-                )}
+                )
+            }
         </DndContext >
     );
 }

@@ -59,6 +59,53 @@ class AIService:
             print(f"AI Error: {e}")
             return None
 
+    def analyze_importance(self, tasks):
+        if not self.client:
+            print("AI Service: Missing API Key")
+            return []
+
+        if not tasks:
+            return []
+
+        tasks_text = ""
+        for t in tasks:
+            tasks_text += f"- ID: {t['_id']}, Title: {t.get('title', 'Untitled')}, Status: {t.get('status', 'Active')}\n"
+
+        prompt = f"""
+        Analyze the following tasks and identify which ones should be marked as "Important".
+        Criteria for "Important":
+        - Urgent deadlines or high priority implied.
+        - Critical blockers or core functionality.
+        - Strategic value.
+        
+        Tasks:
+        {tasks_text}
+        
+        Return a JSON object with a list of IDs for tasks that are "Important".
+        Example:
+        {{
+            "important_task_ids": ["id1", "id2"]
+        }}
+        """
+        
+        try:
+            response = self.client.models.generate_content(
+                model='gemini-3-flash-preview', 
+                contents=prompt,
+                config={
+                    'response_mime_type': 'application/json'
+                }
+            )
+            
+            if hasattr(response, 'parsed') and response.parsed:
+                return response.parsed.get('important_task_ids', [])
+            
+            data = json.loads(response.text)
+            return data.get('important_task_ids', [])
+        except Exception as e:
+            print(f"AI Analysis Error: {e}")
+            return []
+
     def chat_with_task_context(self, user_message, tasks_context, agent_context=None):
         if not self.client:
             return "I can't help you with that right now because the API key is missing."

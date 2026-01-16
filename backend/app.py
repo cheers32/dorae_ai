@@ -621,6 +621,131 @@ add_task_skill = AddTaskSkill(db)
 
 # ... existing endpoints
 
+
+@app.route('/api/folders/<folder_id>/analyze_importance', methods=['POST'])
+def analyze_folder_importance(folder_id):
+    try:
+        # Verify folder exists
+        folder = folders_collection.find_one({"_id": ObjectId(folder_id)})
+        if not folder:
+            return jsonify({"error": "Folder not found"}), 404
+
+        # Fetch active tasks in folder
+        tasks = list(tasks_collection.find({
+            "folderId": folder_id,
+            "status": {"$nin": ["Deleted", "deleted", "Closed", "completed", "Archived", "archived"]}
+        }))
+
+        if not tasks:
+            return jsonify({"message": "No active tasks in folder", "important_count": 0}), 200
+
+        # Run AI Analysis
+        important_ids = ai_service.analyze_importance(tasks)
+        
+        updated_count = 0
+        if important_ids:
+            # Add "Important" label to these tasks
+            # Bulk update for efficiency
+            from pymongo import UpdateOne
+            operations = []
+            
+            # Ensure "Important" label exists in system with Gmail-style Yellow
+            # Check if "Important" label exists, if not create it.
+            # If it exists, ensure color is updated to match new style.
+            important_label_color = "#f59e0b" # Gmail Yellow/Amber
+            
+            existing_label = labels_collection.find_one({"name": "Important"})
+            if not existing_label:
+                labels_collection.insert_one({
+                    "name": "Important",
+                    "color": important_label_color,
+                    "created_at": datetime.utcnow().isoformat(),
+                    "order": 0
+                })
+            elif existing_label.get('color') != important_label_color:
+                # Update existing label color to match new style
+                labels_collection.update_one(
+                    {"_id": existing_label["_id"]},
+                    {"$set": {"color": important_label_color}}
+                )
+
+            for task_id in important_ids:
+                # Add "Important" to labels if not present
+                operations.append(
+                    UpdateOne(
+                        {"_id": ObjectId(task_id)},
+                        {"$addToSet": {"labels": "Important"}}
+                    )
+                )
+            
+            if operations:
+                result = tasks_collection.bulk_write(operations)
+                updated_count = result.modified_count
+
+        return jsonify({
+            "message": "Analysis complete", 
+            "important_count": len(important_ids),
+            "updated_count": updated_count
+        }), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+@app.route('/api/tasks/analyze_importance', methods=['POST'])
+def analyze_all_active_importance():
+    try:
+        # Fetch ALL active tasks (excluding trash/closed/archived)
+        tasks = list(tasks_collection.find({
+            "status": {"$nin": ["Deleted", "deleted", "Closed", "completed", "Archived", "archived"]}
+        }))
+
+        if not tasks:
+            return jsonify({"message": "No active tasks found", "important_count": 0}), 200
+
+        # Run AI Analysis
+        important_ids = ai_service.analyze_importance(tasks)
+        
+        updated_count = 0
+        if important_ids:
+            from pymongo import UpdateOne
+            operations = []
+            
+            # Ensure "Important" label exists with correct color
+            important_label_color = "#f59e0b" # Gmail Yellow/Amber
+            
+            existing_label = labels_collection.find_one({"name": "Important"})
+            if not existing_label:
+                labels_collection.insert_one({
+                    "name": "Important",
+                    "color": important_label_color,
+                    "created_at": datetime.utcnow().isoformat(),
+                    "order": 0
+                })
+            elif existing_label.get('color') != important_label_color:
+                labels_collection.update_one(
+                    {"_id": existing_label["_id"]},
+                    {"$set": {"color": important_label_color}}
+                )
+
+            for task_id in important_ids:
+                operations.append(
+                    UpdateOne(
+                        {"_id": ObjectId(task_id)},
+                        {"$addToSet": {"labels": "Important"}}
+                    )
+                )
+            
+            if operations:
+                result = tasks_collection.bulk_write(operations)
+                updated_count = result.modified_count
+
+        return jsonify({
+            "message": "Global analysis complete", 
+            "important_count": len(important_ids),
+            "updated_count": updated_count
+        }), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
 @app.route('/api/tasks/<task_id>/analyze', methods=['POST'])
 # ... (existing code handles this, but I need to make sure I don't break the file structure)
 # I will only touch the Skill Endpoints part in a separate ReplaceChunk if I could, but replace_file_content is single block.
