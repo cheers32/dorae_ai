@@ -14,7 +14,8 @@ import {
     CheckCircle,
     Bot,
     Plus,
-    ChevronsRight
+    ChevronsRight,
+    ChevronRight
 } from 'lucide-react';
 import { api } from '../api';
 import { UpdatesTimeline } from './UpdatesTimeline';
@@ -523,14 +524,21 @@ export const TaskItem = forwardRef(({ task, onUpdate, showTags, showFolders, fol
                     }}
                 >
                     {/* Gmail-style Importance Marker */}
-                    {localLabels.includes('Important') && (
+                    {localLabels.includes('Important') ? (
                         <div
                             className="mr-1 text-yellow-500 shrink-0"
                             title="Important"
                         >
                             <ChevronsRight size={16} strokeWidth={3} />
                         </div>
-                    )}
+                    ) : localLabels.includes('Notable') ? (
+                        <div
+                            className="mr-1 text-amber-300 shrink-0"
+                            title="Notable"
+                        >
+                            <ChevronRight size={16} strokeWidth={3} />
+                        </div>
+                    ) : null}
 
                     <div
                         className={`p-1 text-gray-600 hover:text-gray-400 transition-colors ${expanded ? 'cursor-pointer' : 'cursor-grab active:cursor-grabbing'}`}

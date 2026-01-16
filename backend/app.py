@@ -640,51 +640,87 @@ def analyze_folder_importance(folder_id):
             return jsonify({"message": "No active tasks in folder", "important_count": 0}), 200
 
         # Run AI Analysis
-        important_ids = ai_service.analyze_importance(tasks)
+        analysis_result = ai_service.analyze_importance(tasks)
+        print(f"DEBUG: AI Analysis Result: {analysis_result}")
+        
+        # Handle both list and dict return types for backward compatibility safety
+        if isinstance(analysis_result, list):
+            critical_ids = analysis_result
+            notable_ids = []
+        else:
+            critical_ids = analysis_result.get('critical_task_ids', [])
+            notable_ids = analysis_result.get('notable_task_ids', [])
         
         updated_count = 0
-        if important_ids:
-            # Add "Important" label to these tasks
-            # Bulk update for efficiency
+        if critical_ids or notable_ids:
             from pymongo import UpdateOne
             operations = []
             
-            # Ensure "Important" label exists in system with Gmail-style Yellow
-            # Check if "Important" label exists, if not create it.
-            # If it exists, ensure color is updated to match new style.
-            important_label_color = "#f59e0b" # Gmail Yellow/Amber
-            
-            existing_label = labels_collection.find_one({"name": "Important"})
-            if not existing_label:
+            # 1. Manage "Important" Label (Critical) - Gmail Yellow/Amber
+            important_label_color = "#f59e0b"
+            existing_imp_label = labels_collection.find_one({"name": "Important"})
+            if not existing_imp_label:
                 labels_collection.insert_one({
                     "name": "Important",
                     "color": important_label_color,
                     "created_at": datetime.utcnow().isoformat(),
                     "order": 0
                 })
-            elif existing_label.get('color') != important_label_color:
-                # Update existing label color to match new style
+            elif existing_imp_label.get('color') != important_label_color:
                 labels_collection.update_one(
-                    {"_id": existing_label["_id"]},
+                    {"_id": existing_imp_label["_id"]},
                     {"$set": {"color": important_label_color}}
                 )
 
-            for task_id in important_ids:
-                # Add "Important" to labels if not present
+            # 2. Manage "Notable" Label (Medium) - Light Yellow
+            notable_label_color = "#fcd34d" # Amber-300
+            existing_notable_label = labels_collection.find_one({"name": "Notable"})
+            if not existing_notable_label:
+                labels_collection.insert_one({
+                    "name": "Notable",
+                    "color": notable_label_color,
+                    "created_at": datetime.utcnow().isoformat(),
+                    "order": 1
+                })
+            elif existing_notable_label.get('color') != notable_label_color:
+                labels_collection.update_one(
+                    {"_id": existing_notable_label["_id"]},
+                    {"$set": {"color": notable_label_color}}
+                )
+
+            # Process Critical Tasks
+            for task_id in critical_ids:
                 operations.append(
                     UpdateOne(
                         {"_id": ObjectId(task_id)},
-                        {"$addToSet": {"labels": "Important"}}
+                        {
+                            "$addToSet": {"labels": "Important"},
+                            "$pull": {"labels": "Notable"} # Upgrade Notable to Important if both present
+                        }
                     )
                 )
             
+            # Process Notable Tasks
+            for task_id in notable_ids:
+                # Only add "Notable" if not already "Important" (priority rule)
+                # But here we just add it, the frontend usually renders all. 
+                # However, cleaner data: if ID is in critical_ids, don't add Notable.
+                if task_id not in critical_ids:
+                     operations.append(
+                        UpdateOne(
+                            {"_id": ObjectId(task_id)},
+                            {"$addToSet": {"labels": "Notable"}}
+                        )
+                    )
+
             if operations:
                 result = tasks_collection.bulk_write(operations)
                 updated_count = result.modified_count
 
         return jsonify({
             "message": "Analysis complete", 
-            "important_count": len(important_ids),
+            "important_count": len(critical_ids),
+            "notable_count": len(notable_ids),
             "updated_count": updated_count
         }), 200
     except Exception as e:
@@ -702,37 +738,72 @@ def analyze_all_active_importance():
             return jsonify({"message": "No active tasks found", "important_count": 0}), 200
 
         # Run AI Analysis
-        important_ids = ai_service.analyze_importance(tasks)
+        analysis_result = ai_service.analyze_importance(tasks)
+        print(f"DEBUG: Global AI Analysis Result: {analysis_result}")
+        
+        if isinstance(analysis_result, list):
+            critical_ids = analysis_result
+            notable_ids = []
+        else:
+            critical_ids = analysis_result.get('critical_task_ids', [])
+            notable_ids = analysis_result.get('notable_task_ids', [])
         
         updated_count = 0
-        if important_ids:
+        if critical_ids or notable_ids:
             from pymongo import UpdateOne
             operations = []
             
-            # Ensure "Important" label exists with correct color
-            important_label_color = "#f59e0b" # Gmail Yellow/Amber
-            
-            existing_label = labels_collection.find_one({"name": "Important"})
-            if not existing_label:
+             # 1. Manage "Important" Label (Critical)
+            important_label_color = "#f59e0b"
+            existing_imp_label = labels_collection.find_one({"name": "Important"})
+            if not existing_imp_label:
                 labels_collection.insert_one({
                     "name": "Important",
                     "color": important_label_color,
                     "created_at": datetime.utcnow().isoformat(),
                     "order": 0
                 })
-            elif existing_label.get('color') != important_label_color:
+            elif existing_imp_label.get('color') != important_label_color:
                 labels_collection.update_one(
-                    {"_id": existing_label["_id"]},
+                    {"_id": existing_imp_label["_id"]},
                     {"$set": {"color": important_label_color}}
                 )
 
-            for task_id in important_ids:
+            # 2. Manage "Notable" Label (Medium)
+            notable_label_color = "#fcd34d"
+            existing_notable_label = labels_collection.find_one({"name": "Notable"})
+            if not existing_notable_label:
+                labels_collection.insert_one({
+                    "name": "Notable",
+                    "color": notable_label_color,
+                    "created_at": datetime.utcnow().isoformat(),
+                    "order": 1
+                })
+            elif existing_notable_label.get('color') != notable_label_color:
+                labels_collection.update_one(
+                    {"_id": existing_notable_label["_id"]},
+                    {"$set": {"color": notable_label_color}}
+                )
+
+            for task_id in critical_ids:
                 operations.append(
                     UpdateOne(
                         {"_id": ObjectId(task_id)},
-                        {"$addToSet": {"labels": "Important"}}
+                        {
+                            "$addToSet": {"labels": "Important"},
+                            "$pull": {"labels": "Notable"}
+                        }
                     )
                 )
+
+            for task_id in notable_ids:
+                if task_id not in critical_ids:
+                    operations.append(
+                        UpdateOne(
+                            {"_id": ObjectId(task_id)},
+                            {"$addToSet": {"labels": "Notable"}}
+                        )
+                    )
             
             if operations:
                 result = tasks_collection.bulk_write(operations)
@@ -740,7 +811,8 @@ def analyze_all_active_importance():
 
         return jsonify({
             "message": "Global analysis complete", 
-            "important_count": len(important_ids),
+            "important_count": len(critical_ids),
+            "notable_count": len(notable_ids),
             "updated_count": updated_count
         }), 200
     except Exception as e:

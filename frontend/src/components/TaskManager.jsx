@@ -1460,7 +1460,7 @@ export const TaskManager = () => {
                                                 <span className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">Actions</span>
                                             </div>
 
-                                            {(selectedFolder || activeTab === 'active') && (
+                                            {(selectedFolder || activeTab === 'active' || activeTab === 'all') && (
                                                 <button
                                                     onClick={async () => {
                                                         setIsMenuOpen(false);

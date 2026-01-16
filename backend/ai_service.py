@@ -72,19 +72,29 @@ class AIService:
             tasks_text += f"- ID: {t['_id']}, Title: {t.get('title', 'Untitled')}, Status: {t.get('status', 'Active')}\n"
 
         prompt = f"""
-        Analyze the following tasks and identify which ones should be marked as "Important".
-        Criteria for "Important":
-        - Urgent deadlines or high priority implied.
+        Analyze the following tasks and categorize them by importance.
+        
+        Criteria for "Critical" (High Importance):
+        - Urgent deadlines (e.g., today/tomorrow).
         - Critical blockers or core functionality.
-        - Strategic value.
+        - High strategic value or impact.
+        
+        Criteria for "Notable" (Medium Importance):
+        - Important but not urgent (e.g., upcoming deadlines).
+        - Significant improvements or refactoring.
+        - Necessary maintenance or bug fixes that aren't critical blockers.
         
         Tasks:
         {tasks_text}
         
-        Return a JSON object with a list of IDs for tasks that are "Important".
+        Return a JSON object with two lists of IDs:
+        - "critical_task_ids": List of IDs for Critical tasks.
+        - "notable_task_ids": List of IDs for Notable tasks.
+        
         Example:
         {{
-            "important_task_ids": ["id1", "id2"]
+            "critical_task_ids": ["id1"],
+            "notable_task_ids": ["id2", "id3"]
         }}
         """
         
@@ -98,10 +108,16 @@ class AIService:
             )
             
             if hasattr(response, 'parsed') and response.parsed:
-                return response.parsed.get('important_task_ids', [])
+                return {
+                    "critical_task_ids": response.parsed.get('critical_task_ids', []),
+                    "notable_task_ids": response.parsed.get('notable_task_ids', [])
+                }
             
             data = json.loads(response.text)
-            return data.get('important_task_ids', [])
+            return {
+                "critical_task_ids": data.get('critical_task_ids', []),
+                "notable_task_ids": data.get('notable_task_ids', [])
+            }
         except Exception as e:
             print(f"AI Analysis Error: {e}")
             return []
