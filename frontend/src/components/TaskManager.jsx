@@ -687,6 +687,16 @@ export const TaskManager = () => {
     };
 
     const handleChipSearch = (query) => {
+        // Save current state before switching to 'all' for universal chip search
+        if (activeTab !== 'all') {
+            setPreSearchState({
+                tab: activeTab,
+                label: selectedLabel,
+                folder: selectedFolder,
+                expandedIds: Array.from(expandedTaskIds),
+                expandedAgentIds: Array.from(expandedAgentIds)
+            });
+        }
         setSearchQuery(query);
         setActiveTab('all');
         if (searchInputRef.current) {
@@ -1187,18 +1197,7 @@ export const TaskManager = () => {
                                             placeholder={`Search ${activeTab === 'trash' ? 'deleted' : activeTab === 'closed' ? 'closed' : 'all'} tasks...`}
                                             value={searchQuery}
                                             onFocus={() => {
-                                                if (activeTab !== 'all') {
-                                                    setPreSearchState({
-                                                        tab: activeTab,
-                                                        label: selectedLabel,
-                                                        folder: selectedFolder,
-                                                        folder: selectedFolder,
-                                                        expandedIds: Array.from(expandedTaskIds),
-                                                        expandedAgentIds: Array.from(expandedAgentIds) // Save expanded agent state
-                                                    });
-                                                    setShouldFocusSearch(true);
-                                                    changeView('all');
-                                                }
+                                                setShouldFocusSearch(true);
                                             }}
                                             onChange={(e) => setSearchQuery(e.target.value)}
                                             onKeyDown={(e) => {
@@ -1275,16 +1274,7 @@ export const TaskManager = () => {
                                             placeholder="Search"
                                             value={searchQuery}
                                             onFocus={() => {
-                                                setPreSearchState({
-                                                    tab: activeTab,
-                                                    label: selectedLabel,
-                                                    folder: selectedFolder,
-                                                    folder: selectedFolder,
-                                                    expandedIds: Array.from(expandedTaskIds),
-                                                    expandedAgentIds: Array.from(expandedAgentIds)
-                                                });
                                                 setShouldFocusSearch(true);
-                                                changeView('all');
                                             }}
                                             onChange={(e) => setSearchQuery(e.target.value)}
                                             onKeyDown={(e) => {
