@@ -622,9 +622,22 @@ def chat():
         else:
             query['$or'] = [{'user_email': None}, {'user_email': {'$exists': False}}]
         
-        # If agent_id is provided, only fetch tasks assigned to this agent
+        # If agent_id is provided, fetch tasks assigned to this agent OR in assigned folders
         if agent_id:
-            query['assigned_agent_ids'] = agent_id
+            # Get agent to find assigned folders
+            agent = agents_collection.find_one({"_id": ObjectId(agent_id)})
+            agent_folder_ids = agent.get('assigned_folder_ids', []) if agent else []
+            
+            # Build OR query: assigned directly OR in assigned folder
+            or_conditions = [
+                {'assigned_agent_ids': agent_id},
+                {'assigned_agent_id': agent_id} # Legacy support
+            ]
+            
+            if agent_folder_ids:
+                or_conditions.append({'folderId': {'$in': agent_folder_ids}})
+                
+            query['$or'] = or_conditions
             
         cursor = tasks_collection.find(query).sort('created_at', -1)
         tasks = list(cursor)
