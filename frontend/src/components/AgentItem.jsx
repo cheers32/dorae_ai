@@ -40,7 +40,7 @@ const AVAILABLE_SKILLS = [
 ];
 
 // Draggable Task Chip Component
-const DraggableTaskChip = ({ task, labelColor, onRemove }) => {
+const DraggableTaskChip = ({ task, labelColor, onRemove, onSearch }) => {
     const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
         id: `agent-task-${task._id}`,
         data: { task, type: 'agent-task-chip' }
@@ -57,12 +57,15 @@ const DraggableTaskChip = ({ task, labelColor, onRemove }) => {
             ref={setNodeRef}
             {...attributes}
             {...listeners}
-            className="border px-2.5 py-1 rounded-lg text-xs font-medium flex items-center gap-1.5 shadow-sm transition-colors group/chip"
+            className="border px-2.5 py-1 rounded-lg text-xs font-medium flex items-center gap-1.5 shadow-sm transition-colors group/chip cursor-pointer"
             style={{
                 ...style,
-                backgroundColor: `${labelColor}1a`,
-                borderColor: `${labelColor}33`,
                 color: labelColor
+            }}
+            onClick={(e) => {
+                if (onSearch) {
+                    onSearch(task.title);
+                }
             }}
         >
             <span
@@ -89,7 +92,7 @@ const DraggableTaskChip = ({ task, labelColor, onRemove }) => {
     );
 };
 
-export const AgentItem = ({ agent, onFocus, onDelete, isFocused, availableLabels, timelineLimit = 3, attachmentLimit = 5, defaultExpanded, onToggleExpand }) => {
+export const AgentItem = ({ agent, onFocus, onDelete, isFocused, availableLabels, timelineLimit = 3, attachmentLimit = 5, defaultExpanded, onToggleExpand, onSearch }) => {
     const { setNodeRef, isOver } = useDroppable({
         id: `agent-${agent._id}`,
         data: { type: 'agent', agent }
@@ -416,6 +419,7 @@ export const AgentItem = ({ agent, onFocus, onDelete, isFocused, availableLabels
                                                             window.dispatchEvent(new CustomEvent('agent-updated'));
                                                             window.dispatchEvent(new CustomEvent('task-created')); // Trigger task list refresh
                                                         }}
+                                                        onSearch={onSearch}
                                                     />
                                                 );
                                             })}

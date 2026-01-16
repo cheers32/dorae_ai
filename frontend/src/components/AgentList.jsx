@@ -4,7 +4,7 @@ import { AgentItem } from './AgentItem';
 import { api } from '../api';
 import { Plus, Search, Sparkles } from 'lucide-react';
 
-export const AgentList = ({ onFocusAgent, focusedAgentId, availableLabels, isCreating, setIsCreating, timelineLimit, agents, onAgentsUpdate, onToggleExpand, expandedIds = new Set() }) => {
+export const AgentList = ({ onFocusAgent, focusedAgentId, availableLabels, isCreating, setIsCreating, timelineLimit, agents, onAgentsUpdate, onToggleExpand, expandedIds = new Set(), onSearch }) => {
     const [newAgentName, setNewAgentName] = useState('');
 
     const handleCreateAgent = async (e) => {
@@ -85,6 +85,7 @@ export const AgentList = ({ onFocusAgent, focusedAgentId, availableLabels, isCre
                             timelineLimit={timelineLimit}
                             defaultExpanded={expandedIds.has(agent._id)}
                             onToggleExpand={onToggleExpand}
+                            onSearch={onSearch}
                         />
                     ))}
                 </div>
