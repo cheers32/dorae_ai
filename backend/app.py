@@ -360,13 +360,9 @@ def update_task(task_id):
         update_fields = {}
         allowed_fields = ['title', 'priority', 'category', 'status', 'importance', 'labels', 'folderId', 'attachments', 'assigned_agent_ids']
         
-        print(f"DEBUG: update_task {task_id} received data: {data}")
-
         for field in allowed_fields:
             if field in data:
                 update_fields[field] = data[field]
-                
-        print(f"DEBUG: update_task constructed fields: {update_fields}")
                 
         # Fetch current task to check status
         current_task = tasks_collection.find_one({"_id": ObjectId(task_id)})
@@ -918,7 +914,10 @@ def get_agents():
             agent_id = str(agent['_id'])
             # assigned_agent_id should be string in task
             tasks = list(tasks_collection.find({
-                'assigned_agent_id': agent_id,
+                '$or': [
+                    {'assigned_agent_id': agent_id},
+                    {'assigned_agent_ids': agent_id}
+                ],
                 'status': {'$nin': ['Closed', 'completed', 'Deleted', 'deleted']}
             }, {'title': 1, 'status': 1, 'labels': 1}))
             agent['active_tasks'] = [serialize_doc(t) for t in tasks]

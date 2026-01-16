@@ -688,6 +688,7 @@ export const TaskItem = forwardRef(({ task, onUpdate, showTags, showFolders, fol
                                                                     : [...localAssignedAgentIds, agentId];
                                                                 setLocalAssignedAgentIds(newIds);
                                                                 await api.updateTask(task._id, { assigned_agent_ids: newIds });
+                                                                window.dispatchEvent(new CustomEvent('agent-updated'));
                                                                 onUpdate();
                                                             }}
                                                             onClose={() => setShowAgentPicker(false)}
