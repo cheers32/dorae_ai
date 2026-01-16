@@ -32,6 +32,7 @@ export const TaskManager = () => {
     const [tasks, setTasks] = useState([]);
     const [searchQuery, setSearchQuery] = useState('');
     const [shouldFocusSearch, setShouldFocusSearch] = useState(false);
+    const [preSearchState, setPreSearchState] = useState(null);
 
     const [labels, setLabels] = useState([]);
     const [folders, setFolders] = useState([]);
@@ -1161,6 +1162,7 @@ export const TaskManager = () => {
                                             value={searchQuery}
                                             onFocus={() => {
                                                 if (activeTab !== 'all') {
+                                                    setPreSearchState({ tab: activeTab, label: selectedLabel, folder: selectedFolder });
                                                     setShouldFocusSearch(true);
                                                     changeView('all');
                                                 }
@@ -1169,6 +1171,10 @@ export const TaskManager = () => {
                                             onKeyDown={(e) => {
                                                 if (e.key === 'Escape') {
                                                     setSearchQuery('');
+                                                    if (preSearchState) {
+                                                        changeView(preSearchState.tab, preSearchState.label, preSearchState.folder);
+                                                        setPreSearchState(null);
+                                                    }
                                                     e.currentTarget.blur();
                                                 }
                                             }}
@@ -1240,6 +1246,7 @@ export const TaskManager = () => {
                                             placeholder="Search"
                                             value={searchQuery}
                                             onFocus={() => {
+                                                setPreSearchState({ tab: activeTab, label: selectedLabel, folder: selectedFolder });
                                                 setShouldFocusSearch(true);
                                                 changeView('all');
                                             }}
@@ -1247,6 +1254,10 @@ export const TaskManager = () => {
                                             onKeyDown={(e) => {
                                                 if (e.key === 'Escape') {
                                                     setSearchQuery('');
+                                                    if (preSearchState) {
+                                                        changeView(preSearchState.tab, preSearchState.label, preSearchState.folder);
+                                                        setPreSearchState(null);
+                                                    }
                                                     e.currentTarget.blur();
                                                 }
                                             }}
