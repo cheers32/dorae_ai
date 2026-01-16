@@ -4,46 +4,47 @@ import { AgentItem } from './AgentItem';
 import { api } from '../api';
 import { Plus, Search, Sparkles } from 'lucide-react';
 
-export const AgentList = ({ onFocusAgent, focusedAgentId, availableLabels, isCreating, setIsCreating }) => {
+export const AgentList = ({ onFocusAgent, focusedAgentId, availableLabels, isCreating, setIsCreating, timelineLimit, attachmentLimit }) => {
     const [agents, setAgents] = useState([]);
     const [isLoading, setIsLoading] = useState(true);
     const [newAgentName, setNewAgentName] = useState('');
-
-
-    useEffect(() => {
-        fetchAgents();
-
-        // Listen for updates (assignments)
-        const handleAgentUpdate = () => fetchAgents();
-        window.addEventListener('agent-updated', handleAgentUpdate);
-
-        return () => {
-            window.removeEventListener('agent-updated', handleAgentUpdate);
-        };
-    }, []);
+    const [error, setError] = useState(null);
 
     const fetchAgents = async () => {
         try {
             const data = await api.getAgents();
             setAgents(data);
-        } catch (error) {
-            console.error("Failed to fetch agents", error);
+        } catch (err) {
+            console.error(err);
+            setError('Failed to load agents');
         } finally {
             setIsLoading(false);
         }
     };
 
+    useEffect(() => {
+        fetchAgents();
+        window.addEventListener('agent-updated', fetchAgents);
+        window.addEventListener('task-created', fetchAgents); // Refresh when task assigned/created
+        return () => {
+            window.removeEventListener('agent-updated', fetchAgents);
+            window.removeEventListener('task-created', fetchAgents);
+        };
+    }, []);
+
     const handleCreateAgent = async (e) => {
         e.preventDefault();
-        if (!newAgentName.trim()) return;
-
         try {
-            const newAgent = await api.createAgent(newAgentName, 'Assistant');
-            setAgents([newAgent, ...agents]);
-            setNewAgentName('');
+            const newAgent = await api.createAgent({
+                name: newAgentName || "New Assistant",
+                role: "General helper",
+                description: "I can help you with your tasks."
+            });
+            setAgents([...agents, newAgent]);
             setIsCreating(false);
-        } catch (error) {
-            console.error("Failed to create agent", error);
+            setNewAgentName('');
+        } catch (err) {
+            console.error(err);
         }
     };
 
@@ -51,89 +52,71 @@ export const AgentList = ({ onFocusAgent, focusedAgentId, availableLabels, isCre
         try {
             await api.deleteAgent(id);
             setAgents(agents.filter(a => a._id !== id));
-        } catch (error) {
-            console.error("Failed to delete agent", error);
+        } catch (err) {
+            console.error(err);
         }
     };
 
     return (
-        <div className="flex-1 flex flex-col h-full bg-[#0f111a] text-white overflow-hidden">
-            {/* Header Removed - Managed by TaskManager */}
-            {agents.length === 0 && (
-                <div className="flex-none px-8 py-4">
-                    <p className="text-gray-400">Manage your team of AI assistants</p>
+        <div className="px-6 pb-20 max-w-4xl mx-auto">
+            {isCreating && (
+                <div className="mb-6 bg-gray-900/50 border border-gray-800 rounded-xl p-4 animate-in fade-in slide-in-from-top-4">
+                    <form onSubmit={handleCreateAgent} className="flex gap-4">
+                        <div className="flex-1 relative">
+                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" size={16} />
+                            <input
+                                autoFocus
+                                type="text"
+                                value={newAgentName}
+                                onChange={(e) => setNewAgentName(e.target.value)}
+                                placeholder="Name your new assistant..."
+                                className="w-full bg-black/40 border border-gray-700 rounded-lg pl-10 pr-4 py-2 text-white focus:outline-none focus:border-blue-500/50 focus:ring-1 focus:ring-blue-500/20"
+                            />
+                        </div>
+                        <div className="flex gap-2">
+                            <button
+                                type="button"
+                                onClick={() => setIsCreating(false)}
+                                className="px-4 py-2 text-gray-400 hover:text-white transition-colors text-sm font-medium"
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                type="submit"
+                                className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors flex items-center gap-2"
+                            >
+                                <Sparkles size={16} />
+                                Create Agent
+                            </button>
+                        </div>
+                    </form>
                 </div>
             )}
 
-            {/* Content */}
-            <div className="p-4">
-
-                {/* Creation Form */}
-                <AnimatePresence>
-                    {isCreating && (
-                        <motion.form
-                            initial={{ opacity: 0, height: 0 }}
-                            animate={{ opacity: 1, height: 'auto' }}
-                            exit={{ opacity: 0, height: 0 }}
-                            className="mb-4"
-                            onSubmit={handleCreateAgent}
-                        >
-                            <div className="bg-gray-900/50 border border-blue-500/30 rounded-xl p-3 flex items-center gap-4">
-                                <div className="p-2 bg-blue-500/10 rounded-lg text-blue-400">
-                                    <Sparkles size={18} />
-                                </div>
-                                <input
-                                    autoFocus
-                                    type="text"
-                                    value={newAgentName}
-                                    onChange={(e) => setNewAgentName(e.target.value)}
-                                    placeholder="Name your new agent..."
-                                    className="flex-1 bg-transparent border-none text-base font-medium placeholder-gray-600 focus:ring-0 text-white"
-                                />
-                                <div className="flex items-center gap-2">
-                                    <button
-                                        type="button"
-                                        onClick={() => setIsCreating(false)}
-                                        className="px-3 py-1.5 text-xs text-gray-400 hover:text-white transition-colors"
-                                    >
-                                        Cancel
-                                    </button>
-                                    <button
-                                        type="submit"
-                                        className="bg-blue-600 hover:bg-blue-500 text-white px-4 py-1.5 rounded-lg text-xs font-medium transition-colors"
-                                    >
-                                        Create
-                                    </button>
-                                </div>
-                            </div>
-                        </motion.form>
-                    )}
-                </AnimatePresence>
-
-                {/* List - Using flex-col instead of grid */}
-                <div className="flex flex-col">
-                    {agents
-                        .filter(agent => agent._id !== focusedAgentId)
-                        .map(agent => (
-                            <AgentItem
-                                key={agent._id}
-                                agent={agent}
-                                isFocused={focusedAgentId === agent._id}
-                                onFocus={onFocusAgent}
-                                onDelete={() => handleDeleteAgent(agent._id)}
-                                availableLabels={availableLabels}
-                            />
-                        ))}
-
-                    {/* Empty State - Simplified */}
-                    {!isLoading && agents.length === 0 && !isCreating && (
-                        <div className="py-20 flex flex-col items-center justify-center text-gray-500 opacity-50">
-                            <Sparkles size={32} className="mb-4 text-gray-600" />
-                            <p className="text-sm">No active agents</p>
-                        </div>
-                    )}
+            {isLoading ? (
+                <div className="flex items-center justify-center py-12">
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
                 </div>
-            </div>
+            ) : agents.length === 0 ? (
+                <div className="text-center py-12">
+                    <p className="text-gray-500">No AI assistants found.</p>
+                </div>
+            ) : (
+                <div className="space-y-4">
+                    {agents.map(agent => (
+                        <AgentItem
+                            key={agent._id}
+                            agent={agent}
+                            onFocus={onFocusAgent}
+                            onDelete={() => handleDeleteAgent(agent._id)}
+                            isFocused={focusedAgentId === agent._id}
+                            availableLabels={availableLabels}
+                            timelineLimit={timelineLimit}
+                            attachmentLimit={attachmentLimit}
+                        />
+                    ))}
+                </div>
+            )}
         </div>
     );
 };

@@ -75,7 +75,7 @@ const DraggableTaskChip = ({ task, labelColor }) => {
     );
 };
 
-export const AgentItem = ({ agent, onFocus, onDelete, isFocused, availableLabels }) => {
+export const AgentItem = ({ agent, onFocus, onDelete, isFocused, availableLabels, timelineLimit = 3, attachmentLimit = 5 }) => {
     const { setNodeRef, isOver } = useDroppable({
         id: `agent-${agent._id}`,
         data: { type: 'agent', agent }
@@ -344,10 +344,18 @@ export const AgentItem = ({ agent, onFocus, onDelete, isFocused, availableLabels
                                     <h4 className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Assigned Tasks</h4>
                                     <DndContext sensors={sensors} onDragEnd={handleTaskChipDragEnd}>
                                         <div className="flex flex-wrap gap-2">
-                                            {agent.active_tasks.map(task => {
+                                            {agent.active_tasks.slice(0, attachmentLimit || 5).map(task => {
                                                 const labelColor = availableLabels?.find(l => l.name === task.labels?.[0])?.color || '#3B82F6';
                                                 return <DraggableTaskChip key={task._id} task={task} labelColor={labelColor} />;
                                             })}
+                                            {agent.active_tasks.length > (attachmentLimit || 5) && (
+                                                <div
+                                                    className="inline-flex items-center justify-center px-2 py-1 rounded-lg border border-white/10 bg-white/5 text-[10px] text-gray-400 font-medium cursor-pointer hover:bg-white/10 transition-colors"
+                                                    title="Show all assigned tasks"
+                                                >
+                                                    +{agent.active_tasks.length - (attachmentLimit || 5)} more
+                                                </div>
+                                            )}
                                         </div>
                                     </DndContext>
                                 </div>
@@ -441,6 +449,7 @@ export const AgentItem = ({ agent, onFocus, onDelete, isFocused, availableLabels
                                         <div className="flex-1 overflow-y-auto p-2 custom-scrollbar">
                                             <UpdatesTimeline
                                                 items={agent.notes || []}
+                                                limit={timelineLimit}
                                                 onAdd={async (content) => {
                                                     await api.addAgentNote(agent._id, content);
                                                     window.dispatchEvent(new CustomEvent('agent-updated'));

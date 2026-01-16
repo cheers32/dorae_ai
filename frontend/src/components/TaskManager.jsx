@@ -6,7 +6,7 @@ import { ChatInterface } from './ChatInterface';
 import { AgentList } from './AgentList';
 import { AgentItem } from './AgentItem';
 import { GeminiPanel, GeminiIcon } from './GeminiPanel';
-import { Search, Plus, Home as HomeIcon, Tag as TagIcon, ArrowLeft, ArrowRight, Trash2, X, ChevronsUpDown, ChevronsDownUp, Type, MessageSquare, ZoomIn, ZoomOut, MoreVertical, SlidersHorizontal, Settings2, Bug, Calendar, ArrowDownAZ, GripVertical, Folder, Sparkles } from 'lucide-react';
+import { Search, Plus, Home as HomeIcon, Tag as TagIcon, ArrowLeft, ArrowRight, Trash2, X, ChevronsUpDown, ChevronsDownUp, Type, MessageSquare, ZoomIn, ZoomOut, MoreVertical, SlidersHorizontal, Settings2, Bug, Calendar, ArrowDownAZ, GripVertical, Folder, Sparkles, Clock, Paperclip, Minus } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import {
@@ -71,6 +71,23 @@ export const TaskManager = () => {
         const parsed = parseInt(saved, 10);
         return isNaN(parsed) ? 5 : Math.min(10, Math.max(1, parsed)); // Clamp between 1-10
     });
+    const [timelineLimit, setTimelineLimit] = useState(() => {
+        const saved = localStorage.getItem('timelineLimit');
+        return saved ? parseInt(saved, 10) : 3;
+    });
+    const [attachmentLimit, setAttachmentLimit] = useState(() => {
+        const saved = localStorage.getItem('attachmentLimit');
+        return saved ? parseInt(saved, 10) : 5;
+    });
+
+    useEffect(() => {
+        localStorage.setItem('timelineLimit', timelineLimit);
+    }, [timelineLimit]);
+
+    useEffect(() => {
+        localStorage.setItem('attachmentLimit', attachmentLimit);
+    }, [attachmentLimit]);
+
     const [isGeminiOpen, setIsGeminiOpen] = useState(false);
     const [sortBy, setSortBy] = useState('manual'); // 'manual', 'date', 'title'
     const searchInputRef = useRef(null);
@@ -1348,10 +1365,56 @@ export const TaskManager = () => {
                                                 </div>
                                             </div>
 
+                                            {/* Timeline Limit */}
+                                            <div className="px-4 py-2 flex items-center justify-between">
+                                                <div className="flex items-center gap-3 text-gray-400">
+                                                    <Clock size={16} />
+                                                    <span className="text-xs font-medium">Timeline Updates</span>
+                                                </div>
+                                                <div className="flex items-center bg-gray-900 border border-gray-800 rounded-lg overflow-hidden h-7">
+                                                    <button
+                                                        onClick={() => setTimelineLimit(prev => Math.max(1, prev - 1))}
+                                                        className="px-2 hover:bg-white/10 text-gray-400 hover:text-white border-r border-gray-800 h-full flex items-center"
+                                                    >
+                                                        <Minus size={12} />
+                                                    </button>
+                                                    <span className="px-2 text-xs text-gray-300 min-w-[20px] text-center">{timelineLimit}</span>
+                                                    <button
+                                                        onClick={() => setTimelineLimit(prev => Math.min(10, prev + 1))}
+                                                        className="px-2 hover:bg-white/10 text-gray-400 hover:text-white border-l border-gray-800 h-full flex items-center"
+                                                    >
+                                                        <Plus size={12} />
+                                                    </button>
+                                                </div>
+                                            </div>
+
+                                            {/* Attachment Limit */}
+                                            <div className="px-4 py-2 flex items-center justify-between">
+                                                <div className="flex items-center gap-3 text-gray-400">
+                                                    <Paperclip size={16} />
+                                                    <span className="text-xs font-medium">Attachments</span>
+                                                </div>
+                                                <div className="flex items-center bg-gray-900 border border-gray-800 rounded-lg overflow-hidden h-7">
+                                                    <button
+                                                        onClick={() => setAttachmentLimit(prev => Math.max(1, prev - 1))}
+                                                        className="px-2 hover:bg-white/10 text-gray-400 hover:text-white border-r border-gray-800 h-full flex items-center"
+                                                    >
+                                                        <Minus size={12} />
+                                                    </button>
+                                                    <span className="px-2 text-xs text-gray-300 min-w-[20px] text-center">{attachmentLimit}</span>
+                                                    <button
+                                                        onClick={() => setAttachmentLimit(prev => Math.min(10, prev + 1))}
+                                                        className="px-2 hover:bg-white/10 text-gray-400 hover:text-white border-l border-gray-800 h-full flex items-center"
+                                                    >
+                                                        <Plus size={12} />
+                                                    </button>
+                                                </div>
+                                            </div>
+
                                             {activeTab !== 'assistant' && tasks.length > 0 && (
                                                 <div className="px-4 py-2 flex items-center justify-between">
                                                     <div className="flex items-center gap-3 text-gray-400">
-                                                        <ZoomIn size={16} />
+                                                        <Type size={16} />
                                                         <span className="text-xs font-medium">Text Size</span>
                                                     </div>
                                                     <div className="flex items-center bg-gray-900 border border-gray-800 rounded-lg overflow-hidden h-7">
@@ -1439,6 +1502,8 @@ export const TaskManager = () => {
                                                                 isFocused={true}
                                                                 onFocus={() => handleFocusAgent(item)}
                                                                 availableLabels={labels}
+                                                                timelineLimit={timelineLimit}
+                                                                attachmentLimit={attachmentLimit}
                                                             // Add compact prop if needed
                                                             />
                                                         </div>
@@ -1469,6 +1534,8 @@ export const TaskManager = () => {
                                                         showPreview={showPreview}
                                                         showDebugInfo={showDebugInfo}
                                                         fontSize={fontSize}
+                                                        timelineLimit={timelineLimit}
+                                                        attachmentLimit={attachmentLimit}
                                                     />
                                                 );
                                             })}
@@ -1488,6 +1555,8 @@ export const TaskManager = () => {
                                     availableLabels={labels}
                                     isCreating={isCreatingAgent}
                                     setIsCreating={setIsCreatingAgent}
+                                    timelineLimit={timelineLimit}
+                                    attachmentLimit={attachmentLimit}
                                 />
                             </div>
                         ) : (
@@ -1542,6 +1611,8 @@ export const TaskManager = () => {
                                                                 showPreview={showPreview}
                                                                 showDebugInfo={showDebugInfo}
                                                                 fontSize={fontSize}
+                                                                timelineLimit={timelineLimit}
+                                                                attachmentLimit={attachmentLimit}
                                                             />
                                                         ))}
                                                     </div>

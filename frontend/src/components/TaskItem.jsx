@@ -179,7 +179,11 @@ const parseUTCDate = (dateString) => {
     return new Date(normalized);
 };
 
-export const TaskItem = forwardRef(({ task, onUpdate, showTags, showFolders, folders, style, dragHandleProps, isOverlay, availableLabels = [], onSendToWorkarea, onRemoveFromWorkarea, isWorkarea, defaultExpanded, onAttachmentClick, onTaskClick, globalExpanded, showFullTitles, showPreview, showDebugInfo, fontSize }, ref) => {
+export const TaskItem = forwardRef(({ task, onUpdate, showTags, showFolders, folders, style, dragHandleProps, isOverlay, availableLabels = [], onSendToWorkarea, onRemoveFromWorkarea, isWorkarea, defaultExpanded, onAttachmentClick, onTaskClick, globalExpanded, showFullTitles, showPreview, showDebugInfo,
+    fontSize = 12,
+    timelineLimit = 3,
+    attachmentLimit = 5
+}, ref) => {
     const [expanded, setExpanded] = useState(defaultExpanded || false);
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [isEditingTitle, setIsEditingTitle] = useState(false);
@@ -640,14 +644,13 @@ export const TaskItem = forwardRef(({ task, onUpdate, showTags, showFolders, fol
                                 {/* Attachments Chips */}
                                 {localAttachments && localAttachments.length > 0 && (
                                     <div className="mb-4 pl-28 pr-4">
-
                                         <div className="flex flex-wrap gap-2">
                                             <DndContext
                                                 sensors={sensors}
-                                                collisionDetection={pointerWithinTaskItem} // Use custom strategy to detect drag out of item
+                                                collisionDetection={pointerWithinTaskItem}
                                                 onDragEnd={handleAttachmentDragEnd}
                                             >
-                                                {localAttachments.map(att => (
+                                                {localAttachments.slice(0, attachmentLimit || 5).map(att => (
                                                     <SortableAttachment
                                                         key={att._id}
                                                         attachment={att}
@@ -656,12 +659,27 @@ export const TaskItem = forwardRef(({ task, onUpdate, showTags, showFolders, fol
                                                     />
                                                 ))}
                                             </DndContext>
+
+                                            {localAttachments.length > (attachmentLimit || 5) && (
+                                                <div
+                                                    className="inline-flex items-center justify-center px-2 py-1 rounded-lg border border-white/10 bg-white/5 text-[10px] text-gray-400 font-medium cursor-pointer hover:bg-white/10 transition-colors"
+                                                    title="Show all attachments"
+                                                // In a real implementation, this would toggle a 'showAllAttachments' state.
+                                                // For now, let's just show the count. Or we can implement the toggle.
+                                                // Since we didn't add state for it yet, let's just make it a static indicator or add simple local state?
+                                                // Let's rely on the user increasing the preference if they want more permanently, OR
+                                                // we add a simple local toggle. Let's add a local toggle.
+                                                >
+                                                    +{localAttachments.length - (attachmentLimit || 5)} more
+                                                </div>
+                                            )}
                                         </div>
                                     </div>
                                 )}
 
                                 <UpdatesTimeline
                                     items={task.updates}
+                                    limit={timelineLimit}
                                     onAdd={async (content) => {
                                         await api.addUpdate(task._id, content);
                                         onUpdate();

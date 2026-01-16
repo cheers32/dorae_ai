@@ -21,7 +21,8 @@ export const UpdatesTimeline = ({
     onEdit,
     onDelete,
     placeholder = "Add update...",
-    className = ""
+    className = "",
+    limit = 3
 }) => {
     const [newDetail, setNewDetail] = useState('');
     const [editingId, setEditingId] = useState(null);
@@ -80,7 +81,7 @@ export const UpdatesTimeline = ({
         }
     };
 
-    const visibleItems = showAll ? items : items.slice(-3);
+    const visibleItems = showAll ? items : items.slice(-limit);
     const hiddenCount = items.length - visibleItems.length;
 
     return (
@@ -96,7 +97,7 @@ export const UpdatesTimeline = ({
                 </div>
             )}
 
-            {showAll && items.length > 3 && (
+            {showAll && items.length > limit && (
                 <div className="flex justify-center mb-2">
                     <button
                         onClick={() => setShowAll(false)}
