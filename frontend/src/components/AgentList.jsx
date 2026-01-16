@@ -73,7 +73,7 @@ export const AgentList = ({ onFocusAgent, focusedAgentId, availableLabels, isCre
                     <p className="text-gray-500">No AI assistants found.</p>
                 </div>
             ) : (
-                <div className="space-y-4">
+                <div>
                     {agents.map(agent => (
                         <AgentItem
                             key={agent._id}
