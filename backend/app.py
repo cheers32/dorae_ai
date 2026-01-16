@@ -152,6 +152,50 @@ def get_tasks():
              query['$or'] = [{'folderId': None}, {'folderId': {'$exists': False}}]
         elif folder_id:
             query['folderId'] = folder_id
+
+        # Search
+        search_query = request.args.get('search')
+        if search_query:
+            # Case-insensitive search on title or label
+            search_regex = {'$regex': search_query, '$options': 'i'}
+            
+            # If we already have an $or from user_email or folder_id (unlikely to clash in this structure, but let's be safe),
+            # we need to combine them carefully.
+            # Actually, the existing logic sets query['$or'] for user_email/folderId check.
+            # We want (Existing Conditions) AND (Search Conditions).
+            
+            # Since $or is a top-level operator, we can't easily have multiple $or at one level in simple dict if keys conflict.
+            # But the existing logic for user_email sets query['$or'] ONLY if user_email is missing (for legacy/unowned).
+            # The folder_id logic sets query['$or'] ONLY if folder_id is 'null'.
+            
+            # Let's use $and to be safe and cleaner if we are adding a complex search condition.
+            # Convert current query to a list of conditions for $and
+            
+            # But simpler: use $text search? No, requires index. $regex is fine for small scale.
+            
+            search_condition = {
+                '$or': [
+                    {'title': search_regex},
+                    {'labels': search_regex}
+                ]
+            }
+            
+            if '$or' in query:
+                # If there's already an $or (e.g. for unassigned items), we must wrap everything in $and
+                # OR, since we are just adding "Title matches OR Label matches", we can make that a separate $or? 
+                # No, MongoDB queries are implicit AND at top level. 
+                # But we can't have two '$or' keys.
+                
+                # Let's rename the existing $or to be part of an $and if needed?
+                # Actually, standard practice: use $and for top level unique constraints if keys overlap.
+                
+                existing_or = query.pop('$or')
+                query['$and'] = [
+                    {'$or': existing_or},
+                    search_condition
+                ]
+            else:
+                query['$or'] = search_condition['$or']
         
         # Pagination
         try:

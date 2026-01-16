@@ -118,16 +118,10 @@ export const TaskManager = () => {
     const [autoExpandTaskId, setAutoExpandTaskId] = useState(null); // ID of task to auto-expand after navigation
 
     // Filter out workarea tasks from main list and apply search
+    // Filter out workarea tasks from main list
+    // Search is now handled server-side
     const visibleTasks = tasks
         .filter(t => !workareaTasks.find(wt => wt._id === t._id))
-        .filter(t => {
-            if (!searchQuery.trim()) return true;
-            const query = searchQuery.toLowerCase();
-            return (
-                (t.title && t.title.toLowerCase().includes(query)) ||
-                (t.labels && t.labels.some(l => l.toLowerCase().includes(query)))
-            );
-        })
         .sort((a, b) => {
             if (sortBy === 'date') {
                 const getLastUpdate = (task) => {
@@ -344,7 +338,7 @@ export const TaskManager = () => {
                 queryFolderId = 'null';
             }
 
-            const response = await api.getTasks(status, selectedLabel, queryFolderId, currentPage, pageSize);
+            const response = await api.getTasks(status, selectedLabel, queryFolderId, currentPage, pageSize, searchQuery);
 
             // Race condition check: Only update if this is still the latest request
             if (requestId === fetchRequestId.current) {
@@ -502,7 +496,7 @@ export const TaskManager = () => {
     useEffect(() => {
         fetchTasks(true);
         fetchStats();
-    }, [activeTab, selectedLabel, selectedFolder, currentPage, pageSize]);
+    }, [activeTab, selectedLabel, selectedFolder, currentPage, pageSize, searchQuery]);
 
     // [NEW] Auto-focus search when switching to 'all' for search purposes
     useEffect(() => {
