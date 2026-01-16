@@ -502,7 +502,7 @@ export const TaskManager = () => {
     useEffect(() => {
         fetchTasks(true);
         fetchStats();
-    }, [activeTab, selectedLabel, selectedFolder]);
+    }, [activeTab, selectedLabel, selectedFolder, currentPage, pageSize]);
 
     // [NEW] Auto-focus search when switching to 'all' for search purposes
     useEffect(() => {
