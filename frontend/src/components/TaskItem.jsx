@@ -656,10 +656,23 @@ export const TaskItem = forwardRef(({ task, onUpdate, showTags, showFolders, fol
                                                 return (
                                                     <div
                                                         key={agentId}
-                                                        className="inline-flex items-center gap-1.5 px-2 py-1 rounded-full border border-blue-500/20 bg-blue-500/10 text-blue-400 text-[10px] font-medium"
+                                                        className="group/chip inline-flex items-center gap-1.5 px-2 py-1 rounded-full border border-blue-500/20 bg-blue-500/10 text-blue-400 text-[10px] font-medium pr-1.5"
                                                     >
                                                         <Bot size={10} />
                                                         {agent.name}
+                                                        <button
+                                                            onClick={async (e) => {
+                                                                e.stopPropagation();
+                                                                const newIds = localAssignedAgentIds.filter(id => id !== agentId);
+                                                                setLocalAssignedAgentIds(newIds);
+                                                                await api.updateTask(task._id, { assigned_agent_ids: newIds });
+                                                                window.dispatchEvent(new CustomEvent('agent-updated'));
+                                                                onUpdate();
+                                                            }}
+                                                            className="ml-0.5 p-0.5 rounded-full hover:bg-blue-500/20 text-blue-400/70 hover:text-blue-400 transition-colors opacity-0 group-hover/chip:opacity-100"
+                                                        >
+                                                            <X size={10} />
+                                                        </button>
                                                     </div>
                                                 );
                                             })}
