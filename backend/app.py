@@ -153,9 +153,32 @@ def get_tasks():
         elif folder_id:
             query['folderId'] = folder_id
         
+        # Pagination
+        try:
+            page = int(request.args.get('page', 1))
+            per_page = int(request.args.get('per_page', 25))
+        except ValueError:
+            page = 1
+            per_page = 25
+
+        if page < 1: page = 1
+        if per_page < 1: per_page = 25
+
+        # Count total documents matching query
+        total_tasks = tasks_collection.count_documents(query)
+        
         # Sort by order ascending, then created_at desc
-        tasks = list(tasks_collection.find(query).sort([('order', 1), ('created_at', -1)]))
-        return jsonify([serialize_doc(task) for task in tasks]), 200
+        skip = (page - 1) * per_page
+        tasks_cursor = tasks_collection.find(query).sort([('order', 1), ('created_at', -1)]).skip(skip).limit(per_page)
+        tasks = list(tasks_cursor)
+        
+        return jsonify({
+            'tasks': [serialize_doc(task) for task in tasks],
+            'total_tasks': total_tasks,
+            'page': page,
+            'per_page': per_page,
+            'total_pages': (total_tasks + per_page - 1) // per_page
+        }), 200
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 

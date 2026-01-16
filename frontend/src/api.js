@@ -13,13 +13,15 @@ const getUserEmail = () => {
 };
 
 export const api = {
-    getTasks: async (status, label, folderId) => {
+    getTasks: async (status, label, folderId, page = 1, perPage = 25) => {
         const query = new URLSearchParams();
         const userEmail = getUserEmail();
         if (userEmail) query.append('user_email', userEmail);
         if (status) query.append('status', status);
         if (label) query.append('label', label);
         if (folderId) query.append('folderId', folderId);
+        query.append('page', page);
+        query.append('per_page', perPage);
         const res = await fetch(`${API_BASE}/tasks?${query.toString()}`);
         return res.json();
     },

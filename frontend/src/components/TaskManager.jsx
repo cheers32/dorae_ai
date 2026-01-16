@@ -27,6 +27,7 @@ import {
     verticalListSortingStrategy,
 } from '@dnd-kit/sortable';
 import { createPortal } from 'react-dom';
+import { ChevronLeft, ChevronRight } from 'lucide-react';
 
 export const TaskManager = () => {
     const [tasks, setTasks] = useState([]);
@@ -41,6 +42,15 @@ export const TaskManager = () => {
     const [activeTab, setActiveTab] = useState('active');
     const [selectedLabel, setSelectedLabel] = useState(null);
     const [selectedFolder, setSelectedFolder] = useState(null);
+
+    // Pagination State
+    const [currentPage, setCurrentPage] = useState(1);
+    const [pageSize, setPageSize] = useState(() => {
+        const saved = localStorage.getItem('taskPageSize');
+        return saved ? parseInt(saved, 10) : 25;
+    });
+    const [totalPages, setTotalPages] = useState(1);
+    const [totalTasks, setTotalTasks] = useState(0);
     const [newTaskTitle, setNewTaskTitle] = useState('');
     const newTaskTextareaRef = useRef(null);
     const [loading, setLoading] = useState(true);
@@ -234,6 +244,7 @@ export const TaskManager = () => {
         setActiveTab(tab);
         setSelectedLabel(label);
         setSelectedFolder(folder);
+        setCurrentPage(1); // Reset pagination
     };
 
     const handleBack = () => {
@@ -333,12 +344,24 @@ export const TaskManager = () => {
                 queryFolderId = 'null';
             }
 
-            const data = await api.getTasks(status, selectedLabel, queryFolderId);
+            const response = await api.getTasks(status, selectedLabel, queryFolderId, currentPage, pageSize);
 
             // Race condition check: Only update if this is still the latest request
             if (requestId === fetchRequestId.current) {
-                if (data.error) throw new Error(data.error);
-                setTasks(data);
+                if (response.error) throw new Error(response.error);
+
+                // Handle both legacy (array) and new (paginated object) responses
+                let tasksData = [];
+                if (Array.isArray(response)) {
+                    tasksData = response;
+                    setTotalPages(1);
+                    setTotalTasks(response.length);
+                } else {
+                    tasksData = response.tasks || [];
+                    setTotalPages(response.total_pages || 1);
+                    setTotalTasks(response.total_tasks || 0);
+                }
+                setTasks(tasksData);
             }
         } catch (err) {
             if (requestId === fetchRequestId.current) {
@@ -529,6 +552,10 @@ export const TaskManager = () => {
     useEffect(() => {
         localStorage.setItem('task_list_font_size', fontSize);
     }, [fontSize]);
+
+    useEffect(() => {
+        localStorage.setItem('taskPageSize', pageSize);
+    }, [pageSize]);
 
     // Refresh workarea tasks from database on mount to get latest data including attachments
     useEffect(() => {
@@ -1687,49 +1714,96 @@ export const TaskManager = () => {
                                                     <p className="text-gray-500 text-lg">No {activeTab} tasks found.</p>
                                                 </div>
                                             ) : (
-                                                <SortableContext
-                                                    items={visibleTasks.map(t => t._id)}
-                                                    strategy={verticalListSortingStrategy}
-                                                >
-                                                    <div>
-                                                        {visibleTasks.map(task => (
-                                                            <SortableTaskItem
-                                                                key={task._id}
-                                                                id={task._id}
-                                                                task={task}
-                                                                onUpdate={() => {
-                                                                    fetchTasks(false);
-                                                                    fetchStats();
-                                                                }}
-                                                                showTags={showTags}
-                                                                showFolders={showFolders}
-                                                                folders={folders}
-                                                                availableLabels={labels}
-                                                                onSendToWorkarea={() => handleSendToWorkarea(task)}
-                                                                isWorkarea={false}
-                                                                defaultExpanded={autoExpandTaskId === task._id || expandedTaskIds.has(task._id)}
-                                                                onToggleExpand={(taskId, isExpanded) => {
-                                                                    setExpandedTaskIds(prev => {
-                                                                        const newSet = new Set(prev);
-                                                                        if (isExpanded) newSet.add(taskId);
-                                                                        else newSet.delete(taskId);
-                                                                        return newSet;
-                                                                    });
-                                                                }}
-                                                                onAttachmentClick={handleNavigateToTask}
-                                                                globalExpanded={globalExpanded}
-                                                                showFullTitles={showFullTitles}
-                                                                showPreview={showPreview}
-                                                                showDebugInfo={showDebugInfo}
-                                                                fontSize={fontSize}
-                                                                timelineLimit={timelineLimit}
-                                                                showCounts={showCounts}
-                                                                agents={agents}
-                                                                onSearch={handleChipSearch}
-                                                            />
-                                                        ))}
-                                                    </div>
-                                                </SortableContext>
+                                                <>
+                                                    <SortableContext
+                                                        items={visibleTasks.map(t => t._id)}
+                                                        strategy={verticalListSortingStrategy}
+                                                    >
+                                                        <div>
+                                                            {visibleTasks.map(task => (
+                                                                <SortableTaskItem
+                                                                    key={task._id}
+                                                                    id={task._id}
+                                                                    task={task}
+                                                                    onUpdate={() => {
+                                                                        fetchTasks(false);
+                                                                        fetchStats();
+                                                                    }}
+                                                                    showTags={showTags}
+                                                                    showFolders={showFolders}
+                                                                    folders={folders}
+                                                                    availableLabels={labels}
+                                                                    onSendToWorkarea={() => handleSendToWorkarea(task)}
+                                                                    isWorkarea={false}
+                                                                    defaultExpanded={autoExpandTaskId === task._id || expandedTaskIds.has(task._id)}
+                                                                    onToggleExpand={(taskId, isExpanded) => {
+                                                                        setExpandedTaskIds(prev => {
+                                                                            const newSet = new Set(prev);
+                                                                            if (isExpanded) newSet.add(taskId);
+                                                                            else newSet.delete(taskId);
+                                                                            return newSet;
+                                                                        });
+                                                                    }}
+                                                                    onAttachmentClick={handleNavigateToTask}
+                                                                    globalExpanded={globalExpanded}
+                                                                    showFullTitles={showFullTitles}
+                                                                    showPreview={showPreview}
+                                                                    showDebugInfo={showDebugInfo}
+                                                                    fontSize={fontSize}
+                                                                    timelineLimit={timelineLimit}
+                                                                    showCounts={showCounts}
+                                                                    agents={agents}
+                                                                    onSearch={handleChipSearch}
+                                                                />
+                                                            ))}
+                                                        </div>
+                                                    </SortableContext>
+
+                                                    {/* Pagination Controls */}
+                                                    {totalTasks > 0 && (
+                                                        <div className="flex items-center justify-between px-4 py-4 border-t border-white/5 mt-auto">
+                                                            <div className="flex items-center gap-2 text-xs text-gray-500">
+                                                                <span>Rows per page:</span>
+                                                                <select
+                                                                    value={pageSize}
+                                                                    onChange={(e) => {
+                                                                        setPageSize(Number(e.target.value));
+                                                                        setCurrentPage(1); // Reset to first page on size change
+                                                                    }}
+                                                                    className="bg-gray-900 border border-gray-800 rounded px-2 py-1 text-gray-300 focus:outline-none focus:border-blue-500/50"
+                                                                >
+                                                                    <option value={10}>10</option>
+                                                                    <option value={25}>25</option>
+                                                                    <option value={50}>50</option>
+                                                                    <option value={100}>100</option>
+                                                                </select>
+                                                                <span className="ml-2">
+                                                                    Showing {(currentPage - 1) * pageSize + 1}-{Math.min(currentPage * pageSize, totalTasks)} of {totalTasks}
+                                                                </span>
+                                                            </div>
+
+                                                            <div className="flex items-center gap-1">
+                                                                <button
+                                                                    onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                                                                    disabled={currentPage === 1}
+                                                                    className="p-1 rounded hover:bg-white/10 text-gray-400 disabled:opacity-30 disabled:hover:bg-transparent transition-colors"
+                                                                >
+                                                                    <ChevronLeft size={16} />
+                                                                </button>
+                                                                <div className="text-xs font-medium text-gray-400 px-2">
+                                                                    Page {currentPage} of {totalPages}
+                                                                </div>
+                                                                <button
+                                                                    onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                                                                    disabled={currentPage === totalPages}
+                                                                    className="p-1 rounded hover:bg-white/10 text-gray-400 disabled:opacity-30 disabled:hover:bg-transparent transition-colors"
+                                                                >
+                                                                    <ChevronRight size={16} />
+                                                                </button>
+                                                            </div>
+                                                        </div>
+                                                    )}
+                                                </>
                                             )}
                                         </div>
                                     </>
@@ -1737,8 +1811,6 @@ export const TaskManager = () => {
                             </div>
                         )}
                     </div>
-
-
                 </main>
                 <GeminiPanel isOpen={isGeminiOpen} onClose={() => setIsGeminiOpen(false)} />
             </div >
