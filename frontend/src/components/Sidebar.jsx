@@ -217,7 +217,7 @@ const DraggableSidebarLabel = ({ id, label, isActive, onClick, color, data, coun
     );
 };
 
-export function Sidebar({ activeTab, onNavigate, labels = [], onLabelsChange, selectedLabel, folders = [], onFoldersChange, selectedFolder, sidebarItems = [], stats = {}, isCollapsed, onToggle, density = 5 }) {
+export function Sidebar({ activeTab, onNavigate, labels = [], onLabelsChange, selectedLabel, folders = [], onFoldersChange, selectedFolder, sidebarItems = [], stats = {}, isCollapsed, onToggle, density = 5, isOpen = false, onCloseMobile }) {
     const [isAddingLabel, setIsAddingLabel] = useState(false);
     const [newLabelName, setNewLabelName] = useState('');
     const [isAddingFolder, setIsAddingFolder] = useState(false);
@@ -312,11 +312,16 @@ export function Sidebar({ activeTab, onNavigate, labels = [], onLabelsChange, se
     };
 
     return (
-        <motion.div
-            className={`h-screen bg-[#0f111a] border-r border-white/5 flex flex-col pt-8 transition-all duration-300 ease-in-out ${isCollapsed ? 'w-[80px]' : 'w-[280px]'}`}
-            initial={{ x: -20, opacity: 0 }}
-            animate={{ x: 0, opacity: 1 }}
+        <div
+            className={`sidebar h-screen bg-[#0f111a] border-r border-white/5 flex flex-col pt-8 transition-all duration-300 ease-in-out ${isCollapsed ? 'w-[80px]' : 'w-[280px]'} ${isOpen ? 'mobile-open' : ''}`}
         >
+            {/* Mobile Close Button */}
+            <button
+                className="mobile-sidebar-close mobile-only"
+                onClick={onCloseMobile}
+            >
+                <X size={20} />
+            </button>
             <div className={`px-6 mb-6 flex items-start justify-between ${isCollapsed ? 'px-0 justify-center' : ''}`}>
                 <div
                     className="flex items-start gap-3 cursor-pointer group"
@@ -560,6 +565,6 @@ export function Sidebar({ activeTab, onNavigate, labels = [], onLabelsChange, se
                     {!isCollapsed && <span className="text-sm font-medium">Log Out</span>}
                 </button>
             </div>
-        </motion.div >
+        </div>
     );
 }

@@ -23,10 +23,25 @@ body {
 }
 
 /* App Shell (Sidebar Layout) */
+/* App Shell (Sidebar Layout) */
 .app-shell {
-  display: grid;
-  grid-template-columns: 260px 1fr;
+  display: flex;
   min-height: 100vh;
+  overflow: hidden;
+  /* Prevent body scroll if needed */
+}
+
+.main-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  /* Enable text truncation in flex children */
+  height: 100vh;
+  overflow: hidden;
+  position: relative;
+  padding: 0;
+  /* Padding handled by inner containers if needed, or override */
 }
 
 /* Sidebar */
@@ -107,11 +122,7 @@ body {
   padding-top: 1rem;
 }
 
-/* Main Content */
-.main-content {
-  padding: 3rem 4rem;
-  max-width: 1000px;
-}
+/* Main Content - Legacy rule removed to prevent conflicts */
 
 .content-header {
   margin-bottom: 3rem;
@@ -508,4 +519,206 @@ body {
 .scrollbar-hide {
   -ms-overflow-style: none;
   scrollbar-width: none;
+}
+
+/* Mobile Responsive Styles */
+@media (max-width: 768px) {
+  .app-shell {
+    display: block;
+    /* Stack layout on mobile */
+  }
+
+  .sidebar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    z-index: 100;
+    transform: translateX(-100%);
+    transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    box-shadow: 20px 0 50px rgba(0, 0, 0, 0.5);
+    width: 85vw;
+    /* Wider sidebar on mobile */
+    max-width: 320px;
+  }
+
+  .sidebar.mobile-open {
+    transform: translateX(0);
+  }
+
+  /* Close button inside sidebar */
+  .mobile-sidebar-close {
+    position: absolute;
+    top: 1rem;
+    right: 1rem;
+    padding: 0.5rem;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 8px;
+    color: var(--text-secondary);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 101;
+  }
+
+  /* Overlay backdrop */
+  .sidebar-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.6);
+    backdrop-filter: blur(4px);
+    z-index: 90;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s;
+  }
+
+  .sidebar-overlay.visible {
+    opacity: 1;
+    pointer-events: auto;
+  }
+
+  .main-content {
+    /* Less padding on mobile */
+    padding: 0;
+  }
+
+  /* Hide Large Title on Mobile */
+  .content-header h1 {
+    display: none;
+  }
+
+  .content-header {
+    margin-bottom: 1rem;
+    padding: 0.5rem 1rem;
+    /* Compact header padding */
+    position: sticky;
+    top: 0;
+    z-index: 50;
+    background: #020617;
+    /* Solid background for sticky header */
+  }
+
+  /* Utility to hide elements on mobile */
+  .mobile-hidden {
+    display: none !important;
+  }
+
+  .mobile-only {
+    display: block;
+  }
+
+  /* Gmail-style Search Pill */
+  .search-pill-container {
+    position: sticky;
+    top: 1rem;
+    z-index: 60;
+    padding: 0 1rem;
+    margin-bottom: 1rem;
+  }
+
+  .search-pill {
+    background: #1e293b;
+    /* Slate-800 */
+    border-radius: 9999px;
+    /* Pill shape */
+    padding: 0.5rem 1rem;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+  }
+
+  .search-pill input {
+    background: transparent;
+    border: none;
+    outline: none;
+    color: white;
+    font-size: 16px;
+    width: 100%;
+  }
+
+  /* Floating Action Button (FAB) */
+  .fab-button {
+    position: fixed;
+    bottom: 2rem;
+    right: 2rem;
+    width: 56px;
+    height: 56px;
+    border-radius: 16px;
+    /* Squircle */
+    background: #3b82f6;
+    /* Blue-500 */
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+    z-index: 90;
+    transition: transform 0.2s;
+  }
+
+  .fab-button:active {
+    transform: scale(0.95);
+  }
+
+  /* Mobile Create Modal Overlay */
+  .mobile-create-modal {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.8);
+    z-index: 200;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 1rem;
+    backdrop-filter: blur(4px);
+  }
+
+  /* Hide standard create bar on mobile */
+  .create-task-bar {
+    display: none;
+  }
+
+  /* Main padding for pill layout */
+  .main-content {
+    padding: 0;
+    padding-top: 0.5rem;
+  }
+
+  /* Reset header styles for this mode */
+  .content-header {
+    display: none;
+    /* Hide standard header container entirely on mobile */
+  }
+
+  /* Task Item Adjustments */
+  .task-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
+  }
+
+  .task-title-section {
+    width: 100%;
+  }
+
+  .task-meta {
+    width: 100%;
+    justify-content: space-between;
+    margin-top: 0.5rem;
+  }
+}
+
+/* Utilities */
+.mobile-only {
+  display: none;
+}
+
+@media (max-width: 768px) {
+  .mobile-only {
+    display: block;
+  }
 }

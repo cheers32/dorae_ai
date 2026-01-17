@@ -6,7 +6,7 @@ import { ChatInterface } from './ChatInterface';
 import { AgentList } from './AgentList';
 import { AgentItem } from './AgentItem';
 import { GeminiPanel, GeminiIcon } from './GeminiPanel';
-import { Search, Plus, Home as HomeIcon, Tag as TagIcon, ArrowLeft, ArrowRight, Trash2, X, ChevronsUpDown, ChevronsDownUp, Type, MessageSquare, ZoomIn, ZoomOut, MoreVertical, SlidersHorizontal, Settings2, Bug, Calendar, ArrowDownAZ, GripVertical, Folder, Sparkles, Zap, Clock, Paperclip, Minus, Copy } from 'lucide-react';
+import { Search, Plus, Home as HomeIcon, Tag as TagIcon, ArrowLeft, ArrowRight, Trash2, X, ChevronsUpDown, ChevronsDownUp, Type, MessageSquare, ZoomIn, ZoomOut, MoreVertical, SlidersHorizontal, Settings2, Bug, Calendar, ArrowDownAZ, GripVertical, Folder, Sparkles, Zap, Clock, Paperclip, Minus, Copy, Menu } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import {
@@ -36,6 +36,8 @@ export const TaskManager = () => {
     const [preSearchState, setPreSearchState] = useState(null);
     const [expandedTaskIds, setExpandedTaskIds] = useState(new Set()); // [NEW] Track expanded tasks
     const [expandedAgentIds, setExpandedAgentIds] = useState(new Set()); // [NEW] Track expanded agents
+    const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false); // [NEW] Mobile sidebar state
+    const [isMobileCreateOpen, setIsMobileCreateOpen] = useState(false); // [NEW] Mobile create modal state
 
     const [labels, setLabels] = useState([]);
     const [folders, setFolders] = useState([]);
@@ -239,7 +241,10 @@ export const TaskManager = () => {
         setActiveTab(tab);
         setSelectedLabel(label);
         setSelectedFolder(folder);
+        setSelectedLabel(label);
+        setSelectedFolder(folder);
         setCurrentPage(1); // Reset pagination
+        setIsMobileSidebarOpen(false); // Close mobile sidebar on navigation
     };
 
     const handleBack = () => {
@@ -1164,513 +1169,617 @@ export const TaskManager = () => {
             onDragEnd={handleDragEnd}
             onDragOver={handleDragOver}
         >
-            <div className="flex h-screen bg-[#0f1014] text-gray-200 font-sans overflow-hidden">
+            <div className="app-shell bg-[#020617] min-h-screen text-slate-50">
+                {/* Mobile Sidebar Overlay */}
+                <div
+                    className={`sidebar-overlay ${isMobileSidebarOpen ? 'visible' : ''}`}
+                    onClick={() => setIsMobileSidebarOpen(false)}
+                />
+
                 <Sidebar
                     activeTab={activeTab}
                     onNavigate={changeView}
                     labels={labels}
-                    folders={folders}
                     onLabelsChange={fetchLabels}
-                    onFoldersChange={fetchFolders}
                     selectedLabel={selectedLabel}
+                    folders={folders}
+                    onFoldersChange={fetchFolders}
                     selectedFolder={selectedFolder}
                     sidebarItems={sidebarItems}
                     stats={stats}
                     isCollapsed={isSidebarCollapsed}
                     onToggle={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
                     density={sidebarDensity}
+                    isOpen={isMobileSidebarOpen}
+                    onCloseMobile={() => setIsMobileSidebarOpen(false)}
                 />
 
-                <main className="flex-1 flex flex-col min-w-0 bg-[#0f1014] h-full relative">
-                    <header className="px-6 py-4 flex justify-between items-center bg-[#0f1014]/80 backdrop-blur-md sticky top-0 z-40 border-b border-white/5">
-                        <div className="flex items-center gap-4 shrink-0">
-                            <AnimatePresence mode="popLayout">
-                                <div className="flex items-center gap-1.5">
-                                    {history.length > 0 && (
-                                        <motion.button
-                                            initial={{ opacity: 0, x: -10 }}
-                                            animate={{ opacity: 1, x: 0 }}
-                                            exit={{ opacity: 0, x: -10 }}
-                                            onClick={handleBack}
-                                            className="p-1.5 bg-white/5 border border-white/10 rounded-lg text-gray-400 hover:text-white hover:bg-white/10 transition-all flex items-center justify-center group"
-                                            title="Go Back (Cmd + [)"
-                                        >
-                                            <ArrowLeft size={16} className="group-hover:-translate-x-0.5 transition-transform" />
-                                        </motion.button>
-                                    )}
+                <div className={`main-content transition-all duration-300 ${isSidebarCollapsed ? 'ml-0' : 'ml-0'}`}>
 
-                                    {forwardHistory.length > 0 && (
-                                        <motion.button
-                                            initial={{ opacity: 0, x: 10 }}
-                                            animate={{ opacity: 1, x: 0 }}
-                                            exit={{ opacity: 0, x: 10 }}
-                                            onClick={handleForward}
-                                            className="p-1.5 bg-white/5 border border-white/10 rounded-lg text-gray-400 hover:text-white hover:bg-white/10 transition-all flex items-center justify-center group"
-                                            title="Go Forward (Cmd + ])"
-                                        >
-                                            <ArrowRight size={16} className="group-hover:translate-x-0.5 transition-transform" />
-                                        </motion.button>
-                                    )}
-                                </div>
-                            </AnimatePresence>
-
-                            <div className="flex items-baseline gap-3">
-                                <h1 className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-blue-200 text-left leading-tight">
-                                    {getHeaderTitle()}
-                                    <span className="text-base text-gray-500 font-normal ml-2">
-                                        ({activeTab === 'active' && !selectedLabel && !selectedFolder ? stats.active :
-                                            activeTab === 'closed' ? stats.closed :
-                                                activeTab === 'trash' ? stats.trash :
-                                                    activeTab === 'folder' && selectedFolder ? (stats.folders[selectedFolder] || 0) :
-                                                        selectedLabel ? (stats.labels[selectedLabel] || 0) :
-                                                            tasks.length})
-                                    </span>
-                                </h1>
-                            </div>
+                    {/* Gmail-Style Mobile Search Pill */}
+                    <div className="search-pill-container mobile-only">
+                        <div className="search-pill">
+                            <button onClick={() => setIsMobileSidebarOpen(true)} className="text-gray-400">
+                                <Menu size={20} />
+                            </button>
+                            <input
+                                type="text"
+                                placeholder="Search in tasks"
+                                value={searchQuery}
+                                onChange={(e) => setSearchQuery(e.target.value)}
+                                className="flex-1"
+                            />
+                            {localStorage.getItem('userProfile') && (
+                                <img
+                                    src={JSON.parse(localStorage.getItem('userProfile')).picture}
+                                    alt="Profile"
+                                    className="w-8 h-8 rounded-full border border-gray-700"
+                                />
+                            )}
                         </div>
+                    </div>
 
-                        {/* Create Task Bar OR Search Bar (Central Priority) */}
-                        <div className="flex-[3] flex justify-center mx-6 min-w-[300px]">
-                            <div className="w-full max-w-xl group relative transition-all duration-300 focus-within:max-w-2xl">
-                                {isSearchPrimary ? (
-                                    // Search Bar (Central)
-                                    <div className="relative w-full">
-                                        <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                                            <Search size={18} className="text-gray-400 group-focus-within:text-blue-400 transition-colors" />
-                                        </div>
-                                        <input
-                                            ref={searchInputRef}
-                                            type="text"
-                                            placeholder={`Search ${activeTab === 'trash' ? 'deleted' : activeTab === 'closed' ? 'closed' : 'all'} tasks...`}
-                                            value={searchQuery}
-                                            onFocus={() => {
-                                                setShouldFocusSearch(true);
-                                            }}
-                                            onChange={(e) => setSearchQuery(e.target.value)}
-                                            onKeyDown={(e) => {
-                                                if (e.key === 'Escape') {
-                                                    handleClearSearch();
-                                                    e.currentTarget.blur();
-                                                }
-                                            }}
-                                            className="w-full bg-white/5 border border-white/5 rounded-xl py-2 pl-12 pr-10 text-sm text-gray-200 placeholder:text-gray-500 focus:outline-none focus:bg-white/10 focus:border-blue-500/50 focus:ring-4 focus:ring-blue-500/10 transition-all shadow-inner"
-                                        />
-                                        {searchQuery && (
-                                            <button
-                                                type="button"
-                                                onClick={handleClearSearch}
-                                                className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-500 hover:text-gray-300 transition-colors"
-                                            >
-                                                <X size={16} />
-                                            </button>
-                                        )}
-                                    </div>
-                                ) : (
-                                    // Create Task Bar
+                    {/* Mobile Floating Action Button (FAB) */}
+                    <button
+                        className="fab-button mobile-only"
+                        onClick={() => setIsMobileCreateOpen(true)}
+                    >
+                        <Plus size={24} />
+                    </button>
+
+                    {/* Mobile Create Modal */}
+                    <AnimatePresence>
+                        {isMobileCreateOpen && (
+                            <motion.div
+                                initial={{ opacity: 0 }}
+                                animate={{ opacity: 1 }}
+                                exit={{ opacity: 0 }}
+                                className="mobile-create-modal"
+                                onClick={() => setIsMobileCreateOpen(false)}
+                            >
+                                <motion.div
+                                    initial={{ y: 50, scale: 0.95 }}
+                                    animate={{ y: 0, scale: 1 }}
+                                    exit={{ y: 50, scale: 0.95 }}
+                                    onClick={(e) => e.stopPropagation()}
+                                    className="bg-[#1e293b] w-full max-w-sm rounded-2xl p-4 shadow-2xl border border-gray-700"
+                                >
+                                    <h3 className="text-lg font-bold mb-3 text-white">New Task</h3>
                                     <form
                                         onSubmit={(e) => {
+                                            e.preventDefault();
                                             handleCreateTask(e);
+                                            setIsMobileCreateOpen(false);
                                         }}
-                                        className="relative w-full"
                                     >
-                                        <div
-                                            className="flex items-center w-full bg-white/5 border border-white/5 rounded-xl px-4 py-2 focus-within:bg-white/10 focus-within:border-blue-500/50 focus-within:ring-4 focus-within:ring-blue-500/10 transition-all shadow-inner cursor-text"
-                                            onClick={() => newTaskTextareaRef.current?.focus()}
-                                        >
-                                            <Plus size={18} className="text-gray-400 group-focus-within:text-blue-400 transition-colors shrink-0 mr-3" />
-                                            <textarea
-                                                ref={newTaskTextareaRef}
-                                                rows={1}
-                                                placeholder={selectedFolder ? `Add task to ${stats.folders[selectedFolder] ? folders.find(f => f._id === selectedFolder)?.name : 'folder'}...` : selectedLabel ? `Add task to ${selectedLabel}...` : "What needs to be done?"}
-                                                value={newTaskTitle}
-                                                onChange={(e) => setNewTaskTitle(e.target.value)}
+                                        <textarea
+                                            autoFocus
+                                            rows={3}
+                                            placeholder="What needs to be done?"
+                                            value={newTaskTitle}
+                                            onChange={(e) => setNewTaskTitle(e.target.value)}
+                                            className="w-full bg-black/20 text-white rounded-xl p-3 mb-4 border border-white/10 focus:border-blue-500/50 outline-none resize-none"
+                                            onKeyDown={(e) => {
+                                                if (e.key === 'Enter' && !e.shiftKey) {
+                                                    e.preventDefault();
+                                                    handleCreateTask(e);
+                                                    setIsMobileCreateOpen(false);
+                                                }
+                                            }}
+                                        />
+                                        <div className="flex justify-end gap-3">
+                                            <button
+                                                type="button"
+                                                onClick={() => setIsMobileCreateOpen(false)}
+                                                className="px-4 py-2 text-gray-400 font-medium"
+                                            >
+                                                Cancel
+                                            </button>
+                                            <button
+                                                type="submit"
+                                                disabled={!newTaskTitle.trim()}
+                                                className="px-6 py-2 bg-blue-500 text-white rounded-xl font-bold disabled:opacity-50"
+                                            >
+                                                Save
+                                            </button>
+                                        </div>
+                                    </form>
+                                </motion.div>
+                            </motion.div>
+                        )}
+                    </AnimatePresence>
+
+                    <div className="content-header">
+                        <header className="px-6 py-4 flex justify-between items-center bg-[#0f1014]/80 backdrop-blur-md sticky top-0 z-40 border-b border-white/5">
+                            <div className="flex items-center gap-4 shrink-0 mobile-hidden">
+                                <AnimatePresence mode="popLayout">
+                                    <div className="flex items-center gap-1.5">
+                                        {history.length > 0 && (
+                                            <motion.button
+                                                initial={{ opacity: 0, x: -10 }}
+                                                animate={{ opacity: 1, x: 0 }}
+                                                exit={{ opacity: 0, x: -10 }}
+                                                onClick={handleBack}
+                                                className="p-1.5 bg-white/5 border border-white/10 rounded-lg text-gray-400 hover:text-white hover:bg-white/10 transition-all flex items-center justify-center group"
+                                                title="Go Back (Cmd + [)"
+                                            >
+                                                <ArrowLeft size={16} className="group-hover:-translate-x-0.5 transition-transform" />
+                                            </motion.button>
+                                        )}
+
+                                        {forwardHistory.length > 0 && (
+                                            <motion.button
+                                                initial={{ opacity: 0, x: 10 }}
+                                                animate={{ opacity: 1, x: 0 }}
+                                                exit={{ opacity: 0, x: 10 }}
+                                                onClick={handleForward}
+                                                className="p-1.5 bg-white/5 border border-white/10 rounded-lg text-gray-400 hover:text-white hover:bg-white/10 transition-all flex items-center justify-center group"
+                                                title="Go Forward (Cmd + ])"
+                                            >
+                                                <ArrowRight size={16} className="group-hover:translate-x-0.5 transition-transform" />
+                                            </motion.button>
+                                        )}
+                                    </div>
+                                </AnimatePresence>
+
+                                <div className="flex items-baseline gap-3">
+                                    <h1 className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-blue-200 text-left leading-tight">
+                                        {getHeaderTitle()}
+                                        <span className="text-base text-gray-500 font-normal ml-2">
+                                            ({activeTab === 'active' && !selectedLabel && !selectedFolder ? stats.active :
+                                                activeTab === 'closed' ? stats.closed :
+                                                    activeTab === 'trash' ? stats.trash :
+                                                        activeTab === 'folder' && selectedFolder ? (stats.folders[selectedFolder] || 0) :
+                                                            selectedLabel ? (stats.labels[selectedLabel] || 0) :
+                                                                tasks.length})
+                                        </span>
+                                    </h1>
+                                </div>
+                            </div>
+
+                            {/* Create Task Bar OR Search Bar (Central Priority) */}
+                            <div className="flex-[3] flex justify-center mx-6 min-w-[300px]">
+                                <div className="w-full max-w-xl group relative transition-all duration-300 focus-within:max-w-2xl">
+                                    {isSearchPrimary ? (
+                                        // Search Bar (Central)
+                                        <div className="relative w-full">
+                                            <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                                                <Search size={18} className="text-gray-400 group-focus-within:text-blue-400 transition-colors" />
+                                            </div>
+                                            <input
+                                                ref={searchInputRef}
+                                                type="text"
+                                                placeholder={`Search ${activeTab === 'trash' ? 'deleted' : activeTab === 'closed' ? 'closed' : 'all'} tasks...`}
+                                                value={searchQuery}
+                                                onFocus={() => {
+                                                    setShouldFocusSearch(true);
+                                                }}
+                                                onChange={(e) => setSearchQuery(e.target.value)}
                                                 onKeyDown={(e) => {
-                                                    if (e.key === 'Enter' && !e.shiftKey) {
-                                                        e.preventDefault();
-                                                        handleCreateTask(e);
-                                                    } else if (e.key === 'Escape') {
-                                                        setNewTaskTitle('');
+                                                    if (e.key === 'Escape') {
+                                                        handleClearSearch();
                                                         e.currentTarget.blur();
                                                     }
                                                 }}
-                                                className="flex-1 bg-transparent border-none outline-none text-sm text-gray-200 placeholder:text-gray-500 resize-none overflow-hidden py-0 leading-normal"
+                                                className="w-full bg-white/5 border border-white/5 rounded-xl py-2 pl-12 pr-10 text-sm text-gray-200 placeholder:text-gray-500 focus:outline-none focus:bg-white/10 focus:border-blue-500/50 focus:ring-4 focus:ring-blue-500/10 transition-all shadow-inner"
                                             />
-                                            {newTaskTitle && (
+                                            {searchQuery && (
                                                 <button
                                                     type="button"
-                                                    onClick={(e) => {
-                                                        e.stopPropagation(); // Prevent wrapper click
-                                                        setNewTaskTitle('');
-                                                    }}
-                                                    className="shrink-0 ml-2 flex items-center text-gray-500 hover:text-gray-300 transition-colors"
+                                                    onClick={handleClearSearch}
+                                                    className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-500 hover:text-gray-300 transition-colors"
                                                 >
                                                     <X size={16} />
                                                 </button>
                                             )}
                                         </div>
-                                    </form>
-                                )}
-                            </div>
-                        </div>
-
-                        <div className="flex items-center gap-4 shrink-0">
-                            {/* Search (Secondary) - Only show if not primary */}
-                            {!isSearchPrimary && (
-                                <div className="relative group/search">
-                                    <div className={`flex items-center transition-all duration-300 ${searchQuery ? 'w-64 bg-white/10' : 'w-8 hover:w-64 hover:bg-white/5'} rounded-lg overflow-hidden border border-transparent focus-within:w-64 focus-within:border-blue-500/30 focus-within:bg-white/10`}>
-                                        <div className="absolute left-2 flex items-center pointer-events-none text-gray-400">
-                                            <Search size={16} />
-                                        </div>
-                                        <input
-                                            ref={searchInputRef}
-                                            type="text"
-                                            placeholder="Search"
-                                            value={searchQuery}
-                                            onFocus={() => {
-                                                setShouldFocusSearch(true);
+                                    ) : (
+                                        // Create Task Bar
+                                        <form
+                                            onSubmit={(e) => {
+                                                handleCreateTask(e);
                                             }}
-                                            onChange={(e) => setSearchQuery(e.target.value)}
-                                            onKeyDown={(e) => {
-                                                if (e.key === 'Escape') {
-                                                    handleClearSearch();
-                                                    e.currentTarget.blur();
-                                                }
-                                            }}
-                                            className="w-full bg-transparent py-1.5 pl-8 pr-8 text-xs text-gray-200 placeholder:text-gray-500 focus:outline-none"
-                                        />
-                                        {searchQuery && (
-                                            <button
-                                                onClick={handleClearSearch}
-                                                className="absolute right-2 flex items-center text-gray-500 hover:text-gray-300"
-                                            >
-                                                <X size={14} />
-                                            </button>
-                                        )}
-                                    </div>
-                                </div>
-                            )}
-
-                            {activeTab === 'assistant' && (
-                                <button
-                                    onClick={() => setIsCreatingAgent(true)}
-                                    className="px-1.5 py-1.5 rounded-lg transition-colors flex items-center text-blue-400 bg-blue-400/10 hover:bg-blue-400/20"
-                                    title="Hire Agent"
-                                >
-                                    <span className="text-xs font-medium">Hire Agent</span>
-                                </button>
-                            )}
-
-
-
-
-                            <div className="relative" ref={menuRef}>
-                                <button
-                                    onClick={() => setIsMenuOpen(!isMenuOpen)}
-                                    className={`p-2 rounded-lg transition-all flex items-center justify-center ${isMenuOpen ? 'bg-blue-500/20 text-blue-400 border border-blue-500/30' : 'bg-gray-900 border border-gray-800 text-gray-400 hover:text-gray-200 hover:border-gray-700'}`}
-                                    title="View Options"
-                                >
-                                    <SlidersHorizontal size={18} />
-                                </button>
-
-                                <AnimatePresence>
-                                    {isMenuOpen && (
-                                        <motion.div
-                                            initial={{ opacity: 0, y: 10, scale: 0.95 }}
-                                            animate={{ opacity: 1, y: 0, scale: 1 }}
-                                            exit={{ opacity: 0, y: 10, scale: 0.95 }}
-                                            transition={{ duration: 0.15 }}
-                                            className="absolute right-0 mt-2 w-56 bg-gray-950 border border-gray-800 rounded-xl shadow-2xl py-2 z-50 backdrop-blur-xl"
+                                            className="relative w-full"
                                         >
-                                            <div className="px-3 py-1.5 mb-1">
-                                                <span className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">Sort By</span>
-                                            </div>
-                                            <div className="px-2 pb-2">
-                                                <div className="flex bg-gray-900 rounded-lg p-1 border border-gray-800">
-                                                    <button
-                                                        onClick={() => setSortBy('manual')}
-                                                        className={`flex-1 py-1 text-[10px] font-medium rounded-md transition-all ${sortBy === 'manual' ? 'bg-blue-500/20 text-blue-400 shadow-sm' : 'text-gray-400 hover:text-gray-300'}`}
-                                                    >
-                                                        Manual
-                                                    </button>
-                                                    <button
-                                                        onClick={() => setSortBy('date')}
-                                                        className={`flex-1 py-1 text-[10px] font-medium rounded-md transition-all ${sortBy === 'date' ? 'bg-blue-500/20 text-blue-400 shadow-sm' : 'text-gray-400 hover:text-gray-300'}`}
-                                                    >
-                                                        Date
-                                                    </button>
-                                                    <button
-                                                        onClick={() => setSortBy('title')}
-                                                        className={`flex-1 py-1 text-[10px] font-medium rounded-md transition-all ${sortBy === 'title' ? 'bg-blue-500/20 text-blue-400 shadow-sm' : 'text-gray-400 hover:text-gray-300'}`}
-                                                    >
-                                                        Title
-                                                    </button>
-                                                </div>
-                                            </div>
-                                            <div className="h-px bg-gray-800 my-2 mx-2"></div>
-                                            <div className="px-3 py-1.5 mb-1">
-                                                <span className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">Layout & Visibility</span>
-                                            </div>
-
-                                            <button
-                                                onClick={() => { setShowTags(!showTags); setIsMenuOpen(false); }}
-                                                className={`w-full px-4 py-2 text-left flex items-center gap-3 transition-colors hover:bg-white/5 ${showTags ? 'text-blue-400' : 'text-gray-400'}`}
+                                            <div
+                                                className="flex items-center w-full bg-white/5 border border-white/5 rounded-xl px-4 py-2 focus-within:bg-white/10 focus-within:border-blue-500/50 focus-within:ring-4 focus-within:ring-blue-500/10 transition-all shadow-inner cursor-text"
+                                                onClick={() => newTaskTextareaRef.current?.focus()}
                                             >
-                                                <TagIcon size={16} />
-                                                <span className="text-xs font-medium">{showTags ? 'Hide Tags' : 'Show Tags'}</span>
-                                            </button>
+                                                <Plus size={18} className="text-gray-400 group-focus-within:text-blue-400 transition-colors shrink-0 mr-3" />
+                                                <textarea
+                                                    ref={newTaskTextareaRef}
+                                                    rows={1}
+                                                    placeholder={selectedFolder ? `Add task to ${stats.folders[selectedFolder] ? folders.find(f => f._id === selectedFolder)?.name : 'folder'}...` : selectedLabel ? `Add task to ${selectedLabel}...` : "What needs to be done?"}
+                                                    value={newTaskTitle}
+                                                    onChange={(e) => setNewTaskTitle(e.target.value)}
+                                                    onKeyDown={(e) => {
+                                                        if (e.key === 'Enter' && !e.shiftKey) {
+                                                            e.preventDefault();
+                                                            handleCreateTask(e);
+                                                        } else if (e.key === 'Escape') {
+                                                            setNewTaskTitle('');
+                                                            e.currentTarget.blur();
+                                                        }
+                                                    }}
+                                                    className="flex-1 bg-transparent border-none outline-none text-sm text-gray-200 placeholder:text-gray-500 resize-none overflow-hidden py-0 leading-normal"
+                                                />
+                                                {newTaskTitle && (
+                                                    <button
+                                                        type="button"
+                                                        onClick={(e) => {
+                                                            e.stopPropagation(); // Prevent wrapper click
+                                                            setNewTaskTitle('');
+                                                        }}
+                                                        className="shrink-0 ml-2 flex items-center text-gray-500 hover:text-gray-300 transition-colors"
+                                                    >
+                                                        <X size={16} />
+                                                    </button>
+                                                )}
+                                            </div>
+                                        </form>
+                                    )}
+                                </div>
+                            </div>
 
-                                            <button
-                                                onClick={() => { setShowFolders(!showFolders); setIsMenuOpen(false); }}
-                                                className={`w-full px-4 py-2 text-left flex items-center gap-3 transition-colors hover:bg-white/5 ${showFolders ? 'text-blue-400' : 'text-gray-400'}`}
+                            <div className="flex items-center gap-4 shrink-0">
+                                {/* Search (Secondary) - Only show if not primary */}
+                                {!isSearchPrimary && (
+                                    <div className="relative group/search">
+                                        <div className={`flex items-center transition-all duration-300 ${searchQuery ? 'w-64 bg-white/10' : 'w-8 hover:w-64 hover:bg-white/5'} rounded-lg overflow-hidden border border-transparent focus-within:w-64 focus-within:border-blue-500/30 focus-within:bg-white/10`}>
+                                            <div className="absolute left-2 flex items-center pointer-events-none text-gray-400">
+                                                <Search size={16} />
+                                            </div>
+                                            <input
+                                                ref={searchInputRef}
+                                                type="text"
+                                                placeholder="Search"
+                                                value={searchQuery}
+                                                onFocus={() => {
+                                                    setShouldFocusSearch(true);
+                                                }}
+                                                onChange={(e) => setSearchQuery(e.target.value)}
+                                                onKeyDown={(e) => {
+                                                    if (e.key === 'Escape') {
+                                                        handleClearSearch();
+                                                        e.currentTarget.blur();
+                                                    }
+                                                }}
+                                                className="w-full bg-transparent py-1.5 pl-8 pr-8 text-xs text-gray-200 placeholder:text-gray-500 focus:outline-none"
+                                            />
+                                            {searchQuery && (
+                                                <button
+                                                    onClick={handleClearSearch}
+                                                    className="absolute right-2 flex items-center text-gray-500 hover:text-gray-300"
+                                                >
+                                                    <X size={14} />
+                                                </button>
+                                            )}
+                                        </div>
+                                    </div>
+                                )}
+
+                                {activeTab === 'assistant' && (
+                                    <button
+                                        onClick={() => setIsCreatingAgent(true)}
+                                        className="px-1.5 py-1.5 rounded-lg transition-colors flex items-center text-blue-400 bg-blue-400/10 hover:bg-blue-400/20"
+                                        title="Hire Agent"
+                                    >
+                                        <span className="text-xs font-medium">Hire Agent</span>
+                                    </button>
+                                )}
+
+
+
+
+                                <div className="relative" ref={menuRef}>
+                                    <button
+                                        onClick={() => setIsMenuOpen(!isMenuOpen)}
+                                        className={`p-2 rounded-lg transition-all flex items-center justify-center ${isMenuOpen ? 'bg-blue-500/20 text-blue-400 border border-blue-500/30' : 'bg-gray-900 border border-gray-800 text-gray-400 hover:text-gray-200 hover:border-gray-700'}`}
+                                        title="View Options"
+                                    >
+                                        <SlidersHorizontal size={18} />
+                                    </button>
+
+                                    <AnimatePresence>
+                                        {isMenuOpen && (
+                                            <motion.div
+                                                initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                                                animate={{ opacity: 1, y: 0, scale: 1 }}
+                                                exit={{ opacity: 0, y: 10, scale: 0.95 }}
+                                                transition={{ duration: 0.15 }}
+                                                className="absolute right-0 mt-2 w-56 bg-gray-950 border border-gray-800 rounded-xl shadow-2xl py-2 z-50 backdrop-blur-xl"
                                             >
-                                                <Folder size={16} />
-                                                <span className="text-xs font-medium">{showFolders ? 'Hide Folders' : 'Show Folders'}</span>
-                                            </button>
+                                                <div className="px-3 py-1.5 mb-1">
+                                                    <span className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">Sort By</span>
+                                                </div>
+                                                <div className="px-2 pb-2">
+                                                    <div className="flex bg-gray-900 rounded-lg p-1 border border-gray-800">
+                                                        <button
+                                                            onClick={() => setSortBy('manual')}
+                                                            className={`flex-1 py-1 text-[10px] font-medium rounded-md transition-all ${sortBy === 'manual' ? 'bg-blue-500/20 text-blue-400 shadow-sm' : 'text-gray-400 hover:text-gray-300'}`}
+                                                        >
+                                                            Manual
+                                                        </button>
+                                                        <button
+                                                            onClick={() => setSortBy('date')}
+                                                            className={`flex-1 py-1 text-[10px] font-medium rounded-md transition-all ${sortBy === 'date' ? 'bg-blue-500/20 text-blue-400 shadow-sm' : 'text-gray-400 hover:text-gray-300'}`}
+                                                        >
+                                                            Date
+                                                        </button>
+                                                        <button
+                                                            onClick={() => setSortBy('title')}
+                                                            className={`flex-1 py-1 text-[10px] font-medium rounded-md transition-all ${sortBy === 'title' ? 'bg-blue-500/20 text-blue-400 shadow-sm' : 'text-gray-400 hover:text-gray-300'}`}
+                                                        >
+                                                            Title
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                                <div className="h-px bg-gray-800 my-2 mx-2"></div>
+                                                <div className="px-3 py-1.5 mb-1">
+                                                    <span className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">Layout & Visibility</span>
+                                                </div>
 
-                                            {activeTab !== 'assistant' && tasks.length > 0 && (
-                                                <>
-                                                    <button
-                                                        onClick={() => { setGlobalExpanded(!globalExpanded); setIsMenuOpen(false); }}
-                                                        className={`w-full px-4 py-2 text-left flex items-center gap-3 transition-colors hover:bg-white/5 ${globalExpanded ? 'text-blue-400' : 'text-gray-400'}`}
-                                                    >
-                                                        <ChevronsUpDown size={16} />
-                                                        <span className="text-xs font-medium">{globalExpanded ? 'Collapse All' : 'Expand All'}</span>
-                                                    </button>
+                                                <button
+                                                    onClick={() => { setShowTags(!showTags); setIsMenuOpen(false); }}
+                                                    className={`w-full px-4 py-2 text-left flex items-center gap-3 transition-colors hover:bg-white/5 ${showTags ? 'text-blue-400' : 'text-gray-400'}`}
+                                                >
+                                                    <TagIcon size={16} />
+                                                    <span className="text-xs font-medium">{showTags ? 'Hide Tags' : 'Show Tags'}</span>
+                                                </button>
 
-                                                    <button
-                                                        onClick={() => { setShowFullTitles(!showFullTitles); setIsMenuOpen(false); }}
-                                                        className={`w-full px-4 py-2 text-left flex items-center gap-3 transition-colors hover:bg-white/5 ${showFullTitles ? 'text-blue-400' : 'text-gray-400'}`}
-                                                    >
-                                                        <Type size={16} />
-                                                        <span className="text-xs font-medium">{showFullTitles ? 'Truncate Titles' : 'Full Titles'}</span>
-                                                    </button>
+                                                <button
+                                                    onClick={() => { setShowFolders(!showFolders); setIsMenuOpen(false); }}
+                                                    className={`w-full px-4 py-2 text-left flex items-center gap-3 transition-colors hover:bg-white/5 ${showFolders ? 'text-blue-400' : 'text-gray-400'}`}
+                                                >
+                                                    <Folder size={16} />
+                                                    <span className="text-xs font-medium">{showFolders ? 'Hide Folders' : 'Show Folders'}</span>
+                                                </button>
 
-                                                    <button
-                                                        onClick={() => { setShowPreview(!showPreview); setIsMenuOpen(false); }}
-                                                        className={`w-full px-4 py-2 text-left flex items-center gap-3 transition-colors hover:bg-white/5 ${showPreview ? 'text-blue-400' : 'text-gray-400'}`}
-                                                    >
-                                                        <MessageSquare size={16} />
-                                                        <span className="text-xs font-medium">{showPreview ? 'Hide Preview' : 'Show Preview'}</span>
-                                                    </button>
+                                                {activeTab !== 'assistant' && tasks.length > 0 && (
+                                                    <>
+                                                        <button
+                                                            onClick={() => { setGlobalExpanded(!globalExpanded); setIsMenuOpen(false); }}
+                                                            className={`w-full px-4 py-2 text-left flex items-center gap-3 transition-colors hover:bg-white/5 ${globalExpanded ? 'text-blue-400' : 'text-gray-400'}`}
+                                                        >
+                                                            <ChevronsUpDown size={16} />
+                                                            <span className="text-xs font-medium">{globalExpanded ? 'Collapse All' : 'Expand All'}</span>
+                                                        </button>
 
-                                                    <button
-                                                        onClick={() => { setShowPulse(!showPulse); setIsMenuOpen(false); }}
-                                                        className={`w-full px-4 py-2 text-left flex items-center gap-3 transition-colors hover:bg-white/5 ${showPulse ? 'text-blue-400' : 'text-gray-400'}`}
-                                                    >
-                                                        <Zap size={16} />
-                                                        <span className="text-xs font-medium">{showPulse ? 'Disable Pulse' : 'Enable Pulse'}</span>
-                                                    </button>
+                                                        <button
+                                                            onClick={() => { setShowFullTitles(!showFullTitles); setIsMenuOpen(false); }}
+                                                            className={`w-full px-4 py-2 text-left flex items-center gap-3 transition-colors hover:bg-white/5 ${showFullTitles ? 'text-blue-400' : 'text-gray-400'}`}
+                                                        >
+                                                            <Type size={16} />
+                                                            <span className="text-xs font-medium">{showFullTitles ? 'Truncate Titles' : 'Full Titles'}</span>
+                                                        </button>
 
-                                                    <button
-                                                        onClick={() => { setShowDebugInfo(!showDebugInfo); setIsMenuOpen(false); }}
-                                                        className={`w-full px-4 py-2 text-left flex items-center gap-3 transition-colors hover:bg-white/5 ${showDebugInfo ? 'text-blue-400' : 'text-gray-400'}`}
-                                                    >
-                                                        <Bug size={16} />
-                                                        <span className="text-xs font-medium">{showDebugInfo ? 'Hide Debug Info' : 'Show Debug Info'}</span>
-                                                    </button>
-                                                </>
-                                            )}
+                                                        <button
+                                                            onClick={() => { setShowPreview(!showPreview); setIsMenuOpen(false); }}
+                                                            className={`w-full px-4 py-2 text-left flex items-center gap-3 transition-colors hover:bg-white/5 ${showPreview ? 'text-blue-400' : 'text-gray-400'}`}
+                                                        >
+                                                            <MessageSquare size={16} />
+                                                            <span className="text-xs font-medium">{showPreview ? 'Hide Preview' : 'Show Preview'}</span>
+                                                        </button>
 
-                                            <div className="h-px bg-gray-800 my-2 mx-2"></div>
+                                                        <button
+                                                            onClick={() => { setShowPulse(!showPulse); setIsMenuOpen(false); }}
+                                                            className={`w-full px-4 py-2 text-left flex items-center gap-3 transition-colors hover:bg-white/5 ${showPulse ? 'text-blue-400' : 'text-gray-400'}`}
+                                                        >
+                                                            <Zap size={16} />
+                                                            <span className="text-xs font-medium">{showPulse ? 'Disable Pulse' : 'Enable Pulse'}</span>
+                                                        </button>
 
-                                            <div className="px-3 py-1.5 mb-1">
-                                                <span className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">Actions</span>
-                                            </div>
+                                                        <button
+                                                            onClick={() => { setShowDebugInfo(!showDebugInfo); setIsMenuOpen(false); }}
+                                                            className={`w-full px-4 py-2 text-left flex items-center gap-3 transition-colors hover:bg-white/5 ${showDebugInfo ? 'text-blue-400' : 'text-gray-400'}`}
+                                                        >
+                                                            <Bug size={16} />
+                                                            <span className="text-xs font-medium">{showDebugInfo ? 'Hide Debug Info' : 'Show Debug Info'}</span>
+                                                        </button>
+                                                    </>
+                                                )}
 
-                                            {(selectedFolder || activeTab === 'active' || activeTab === 'all') && (
-                                                <>
-                                                    <button
-                                                        onClick={async () => {
-                                                            setIsMenuOpen(false);
-                                                            try {
-                                                                if (selectedFolder) {
-                                                                    await api.runFolderImportance(selectedFolder);
-                                                                } else {
-                                                                    await api.runGlobalImportance();
+                                                <div className="h-px bg-gray-800 my-2 mx-2"></div>
+
+                                                <div className="px-3 py-1.5 mb-1">
+                                                    <span className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">Actions</span>
+                                                </div>
+
+                                                {(selectedFolder || activeTab === 'active' || activeTab === 'all') && (
+                                                    <>
+                                                        <button
+                                                            onClick={async () => {
+                                                                setIsMenuOpen(false);
+                                                                try {
+                                                                    if (selectedFolder) {
+                                                                        await api.runFolderImportance(selectedFolder);
+                                                                    } else {
+                                                                        await api.runGlobalImportance();
+                                                                    }
+                                                                    fetchTasks(false);
+                                                                    fetchStats();
+                                                                } catch (err) {
+                                                                    console.error("Failed to run importance analysis", err);
                                                                 }
-                                                                fetchTasks(false);
-                                                                fetchStats();
-                                                            } catch (err) {
-                                                                console.error("Failed to run importance analysis", err);
-                                                            }
-                                                        }}
-                                                        className="w-full px-4 py-2 text-left flex items-center gap-3 transition-colors hover:bg-white/5 text-purple-400"
-                                                    >
-                                                        <Sparkles size={16} />
-                                                        <span className="text-xs font-medium">Run Importance Analysis</span>
-                                                    </button>
+                                                            }}
+                                                            className="w-full px-4 py-2 text-left flex items-center gap-3 transition-colors hover:bg-white/5 text-purple-400"
+                                                        >
+                                                            <Sparkles size={16} />
+                                                            <span className="text-xs font-medium">Run Importance Analysis</span>
+                                                        </button>
 
-                                                    <button
-                                                        onClick={async () => {
-                                                            setIsMenuOpen(false);
-                                                            try {
-                                                                if (selectedFolder) {
-                                                                    await api.runFolderPriority(selectedFolder);
-                                                                } else {
-                                                                    await api.runGlobalPriority();
+                                                        <button
+                                                            onClick={async () => {
+                                                                setIsMenuOpen(false);
+                                                                try {
+                                                                    if (selectedFolder) {
+                                                                        await api.runFolderPriority(selectedFolder);
+                                                                    } else {
+                                                                        await api.runGlobalPriority();
+                                                                    }
+                                                                    fetchTasks(false);
+                                                                    fetchStats();
+                                                                } catch (err) {
+                                                                    console.error("Failed to run priority check", err);
                                                                 }
-                                                                fetchTasks(false);
-                                                                fetchStats();
-                                                            } catch (err) {
-                                                                console.error("Failed to run priority check", err);
-                                                            }
-                                                        }}
-                                                        className="w-full px-4 py-2 text-left flex items-center gap-3 transition-colors hover:bg-white/5 text-red-400"
-                                                    >
-                                                        <Zap size={16} />
-                                                        <span className="text-xs font-medium">Run Priority Check</span>
-                                                    </button>
+                                                            }}
+                                                            className="w-full px-4 py-2 text-left flex items-center gap-3 transition-colors hover:bg-white/5 text-red-400"
+                                                        >
+                                                            <Zap size={16} />
+                                                            <span className="text-xs font-medium">Run Priority Check</span>
+                                                        </button>
 
-                                                    <button
-                                                        onClick={async () => {
-                                                            setIsMenuOpen(false);
-                                                            try {
-                                                                if (selectedFolder) {
-                                                                    await api.runFolderDuplicate(selectedFolder);
-                                                                } else {
-                                                                    await api.runGlobalDuplicate();
+                                                        <button
+                                                            onClick={async () => {
+                                                                setIsMenuOpen(false);
+                                                                try {
+                                                                    if (selectedFolder) {
+                                                                        await api.runFolderDuplicate(selectedFolder);
+                                                                    } else {
+                                                                        await api.runGlobalDuplicate();
+                                                                    }
+                                                                    fetchTasks(false);
+                                                                    fetchStats();
+                                                                } catch (err) {
+                                                                    console.error("Failed to run duplicate check", err);
                                                                 }
-                                                                fetchTasks(false);
-                                                                fetchStats();
-                                                            } catch (err) {
-                                                                console.error("Failed to run duplicate check", err);
-                                                            }
-                                                        }}
-                                                        className="w-full px-4 py-2 text-left flex items-center gap-3 transition-colors hover:bg-white/5 text-gray-400"
-                                                    >
-                                                        <Copy size={16} />
-                                                        <span className="text-xs font-medium">Run Duplicate Check</span>
-                                                    </button>
-                                                </>
-                                            )}
+                                                            }}
+                                                            className="w-full px-4 py-2 text-left flex items-center gap-3 transition-colors hover:bg-white/5 text-gray-400"
+                                                        >
+                                                            <Copy size={16} />
+                                                            <span className="text-xs font-medium">Run Duplicate Check</span>
+                                                        </button>
+                                                    </>
+                                                )}
 
-                                            <div className="h-px bg-gray-800 my-2 mx-2"></div>
+                                                <div className="h-px bg-gray-800 my-2 mx-2"></div>
 
-                                            <div className="px-3 py-1.5 mb-1">
-                                                <span className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">Preferences</span>
-                                            </div>
-
-                                            {/* Sidebar Density */}
-                                            <div className="px-4 py-2 flex items-center justify-between">
-                                                <div className="flex items-center gap-3 text-gray-400">
-                                                    <SlidersHorizontal size={16} />
-                                                    <span className="text-xs font-medium">Sidebar Density</span>
+                                                <div className="px-3 py-1.5 mb-1">
+                                                    <span className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">Preferences</span>
                                                 </div>
-                                                <div className="flex items-center bg-gray-900 border border-gray-800 rounded-lg overflow-hidden h-7">
-                                                    <button
-                                                        onClick={() => setSidebarDensity(prev => Math.max(1, prev - 1))}
-                                                        className="px-2 hover:bg-white/10 text-gray-400 hover:text-white border-r border-gray-800 h-full flex items-center"
-                                                    >
-                                                        <ZoomOut size={12} />
-                                                    </button>
-                                                    <button
-                                                        onClick={() => setSidebarDensity(prev => Math.min(10, prev + 1))}
-                                                        className="px-2 hover:bg-white/10 text-gray-400 hover:text-white h-full flex items-center"
-                                                    >
-                                                        <ZoomIn size={12} />
-                                                    </button>
-                                                </div>
-                                            </div>
 
-                                            {/* Timeline Limit */}
-                                            <div className="px-4 py-2 flex items-center justify-between">
-                                                <div className="flex items-center gap-3 text-gray-400">
-                                                    <Clock size={16} />
-                                                    <span className="text-xs font-medium">Timeline Updates</span>
-                                                </div>
-                                                <div className="flex items-center bg-gray-900 border border-gray-800 rounded-lg overflow-hidden h-7">
-                                                    <button
-                                                        onClick={() => setTimelineLimit(prev => Math.max(1, prev - 1))}
-                                                        className="px-2 hover:bg-white/10 text-gray-400 hover:text-white border-r border-gray-800 h-full flex items-center"
-                                                    >
-                                                        <Minus size={12} />
-                                                    </button>
-                                                    <span className="px-2 text-xs text-gray-300 min-w-[20px] text-center">{timelineLimit}</span>
-                                                    <button
-                                                        onClick={() => setTimelineLimit(prev => Math.min(10, prev + 1))}
-                                                        className="px-2 hover:bg-white/10 text-gray-400 hover:text-white border-l border-gray-800 h-full flex items-center"
-                                                    >
-                                                        <Plus size={12} />
-                                                    </button>
-                                                </div>
-                                            </div>
-
-                                            {activeTab !== 'assistant' && tasks.length > 0 && (
+                                                {/* Sidebar Density */}
                                                 <div className="px-4 py-2 flex items-center justify-between">
                                                     <div className="flex items-center gap-3 text-gray-400">
-                                                        <Type size={16} />
-                                                        <span className="text-xs font-medium">Text Size</span>
+                                                        <SlidersHorizontal size={16} />
+                                                        <span className="text-xs font-medium">Sidebar Density</span>
                                                     </div>
                                                     <div className="flex items-center bg-gray-900 border border-gray-800 rounded-lg overflow-hidden h-7">
                                                         <button
-                                                            onClick={() => setFontSize(prev => Math.max(9, prev - 1))}
+                                                            onClick={() => setSidebarDensity(prev => Math.max(1, prev - 1))}
                                                             className="px-2 hover:bg-white/10 text-gray-400 hover:text-white border-r border-gray-800 h-full flex items-center"
                                                         >
                                                             <ZoomOut size={12} />
                                                         </button>
                                                         <button
-                                                            onClick={() => setFontSize(prev => Math.min(24, prev + 1))}
+                                                            onClick={() => setSidebarDensity(prev => Math.min(10, prev + 1))}
                                                             className="px-2 hover:bg-white/10 text-gray-400 hover:text-white h-full flex items-center"
                                                         >
                                                             <ZoomIn size={12} />
                                                         </button>
                                                     </div>
                                                 </div>
-                                            )}
 
-                                            {/* Show Count Toggle */}
-                                            <button
-                                                onClick={() => setShowCounts(!showCounts)}
-                                                className="w-full px-4 py-2 text-left flex items-center justify-between transition-colors hover:bg-white/5"
-                                            >
-                                                <span className="text-xs font-medium text-gray-400">Show Counts</span>
-                                                <div className={`w-8 h-4 rounded-full relative transition-colors ${showCounts ? 'bg-blue-500' : 'bg-gray-700'}`}>
-                                                    <div className={`absolute top-0.5 w-3 h-3 bg-white rounded-full transition-all ${showCounts ? 'right-0.5' : 'left-0.5'}`} />
+                                                {/* Timeline Limit */}
+                                                <div className="px-4 py-2 flex items-center justify-between">
+                                                    <div className="flex items-center gap-3 text-gray-400">
+                                                        <Clock size={16} />
+                                                        <span className="text-xs font-medium">Timeline Updates</span>
+                                                    </div>
+                                                    <div className="flex items-center bg-gray-900 border border-gray-800 rounded-lg overflow-hidden h-7">
+                                                        <button
+                                                            onClick={() => setTimelineLimit(prev => Math.max(1, prev - 1))}
+                                                            className="px-2 hover:bg-white/10 text-gray-400 hover:text-white border-r border-gray-800 h-full flex items-center"
+                                                        >
+                                                            <Minus size={12} />
+                                                        </button>
+                                                        <span className="px-2 text-xs text-gray-300 min-w-[20px] text-center">{timelineLimit}</span>
+                                                        <button
+                                                            onClick={() => setTimelineLimit(prev => Math.min(10, prev + 1))}
+                                                            className="px-2 hover:bg-white/10 text-gray-400 hover:text-white border-l border-gray-800 h-full flex items-center"
+                                                        >
+                                                            <Plus size={12} />
+                                                        </button>
+                                                    </div>
                                                 </div>
-                                            </button>
 
-                                            {activeTab === 'trash' && tasks.length > 0 && (
-                                                <>
-                                                    <div className="h-px bg-gray-800 my-2 mx-2"></div>
-                                                    <button
-                                                        onClick={() => { handleEmptyTrash(); setIsMenuOpen(false); }}
-                                                        className="w-full px-4 py-2 text-left flex items-center gap-3 transition-colors hover:bg-red-500/10 text-red-400"
-                                                    >
-                                                        <Trash2 size={16} />
-                                                        <span className="text-xs font-medium">Empty Trash</span>
-                                                    </button>
-                                                </>
-                                            )}
-                                        </motion.div>
-                                    )}
-                                </AnimatePresence>
-                            </div>
-                            <button
-                                onClick={() => setIsGeminiOpen(!isGeminiOpen)}
-                                className={`p-2 rounded-lg transition-all flex items-center justify-center ${isGeminiOpen ? 'bg-gradient-to-tr from-blue-500/20 to-purple-500/20 text-blue-400 border border-blue-500/30' : 'bg-gray-900 border border-gray-800 text-gray-400 hover:text-white hover:border-gray-700'}`}
-                                title="Ask Gemini"
-                            >
-                                <GeminiIcon size={18} />
-                            </button>
+                                                {activeTab !== 'assistant' && tasks.length > 0 && (
+                                                    <div className="px-4 py-2 flex items-center justify-between">
+                                                        <div className="flex items-center gap-3 text-gray-400">
+                                                            <Type size={16} />
+                                                            <span className="text-xs font-medium">Text Size</span>
+                                                        </div>
+                                                        <div className="flex items-center bg-gray-900 border border-gray-800 rounded-lg overflow-hidden h-7">
+                                                            <button
+                                                                onClick={() => setFontSize(prev => Math.max(9, prev - 1))}
+                                                                className="px-2 hover:bg-white/10 text-gray-400 hover:text-white border-r border-gray-800 h-full flex items-center"
+                                                            >
+                                                                <ZoomOut size={12} />
+                                                            </button>
+                                                            <button
+                                                                onClick={() => setFontSize(prev => Math.min(24, prev + 1))}
+                                                                className="px-2 hover:bg-white/10 text-gray-400 hover:text-white h-full flex items-center"
+                                                            >
+                                                                <ZoomIn size={12} />
+                                                            </button>
+                                                        </div>
+                                                    </div>
+                                                )}
 
+                                                {/* Show Count Toggle */}
+                                                <button
+                                                    onClick={() => setShowCounts(!showCounts)}
+                                                    className="w-full px-4 py-2 text-left flex items-center justify-between transition-colors hover:bg-white/5"
+                                                >
+                                                    <span className="text-xs font-medium text-gray-400">Show Counts</span>
+                                                    <div className={`w-8 h-4 rounded-full relative transition-colors ${showCounts ? 'bg-blue-500' : 'bg-gray-700'}`}>
+                                                        <div className={`absolute top-0.5 w-3 h-3 bg-white rounded-full transition-all ${showCounts ? 'right-0.5' : 'left-0.5'}`} />
+                                                    </div>
+                                                </button>
 
-
-
-
-                            {localStorage.getItem('userProfile') && (
-                                <div className="flex items-center gap-3 bg-gray-900/50 px-4 py-2 rounded-full border border-gray-800">
-                                    <img
-                                        src={JSON.parse(localStorage.getItem('userProfile')).picture}
-                                        alt="Profile"
-                                        className="w-8 h-8 rounded-full border border-gray-700"
-                                    />
-                                    <span className="text-sm font-medium text-gray-300">
-                                        {JSON.parse(localStorage.getItem('userProfile')).name}
-                                    </span>
+                                                {activeTab === 'trash' && tasks.length > 0 && (
+                                                    <>
+                                                        <div className="h-px bg-gray-800 my-2 mx-2"></div>
+                                                        <button
+                                                            onClick={() => { handleEmptyTrash(); setIsMenuOpen(false); }}
+                                                            className="w-full px-4 py-2 text-left flex items-center gap-3 transition-colors hover:bg-red-500/10 text-red-400"
+                                                        >
+                                                            <Trash2 size={16} />
+                                                            <span className="text-xs font-medium">Empty Trash</span>
+                                                        </button>
+                                                    </>
+                                                )}
+                                            </motion.div>
+                                        )}
+                                    </AnimatePresence>
                                 </div>
-                            )}
-                        </div>
-                    </header>
+                                <button
+                                    onClick={() => setIsGeminiOpen(!isGeminiOpen)}
+                                    className={`p-2 rounded-lg transition-all flex items-center justify-center ${isGeminiOpen ? 'bg-gradient-to-tr from-blue-500/20 to-purple-500/20 text-blue-400 border border-blue-500/30' : 'bg-gray-900 border border-gray-800 text-gray-400 hover:text-white hover:border-gray-700'}`}
+                                    title="Ask Gemini"
+                                >
+                                    <GeminiIcon size={18} />
+                                </button>
+
+
+
+
+
+                                {localStorage.getItem('userProfile') && (
+                                    <div className="flex items-center gap-3 bg-gray-900/50 px-4 py-2 rounded-full border border-gray-800">
+                                        <img
+                                            src={JSON.parse(localStorage.getItem('userProfile')).picture}
+                                            alt="Profile"
+                                            className="w-8 h-8 rounded-full border border-gray-700"
+                                        />
+                                        <span className="text-sm font-medium text-gray-300">
+                                            {JSON.parse(localStorage.getItem('userProfile')).name}
+                                        </span>
+                                    </div>
+                                )}
+                            </div>
+                        </header>
+                    </div>
 
                     {/* Main Scrollable Area */}
                     <div className="flex-1 overflow-y-auto custom-scrollbar relative">
@@ -1900,7 +2009,7 @@ export const TaskManager = () => {
                             </div>
                         )}
                     </div>
-                </main>
+                </div>
                 <GeminiPanel isOpen={isGeminiOpen} onClose={() => setIsGeminiOpen(false)} />
             </div >
 
