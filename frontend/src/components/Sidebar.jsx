@@ -33,10 +33,8 @@ const SortableSidebarItem = ({ id, icon: Icon, label, isActive, onClick, data, i
     const [isDeleting, setIsDeleting] = useState(false);
 
     // Calculate padding based on numeric density (1=compact, 10=comfortable)
-    // Linear scale: 1=2px, 2=3.5px, 3=5px ... 10=16px
     const getPaddingPx = (density) => {
-        // Linear interpolation from 2px (level 1) to 16px (level 10)
-        return 2 + ((density - 1) * 1.56); // ~1.56px per level
+        return 2 + ((density - 1) * 1.56);
     };
     const paddingY = getPaddingPx(density);
 
@@ -61,14 +59,14 @@ const SortableSidebarItem = ({ id, icon: Icon, label, isActive, onClick, data, i
         <div ref={setNodeRef} style={style} {...attributes} {...listeners} className="relative group">
             <button
                 className={`nav-item w-full flex items-center gap-3 px-4 rounded-xl transition-all ${isActive ? 'bg-blue-500/10 text-blue-400' : 'text-gray-400 hover:text-gray-200 hover:bg-white/5'
-                    } ${isOver && !isDragging ? 'bg-blue-500/20 border-blue-400 shadow-[0_0_15px_rgba(59,130,246,0.3)]' : ''} ${isCollapsed ? 'justify-center px-0' : ''}`}
+                    } ${isOver && !isDragging ? 'bg-blue-500/20 border-blue-400 shadow-[0_0_15px_rgba(59,130,246,0.3)]' : ''} ${isCollapsed ? '!justify-center !px-0' : ''}`}
                 style={{ paddingTop: `${paddingY}px`, paddingBottom: `${paddingY}px` }}
                 onClick={onClick}
                 title={isCollapsed ? label : ''}
             >
-                {Icon && <Icon size={18} className={isOver ? 'text-blue-400' : ''} />}
+                {Icon && <Icon size={18} className={`shrink-0 ${isOver ? 'text-blue-400' : ''}`} />}
                 {!Icon && <div className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: data?.color || '#3B82F6' }} />}
-                {!isCollapsed && <span className={`text-sm font-medium ${isOver ? 'text-blue-400' : ''}`}>{label}</span>}
+                {!isCollapsed && <span className={`text-sm font-medium truncate ${isOver ? 'text-blue-400' : ''}`}>{label}</span>}
                 {!isCollapsed && count !== undefined && count > 0 && (
                     <span className={`ml-auto text-xs ${isActive ? 'text-blue-400' : 'text-gray-600'}`}>{count}</span>
                 )}
@@ -84,31 +82,33 @@ const SortableSidebarItem = ({ id, icon: Icon, label, isActive, onClick, data, i
                     className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-all z-50"
                     onPointerDown={(e) => e.stopPropagation()}
                 >
-                    {isDeleting ? (
-                        <div className="flex items-center gap-1">
+                    {!isCollapsed && (
+                        isDeleting ? (
+                            <div className="flex items-center gap-1">
+                                <button
+                                    onClick={onDelete}
+                                    className="p-1 text-green-400 hover:text-green-300 transition-colors bg-green-400/10 rounded"
+                                    title="Confirm Delete"
+                                >
+                                    <Check size={12} />
+                                </button>
+                                <button
+                                    onClick={() => setIsDeleting(false)}
+                                    className="p-1 text-gray-500 hover:text-gray-300 transition-colors"
+                                    title="Cancel"
+                                >
+                                    <X size={12} />
+                                </button>
+                            </div>
+                        ) : (
                             <button
-                                onClick={onDelete}
-                                className="p-1 text-green-400 hover:text-green-300 transition-colors bg-green-400/10 rounded"
-                                title="Confirm Delete"
+                                onClick={() => setIsDeleting(true)}
+                                className="p-1.5 text-gray-600 hover:text-red-400 transition-all rounded hover:bg-white/5"
+                                title="Delete Folder"
                             >
-                                <Check size={12} />
+                                <Trash2 size={12} />
                             </button>
-                            <button
-                                onClick={() => setIsDeleting(false)}
-                                className="p-1 text-gray-500 hover:text-gray-300 transition-colors"
-                                title="Cancel"
-                            >
-                                <X size={12} />
-                            </button>
-                        </div>
-                    ) : (
-                        <button
-                            onClick={() => setIsDeleting(true)}
-                            className="p-1.5 text-gray-600 hover:text-red-400 transition-all rounded hover:bg-white/5"
-                            title="Delete Folder"
-                        >
-                            <Trash2 size={12} />
-                        </button>
+                        )
                     )}
                 </div>
             )}
@@ -119,11 +119,8 @@ const SortableSidebarItem = ({ id, icon: Icon, label, isActive, onClick, data, i
 const DraggableSidebarLabel = ({ id, label, isActive, onClick, color, data, count, onDelete, onColorChange, isCollapsed, density = 5 }) => {
     const [isDeleting, setIsDeleting] = useState(false);
 
-    // Calculate padding based on numeric density (1=compact, 10=comfortable)
-    // Linear scale: 1=2px, 2=3.5px, 3=5px ... 10=16px
     const getPaddingPx = (density) => {
-        // Linear interpolation from 2px (level 1) to 16px (level 10)
-        return 2 + ((density - 1) * 1.56); // ~1.56px per level
+        return 2 + ((density - 1) * 1.56);
     };
     const paddingY = getPaddingPx(density);
 
@@ -157,13 +154,13 @@ const DraggableSidebarLabel = ({ id, label, isActive, onClick, color, data, coun
         >
             <button
                 className={`nav-item w-full flex items-center gap-3 px-4 rounded-xl transition-all touch-none cursor-grab active:cursor-grabbing ${isActive ? 'bg-blue-500/10 text-blue-400' : 'text-gray-400 hover:text-gray-200 hover:bg-white/5'
-                    } ${isOver && !isDragging ? 'bg-blue-500/20 border-blue-400 shadow-[0_0_15px_rgba(59,130,246,0.3)]' : ''} ${isCollapsed ? 'justify-center px-0' : ''}`}
+                    } ${isOver && !isDragging ? 'bg-blue-500/20 border-blue-400 shadow-[0_0_15px_rgba(59,130,246,0.3)]' : ''} ${isCollapsed ? '!justify-center !px-0' : ''}`}
                 style={{ paddingTop: `${paddingY}px`, paddingBottom: `${paddingY}px` }}
                 onClick={onClick}
                 title={isCollapsed ? label : ''}
             >
                 <div className="w-2 h-2 rounded-full pointer-events-none shrink-0" style={{ backgroundColor: color || '#3B82F6' }} />
-                {!isCollapsed && <span className={`text-sm font-medium pointer-events-none ${isOver ? 'text-blue-400' : ''}`}>{label}</span>}
+                {!isCollapsed && <span className={`text-sm font-medium pointer-events-none truncate ${isOver ? 'text-blue-400' : ''}`}>{label}</span>}
                 {!isCollapsed && count !== undefined && count > 0 && (
                     <span className={`ml-auto text-xs transition-opacity group-hover:opacity-0 ${isActive ? 'text-blue-400' : 'text-gray-600'}`}>{count}</span>
                 )}
@@ -178,42 +175,44 @@ const DraggableSidebarLabel = ({ id, label, isActive, onClick, color, data, coun
                 className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-all z-50"
                 onPointerDown={(e) => e.stopPropagation()}
             >
-                {isDeleting ? (
-                    <div className="flex items-center gap-1">
-                        <button
-                            onClick={onDelete}
-                            className="p-1 text-green-400 hover:text-green-300 transition-colors bg-green-400/10 rounded"
-                            title="Confirm Delete"
-                        >
-                            <Check size={12} />
-                        </button>
-                        <button
-                            onClick={() => setIsDeleting(false)}
-                            className="p-1 text-gray-500 hover:text-gray-300 transition-colors"
-                            title="Cancel"
-                        >
-                            <X size={12} />
-                        </button>
-                    </div>
-                ) : (
-                    <>
-                        <label className="relative cursor-pointer p-1 text-gray-600 hover:text-blue-400 transition-colors">
-                            <Palette size={12} />
-                            <input
-                                type="color"
-                                value={color || '#3B82F6'}
-                                onChange={onColorChange}
-                                className="absolute inset-0 opacity-0 cursor-pointer"
-                            />
-                        </label>
-                        <button
-                            onClick={() => setIsDeleting(true)}
-                            className="relative p-1 text-gray-600 hover:text-red-400 transition-all"
-                            title="Delete Label"
-                        >
-                            <Trash2 size={12} />
-                        </button>
-                    </>
+                {!isCollapsed && (
+                    isDeleting ? (
+                        <div className="flex items-center gap-1">
+                            <button
+                                onClick={onDelete}
+                                className="p-1 text-green-400 hover:text-green-300 transition-colors bg-green-400/10 rounded"
+                                title="Confirm Delete"
+                            >
+                                <Check size={12} />
+                            </button>
+                            <button
+                                onClick={() => setIsDeleting(false)}
+                                className="p-1 text-gray-500 hover:text-gray-300 transition-colors"
+                                title="Cancel"
+                            >
+                                <X size={12} />
+                            </button>
+                        </div>
+                    ) : (
+                        <>
+                            <label className="relative cursor-pointer p-1 text-gray-600 hover:text-blue-400 transition-colors">
+                                <Palette size={12} />
+                                <input
+                                    type="color"
+                                    value={color || '#3B82F6'}
+                                    onChange={onColorChange}
+                                    className="absolute inset-0 opacity-0 cursor-pointer"
+                                />
+                            </label>
+                            <button
+                                onClick={() => setIsDeleting(true)}
+                                className="relative p-1 text-gray-600 hover:text-red-400 transition-all"
+                                title="Delete Label"
+                            >
+                                <Trash2 size={12} />
+                            </button>
+                        </>
+                    )
                 )}
             </div>
         </div>
