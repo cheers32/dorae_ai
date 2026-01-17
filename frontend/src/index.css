@@ -721,4 +721,36 @@ body {
   .mobile-only {
     display: block;
   }
+
+  /* Expanded Task Layout on Mobile */
+  .mobile-expanded-container {
+    flex-wrap: wrap;
+  }
+
+  .mobile-expanded-container .mobile-title-group {
+    width: 100%;
+    order: -1;
+    margin-bottom: 0.75rem;
+    padding-left: 0.25rem;
+    flex-direction: column;
+    /* Stack title and tags */
+    align-items: flex-start;
+    gap: 0.5rem;
+  }
+
+  /* Force tags container to wrap and take full width below title */
+  .mobile-expanded-container .mobile-title-group>div {
+    margin-left: 0 !important;
+    max-width: 100% !important;
+  }
+
+  .mobile-expanded-container .mobile-control-group,
+  .mobile-expanded-container .mobile-dot-group {
+    order: 2;
+  }
+
+  /* Hide drag handle/chevron in mobile layout (Always) */
+  .drag-handle-btn {
+    display: none;
+  }
 }

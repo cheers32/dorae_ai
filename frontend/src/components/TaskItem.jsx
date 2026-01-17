@@ -518,13 +518,13 @@ export const TaskItem = forwardRef(({ task, onUpdate, showTags, showFolders, fol
                 {...(expanded || globalExpanded ? {} : dragHandleProps)}
             >
                 <div
-                    className="px-4 flex items-center gap-4 flex-1 min-w-0"
+                    className={`px-4 flex items-center gap-4 flex-1 min-w-0 ${expanded || globalExpanded ? 'mobile-expanded-container' : ''}`}
                     style={{
                         paddingTop: `${Math.max(1, fontSize - 11)}px`,
                         paddingBottom: `${Math.max(1, fontSize - 11)}px`
                     }}
                 >
-                    <div className="flex items-center gap-1">
+                    <div className="flex items-center gap-1 mobile-control-group">
                         {/* Gmail-style Importance Marker */}
                         {localLabels.includes('Important') ? (
                             <div
@@ -550,7 +550,7 @@ export const TaskItem = forwardRef(({ task, onUpdate, showTags, showFolders, fol
                         )}
 
                         <div
-                            className={`p-1 text-gray-600 hover:text-gray-400 transition-colors ${expanded ? 'cursor-pointer' : 'cursor-grab active:cursor-grabbing'}`}
+                            className={`drag-handle-btn p-1 text-gray-600 hover:text-gray-400 transition-colors ${expanded ? 'cursor-pointer' : 'cursor-grab active:cursor-grabbing'}`}
                             onClick={(e) => {
                                 if (expanded || globalExpanded) {
                                     e.stopPropagation();
@@ -567,7 +567,8 @@ export const TaskItem = forwardRef(({ task, onUpdate, showTags, showFolders, fol
                             {expanded || globalExpanded ? <ChevronUp size={16} /> : <GripVertical size={16} />}
                         </div>
                     </div>
-                    <div className="relative flex items-center justify-center">
+
+                    <div className="relative flex items-center justify-center mobile-dot-group">
                         <div
                             ref={triggerRef}
                             className="p-3 -m-3 cursor-pointer group/dot flex items-center justify-center transition-transform active:scale-95"
@@ -635,7 +636,7 @@ export const TaskItem = forwardRef(({ task, onUpdate, showTags, showFolders, fol
                             rows={1}
                         />
                     ) : (
-                        <div className="flex-1 min-w-0 flex items-center gap-2 group/title">
+                        <div className="flex-1 min-w-0 flex items-center gap-2 group/title mobile-title-group">
                             <h3
                                 className={`font-medium text-gray-400 text-left select-text ${expanded || globalExpanded || showFullTitles ? 'break-words whitespace-pre-wrap cursor-text' : 'truncate'} ${(task.status === 'Deleted' || task.status === 'deleted') ? 'line-through opacity-50' : ''}`}
                                 style={{ fontSize: `${fontSize}px`, lineHeight: '1.4' }}
