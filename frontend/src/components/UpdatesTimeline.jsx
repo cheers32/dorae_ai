@@ -90,7 +90,7 @@ export const UpdatesTimeline = ({
                 <div className="flex justify-center mb-4">
                     <button
                         onClick={() => setShowAll(true)}
-                        className="text-xs font-medium text-gray-500 hover:text-blue-400 bg-gray-900/50 hover:bg-gray-800 rounded-full px-3 py-1 transition-all border border-gray-800 hover:border-blue-500/30"
+                        className="text-xs font-medium text-[var(--text-muted)] hover:text-blue-400 bg-[var(--input-bg)] hover:bg-[var(--card-hover)] rounded-full px-3 py-1 transition-all border border-[var(--border)] hover:border-blue-500/30"
                     >
                         Show {hiddenCount} previous updates
                     </button>
@@ -101,7 +101,7 @@ export const UpdatesTimeline = ({
                 <div className="flex justify-center mb-2">
                     <button
                         onClick={() => setShowAll(false)}
-                        className="text-xs font-medium text-gray-500 hover:text-gray-300 transition-colors"
+                        className="text-xs font-medium text-[var(--text-muted)] hover:text-[var(--text-main)] transition-colors"
                     >
                         Show less
                     </button>
@@ -110,11 +110,11 @@ export const UpdatesTimeline = ({
 
             {visibleItems.map((item) => (
                 <div key={item.id} className="flex gap-4 group/item text-sm">
-                    <div className="w-24 text-xs text-gray-400 text-right pt-0.5 font-mono shrink-0">
+                    <div className="w-24 text-xs text-[var(--text-muted)] text-right pt-0.5 font-mono shrink-0">
                         {format(parseUTCDate(item.timestamp), 'MMM d, HH:mm')}
                     </div>
-                    <div className="relative border-l-2 border-white/5 pl-4 pb-1 flex-1">
-                        <div className="absolute -left-[5px] top-1.5 w-2 h-2 rounded-full bg-gray-700 ring-4 ring-[#13161c]" />
+                    <div className="relative border-l-2 border-[var(--border)] pl-4 pb-1 flex-1">
+                        <div className="absolute -left-[5px] top-1.5 w-2 h-2 rounded-full bg-[var(--text-muted)] ring-4 ring-[#13161c]" />
 
                         {editingId === item.id ? (
                             <div className="flex items-center gap-2 w-full">
@@ -122,7 +122,7 @@ export const UpdatesTimeline = ({
                                     ref={updateTextareaRef}
                                     value={editContent}
                                     onChange={(e) => setEditContent(e.target.value)}
-                                    className="flex-1 bg-gray-900 border border-gray-800 rounded px-3 py-1.5 text-sm text-gray-200 focus:outline-none focus:border-blue-500 transition-all placeholder:text-gray-600 resize-none overflow-hidden"
+                                    className="flex-1 bg-gray-900 border border-[var(--border)] rounded px-3 py-1.5 text-sm text-[var(--text-main)] focus:outline-none focus:border-blue-500 transition-all placeholder:text-[var(--text-muted)] resize-none overflow-hidden"
                                     autoFocus
                                     onKeyDown={(e) => {
                                         if (e.key === 'Enter' && !e.shiftKey) {
@@ -141,7 +141,7 @@ export const UpdatesTimeline = ({
                                     <Check size={14} />
                                 </button>
                                 <button
-                                    className="text-gray-500 hover:text-gray-300 p-1 hover:bg-white/5 rounded"
+                                    className="text-[var(--text-muted)] hover:text-[var(--text-main)] p-1 hover:bg-[var(--card-hover)] rounded"
                                     onClick={() => setEditingId(null)}
                                     title="Cancel (Esc)"
                                 >
@@ -168,7 +168,7 @@ export const UpdatesTimeline = ({
                                                     <Check size={14} />
                                                 </button>
                                                 <button
-                                                    className="text-gray-500 hover:text-gray-300 transition-all p-0.5"
+                                                    className="text-[var(--text-muted)] hover:text-[var(--text-main)] transition-all p-0.5"
                                                     onClick={() => setDeletingId(null)}
                                                     title="Cancel"
                                                 >
@@ -188,7 +188,7 @@ export const UpdatesTimeline = ({
                                 </div>
                             ) : (
                                 <div className="group/content flex items-start gap-2">
-                                    <p className={`text-left whitespace-pre-wrap ${['creation', 'status_change', 'property_change', 'deletion'].includes(item.type) ? 'text-gray-400 italic' : 'text-gray-300'}`}>
+                                    <p className={`text-left whitespace-pre-wrap ${['creation', 'status_change', 'property_change', 'deletion'].includes(item.type) ? 'text-[var(--text-muted)] italic' : 'text-[var(--text-main)]'}`}>
                                         {item.content}
                                     </p>
                                     {!['status_change', 'creation', 'property_change', 'deletion'].includes(item.type) && (
@@ -203,7 +203,7 @@ export const UpdatesTimeline = ({
                                                         <Check size={14} />
                                                     </button>
                                                     <button
-                                                        className="text-gray-500 hover:text-gray-300 transition-all p-0.5"
+                                                        className="text-[var(--text-muted)] hover:text-[var(--text-main)] transition-all p-0.5"
                                                         onClick={() => setDeletingId(null)}
                                                         title="Cancel"
                                                     >
@@ -213,14 +213,14 @@ export const UpdatesTimeline = ({
                                             ) : (
                                                 <>
                                                     <button
-                                                        className="text-gray-600 hover:text-blue-400 transition-all"
+                                                        className="text-[var(--text-muted)] hover:text-blue-400 transition-all"
                                                         onClick={() => { setEditingId(item.id); setEditContent(item.content); }}
                                                         title="Edit"
                                                     >
                                                         <Pencil size={14} />
                                                     </button>
                                                     <button
-                                                        className="text-gray-600 hover:text-red-400 transition-all"
+                                                        className="text-[var(--text-muted)] hover:text-red-400 transition-all"
                                                         onClick={() => setDeletingId(item.id)}
                                                         title="Delete"
                                                     >
@@ -238,16 +238,16 @@ export const UpdatesTimeline = ({
             ))}
 
             <div className="flex gap-4 group/add mt-2">
-                <div className="w-24 text-xs text-gray-400 text-right pt-2 font-mono shrink-0">Now</div>
-                <div className="relative border-l-2 border-white/5 pl-4 pb-2 flex-1">
-                    <div className="absolute -left-[5px] top-2.5 w-2 h-2 rounded-full border border-gray-600 bg-[#13161c]" />
+                <div className="w-24 text-xs text-[var(--text-muted)] text-right pt-2 font-mono shrink-0">Now</div>
+                <div className="relative border-l-2 border-[var(--border)] pl-4 pb-2 flex-1">
+                    <div className="absolute -left-[5px] top-2.5 w-2 h-2 rounded-full border border-gray-600 bg-[var(--bg-card)]" />
                     <form onSubmit={handleAdd} className="relative">
                         <textarea
                             ref={newUpdateTextareaRef}
                             placeholder={placeholder}
                             value={newDetail}
                             onChange={(e) => setNewDetail(e.target.value)}
-                            className="w-full bg-gray-900 border border-gray-800 rounded-xl px-4 py-3 text-sm text-gray-200 focus:outline-none focus:border-blue-500 focus:ring-0 transition-all placeholder:text-gray-600 resize-none overflow-hidden"
+                            className="w-full bg-gray-900 border border-[var(--border)] rounded-xl px-4 py-3 text-sm text-[var(--text-main)] focus:outline-none focus:border-blue-500 focus:ring-0 transition-all placeholder:text-[var(--text-muted)] resize-none overflow-hidden"
                             rows={1}
                             onKeyDown={(e) => {
                                 if (e.key === 'Enter' && !e.shiftKey) {

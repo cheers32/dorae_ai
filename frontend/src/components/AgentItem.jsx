@@ -76,10 +76,10 @@ const DraggableTaskChip = ({ task, labelColor, onRemove, onSearch }) => {
                     boxShadow: `0 0 8px ${labelColor}80`
                 }}
             ></span>
-            <span className="truncate max-w-[150px] text-gray-300">{task.title}</span>
+            <span className="truncate max-w-[150px] text-[var(--text-main)]">{task.title}</span>
             {onRemove && (
                 <button
-                    className="ml-0.5 p-0.5 rounded-full hover:bg-white/10 text-gray-400 hover:text-white transition-colors opacity-0 group-hover/chip:opacity-100"
+                    className="ml-0.5 p-0.5 rounded-full hover:bg-[var(--card-hover)] text-[var(--text-muted)] hover:text-white transition-colors opacity-0 group-hover/chip:opacity-100"
                     onClick={(e) => {
                         e.stopPropagation();
                         onRemove();
@@ -234,7 +234,7 @@ export const AgentItem = ({ agent, onFocus, onDelete, isFocused, availableLabels
                 group transition-all duration-200 bg-transparent
                 ${expanded
                     ? 'mb-4 rounded-xl bg-blue-500/5 border-blue-500/30 border shadow-lg'
-                    : 'border-b border-white/5 border-l border-l-transparent hover:bg-white/[0.03]'
+                    : 'border-b border-[var(--border)] border-l border-l-transparent hover:bg-white/[0.03]'
                 }
                 ${isOver ? 'ring-2 ring-blue-400 bg-blue-500/20' : ''}
             `}
@@ -253,7 +253,7 @@ export const AgentItem = ({ agent, onFocus, onDelete, isFocused, availableLabels
                     style={matchTaskItemPadding}
                 >
                     {/* Grip/Expand Icon */}
-                    <div className={`p-1 text-gray-600 hover:text-gray-400 transition-colors ${expanded ? 'cursor-pointer' : 'cursor-grab active:cursor-grabbing'}`}>
+                    <div className={`p-1 text-gray-600 hover:text-[var(--text-muted)] transition-colors ${expanded ? 'cursor-pointer' : 'cursor-grab active:cursor-grabbing'}`}>
                         {expanded ? <ChevronUp size={16} /> : <GripVertical size={16} />}
                     </div>
 
@@ -263,7 +263,7 @@ export const AgentItem = ({ agent, onFocus, onDelete, isFocused, availableLabels
                             p-1.5 rounded-lg flex items-center justify-center shrink-0 transition-transform active:scale-95
                             ${isFocused
                                 ? 'bg-blue-500/20 text-blue-300 shadow-[0_0_10px_rgba(59,130,246,0.3)]'
-                                : 'bg-white/5 text-gray-500 group-hover:bg-white/10 group-hover/text-gray-300'
+                                : 'bg-[var(--input-bg)] text-[var(--text-muted)] group-hover:bg-[var(--card-hover)] group-hover/text-[var(--text-main)]'
                             }
                         `}>
                             <Brain size={14} />
@@ -285,12 +285,12 @@ export const AgentItem = ({ agent, onFocus, onDelete, isFocused, availableLabels
                                     type="text"
                                     value={editedRole}
                                     onChange={(e) => setEditedRole(e.target.value)}
-                                    className="bg-black/40 border border-blue-500/50 rounded px-2 py-0.5 text-gray-400 text-xs focus:outline-none flex-1"
+                                    className="bg-black/40 border border-blue-500/50 rounded px-2 py-0.5 text-[var(--text-muted)] text-xs focus:outline-none flex-1"
                                     placeholder="Role"
                                 />
                             </div>
                         ) : (
-                            <h3 className={`font-medium text-left truncate ${expanded ? 'text-gray-200' : 'text-gray-400'}`} style={{ fontSize: '12px', lineHeight: '1.4' }}>
+                            <h3 className={`font-medium text-left truncate ${expanded ? 'text-[var(--text-main)]' : 'text-[var(--text-muted)]'}`} style={{ fontSize: '12px', lineHeight: '1.4' }}>
                                 {localName}
                                 <span className="text-gray-600 font-normal ml-2 text-[11px]">
                                     <span className="text-gray-700 mr-1">-</span>
@@ -302,7 +302,7 @@ export const AgentItem = ({ agent, onFocus, onDelete, isFocused, availableLabels
                         {/* Status/Badge */}
                         {!expanded && (
                             <div className="flex items-center gap-3 ml-2">
-                                <div className="flex items-center gap-1.5 px-2 py-0.5 rounded text-[10px] uppercase font-bold tracking-wider text-gray-600 bg-white/5">
+                                <div className="flex items-center gap-1.5 px-2 py-0.5 rounded text-[10px] uppercase font-bold tracking-wider text-gray-600 bg-[var(--input-bg)]">
                                     <Zap size={10} />
                                     <span>{agent.skills?.length || 0}</span>
                                 </div>
@@ -323,7 +323,7 @@ export const AgentItem = ({ agent, onFocus, onDelete, isFocused, availableLabels
                     <div className={`flex items-center gap-2 transition-opacity ${expanded ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`} onClick={e => e.stopPropagation()}>
                         {isDeleting ? (
                             <div className="flex items-center gap-1">
-                                <button className="p-1 text-gray-500 hover:text-gray-300 transition-colors" onClick={() => setIsDeleting(false)}>
+                                <button className="p-1 text-[var(--text-muted)] hover:text-[var(--text-main)] transition-colors" onClick={() => setIsDeleting(false)}>
                                     <X size={14} />
                                 </button>
                                 <button className="p-1 text-green-400 hover:text-green-300 transition-colors" onClick={confirmDelete}>
@@ -332,7 +332,7 @@ export const AgentItem = ({ agent, onFocus, onDelete, isFocused, availableLabels
                             </div>
                         ) : isEditing ? (
                             <div className="flex items-center gap-1">
-                                <button className="p-1 text-gray-500 hover:text-gray-300 transition-colors" onClick={() => { setIsEditing(false); setEditedName(localName); }}>
+                                <button className="p-1 text-[var(--text-muted)] hover:text-[var(--text-main)] transition-colors" onClick={() => { setIsEditing(false); setEditedName(localName); }}>
                                     <X size={14} />
                                 </button>
                                 <button className="p-1 text-green-400 hover:text-green-300 transition-colors" onClick={handleSaveProfile}>
@@ -355,10 +355,10 @@ export const AgentItem = ({ agent, onFocus, onDelete, isFocused, availableLabels
                                 </button>
                                 {expanded && (
                                     <>
-                                        <button onClick={() => setIsEditing(true)} className="p-1 text-gray-500 hover:text-blue-400 transition-colors">
+                                        <button onClick={() => setIsEditing(true)} className="p-1 text-[var(--text-muted)] hover:text-blue-400 transition-colors">
                                             <Pencil size={14} />
                                         </button>
-                                        <button onClick={() => setIsDeleting(true)} className="p-1 text-gray-500 hover:text-red-400 transition-colors">
+                                        <button onClick={() => setIsDeleting(true)} className="p-1 text-[var(--text-muted)] hover:text-red-400 transition-colors">
                                             <Trash2 size={14} />
                                         </button>
                                     </>
@@ -377,7 +377,7 @@ export const AgentItem = ({ agent, onFocus, onDelete, isFocused, availableLabels
                         animate={{ height: 'auto', opacity: 1 }}
                         exit={{ height: 0, opacity: 0 }}
                     >
-                        <div className="px-4 pb-4 pt-0 border-t border-white/5 bg-black/20">
+                        <div className="px-4 pb-4 pt-0 border-t border-[var(--border)] bg-black/20">
                             {/* Description / Instructions */}
                             <div className="py-4">
                                 {isEditing ? (
@@ -386,10 +386,10 @@ export const AgentItem = ({ agent, onFocus, onDelete, isFocused, availableLabels
                                         onChange={(e) => setEditedDescription(e.target.value)}
                                         placeholder="System instructions..."
                                         rows={3}
-                                        className="w-full bg-black/40 border border-blue-500/50 rounded-lg px-3 py-2 text-sm text-gray-300 focus:outline-none"
+                                        className="w-full bg-black/40 border border-blue-500/50 rounded-lg px-3 py-2 text-sm text-[var(--text-main)] focus:outline-none"
                                     />
                                 ) : (
-                                    <p className="text-sm text-gray-400 italic">
+                                    <p className="text-sm text-[var(--text-muted)] italic">
                                         {agent.description || "No system instructions set."}
                                     </p>
                                 )}
@@ -399,7 +399,7 @@ export const AgentItem = ({ agent, onFocus, onDelete, isFocused, availableLabels
                             {/* [NEW] Assigned Folders */}
                             {agent.assigned_folders && agent.assigned_folders.length > 0 && (
                                 <div className="mb-4">
-                                    <h4 className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Assigned Folders</h4>
+                                    <h4 className="text-xs font-bold text-[var(--text-muted)] uppercase tracking-wider mb-2">Assigned Folders</h4>
                                     <div className="flex flex-wrap gap-2">
                                         {agent.assigned_folders.map(folder => (
                                             <div
@@ -409,7 +409,7 @@ export const AgentItem = ({ agent, onFocus, onDelete, isFocused, availableLabels
                                                 <Folder size={12} className="text-blue-400" />
                                                 <span className="truncate max-w-[150px]">{folder.name}</span>
                                                 <button
-                                                    className="ml-0.5 p-0.5 rounded-full hover:bg-white/10 text-blue-400 hover:text-white transition-colors opacity-0 group-hover/chip:opacity-100"
+                                                    className="ml-0.5 p-0.5 rounded-full hover:bg-[var(--card-hover)] text-blue-400 hover:text-white transition-colors opacity-0 group-hover/chip:opacity-100"
                                                     onClick={async (e) => {
                                                         e.stopPropagation();
                                                         try {
@@ -431,7 +431,7 @@ export const AgentItem = ({ agent, onFocus, onDelete, isFocused, availableLabels
                             {/* Assigned Tasks */}
                             {agent.active_tasks && agent.active_tasks.length > 0 && (
                                 <div className="mb-4">
-                                    <h4 className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Assigned Tasks</h4>
+                                    <h4 className="text-xs font-bold text-[var(--text-muted)] uppercase tracking-wider mb-2">Assigned Tasks</h4>
                                     <DndContext sensors={sensors} onDragEnd={handleTaskChipDragEnd}>
                                         <div className="flex flex-wrap gap-2">
                                             {agent.active_tasks.slice(0, attachmentLimit || 5).map(task => {
@@ -459,7 +459,7 @@ export const AgentItem = ({ agent, onFocus, onDelete, isFocused, availableLabels
                                             })}
                                             {agent.active_tasks.length > (attachmentLimit || 5) && (
                                                 <div
-                                                    className="inline-flex items-center justify-center px-2 py-1 rounded-lg border border-white/10 bg-white/5 text-[10px] text-gray-400 font-medium cursor-pointer hover:bg-white/10 transition-colors"
+                                                    className="inline-flex items-center justify-center px-2 py-1 rounded-lg border border-[var(--border)] bg-[var(--input-bg)] text-[10px] text-[var(--text-muted)] font-medium cursor-pointer hover:bg-[var(--card-hover)] transition-colors"
                                                     title="Show all assigned tasks"
                                                 >
                                                     +{agent.active_tasks.length - (attachmentLimit || 5)} more
@@ -473,10 +473,10 @@ export const AgentItem = ({ agent, onFocus, onDelete, isFocused, availableLabels
                             {/* Tools / Features Grid */}
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-2">
                                 {/* Chat */}
-                                <div className="border border-white/5 rounded-lg bg-black/20 overflow-hidden flex flex-col h-[300px]">
-                                    <div className="p-3 border-b border-white/5 flex items-center gap-2 bg-white/5">
+                                <div className="border border-[var(--border)] rounded-lg bg-black/20 overflow-hidden flex flex-col h-[300px]">
+                                    <div className="p-3 border-b border-[var(--border)] flex items-center gap-2 bg-[var(--input-bg)]">
                                         <MessageSquare size={14} className="text-purple-400" />
-                                        <span className="text-xs font-bold text-gray-300 uppercase tracking-wider">Chat</span>
+                                        <span className="text-xs font-bold text-[var(--text-main)] uppercase tracking-wider">Chat</span>
                                     </div>
                                     <div className="flex-1 overflow-y-auto p-3 space-y-3 custom-scrollbar">
                                         {chatMessages.map((msg, i) => (
@@ -485,7 +485,7 @@ export const AgentItem = ({ agent, onFocus, onDelete, isFocused, availableLabels
                                                     max-w-[85%] rounded-lg px-3 py-2 text-xs leading-relaxed
                                                     ${msg.role === 'user'
                                                         ? 'bg-blue-500/20 text-blue-100 border border-blue-500/20'
-                                                        : 'bg-white/5 text-gray-300 border border-white/5'
+                                                        : 'bg-[var(--input-bg)] text-[var(--text-main)] border border-[var(--border)]'
                                                     }
                                                 `}>
                                                     <ReactMarkdown>{msg.text}</ReactMarkdown>
@@ -494,20 +494,20 @@ export const AgentItem = ({ agent, onFocus, onDelete, isFocused, availableLabels
                                         ))}
                                         {isChatLoading && (
                                             <div className="flex justify-start">
-                                                <div className="bg-white/5 rounded-lg px-3 py-2 border border-white/5">
-                                                    <span className="animate-pulse text-gray-500 text-xs">Thinking...</span>
+                                                <div className="bg-[var(--input-bg)] rounded-lg px-3 py-2 border border-[var(--border)]">
+                                                    <span className="animate-pulse text-[var(--text-muted)] text-xs">Thinking...</span>
                                                 </div>
                                             </div>
                                         )}
                                         <div ref={chatEndRef} />
                                     </div>
-                                    <form onSubmit={handleSendMessage} className="p-2 border-t border-white/5 bg-black/20">
+                                    <form onSubmit={handleSendMessage} className="p-2 border-t border-[var(--border)] bg-black/20">
                                         <input
                                             type="text"
                                             value={chatInput}
                                             onChange={(e) => setChatInput(e.target.value)}
                                             placeholder="Message agent..."
-                                            className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-1.5 text-xs text-white focus:outline-none focus:border-purple-500/50"
+                                            className="w-full bg-[var(--input-bg)] border border-[var(--border)] rounded-lg px-3 py-1.5 text-xs text-white focus:outline-none focus:border-purple-500/50"
                                         />
                                     </form>
                                 </div>
@@ -515,11 +515,11 @@ export const AgentItem = ({ agent, onFocus, onDelete, isFocused, availableLabels
                                 {/* Skills & Notes */}
                                 <div className="space-y-4">
                                     {/* Skills */}
-                                    <div className="border border-white/5 rounded-lg bg-black/20 overflow-hidden">
-                                        <div className="p-3 border-b border-white/5 flex items-center justify-between bg-white/5">
+                                    <div className="border border-[var(--border)] rounded-lg bg-black/20 overflow-hidden">
+                                        <div className="p-3 border-b border-[var(--border)] flex items-center justify-between bg-[var(--input-bg)]">
                                             <div className="flex items-center gap-2">
                                                 <Cpu size={14} className="text-green-400" />
-                                                <span className="text-xs font-bold text-gray-300 uppercase tracking-wider">Skills</span>
+                                                <span className="text-xs font-bold text-[var(--text-main)] uppercase tracking-wider">Skills</span>
                                             </div>
                                         </div>
                                         <div className="p-3 space-y-2">
@@ -530,12 +530,12 @@ export const AgentItem = ({ agent, onFocus, onDelete, isFocused, availableLabels
                                                         onClick={() => handleToggleSkill(skill.id)}
                                                         className={`
                                                             flex items-center justify-between p-2 rounded cursor-pointer transition-colors border
-                                                            ${isEnabled ? 'bg-green-500/10 border-green-500/20' : 'bg-white/5 border-white/5 hover:bg-white/10'}
+                                                            ${isEnabled ? 'bg-green-500/10 border-green-500/20' : 'bg-[var(--input-bg)] border-[var(--border)] hover:bg-[var(--card-hover)]'}
                                                         `}
                                                     >
                                                         <div className="flex items-center gap-2">
-                                                            <skill.icon size={14} className={isEnabled ? 'text-green-400' : 'text-gray-500'} />
-                                                            <span className={`text-xs ${isEnabled ? 'text-green-100' : 'text-gray-400'}`}>{skill.name}</span>
+                                                            <skill.icon size={14} className={isEnabled ? 'text-green-400' : 'text-[var(--text-muted)]'} />
+                                                            <span className={`text-xs ${isEnabled ? 'text-green-100' : 'text-[var(--text-muted)]'}`}>{skill.name}</span>
                                                         </div>
                                                         <div className={`
                                                             w-6 h-3 rounded-full relative transition-colors
@@ -550,10 +550,10 @@ export const AgentItem = ({ agent, onFocus, onDelete, isFocused, availableLabels
                                     </div>
 
                                     {/* Notes */}
-                                    <div className="border border-white/5 rounded-lg bg-black/20 overflow-hidden flex flex-col h-[150px]">
-                                        <div className="p-3 border-b border-white/5 flex items-center gap-2 bg-white/5">
+                                    <div className="border border-[var(--border)] rounded-lg bg-black/20 overflow-hidden flex flex-col h-[150px]">
+                                        <div className="p-3 border-b border-[var(--border)] flex items-center gap-2 bg-[var(--input-bg)]">
                                             <Pencil size={14} className="text-yellow-400" />
-                                            <span className="text-xs font-bold text-gray-300 uppercase tracking-wider">Memory / Notes</span>
+                                            <span className="text-xs font-bold text-[var(--text-main)] uppercase tracking-wider">Memory / Notes</span>
                                         </div>
                                         <div className="flex-1 overflow-y-auto p-2 custom-scrollbar">
                                             <UpdatesTimeline

@@ -62,7 +62,7 @@ export const GeminiPanel = ({ isOpen, onClose }) => {
                         // Disable transition during resize for smooth tracking
                         duration: isResizing ? 0 : undefined
                     }}
-                    className="h-screen bg-[#0f111a] border-l border-white/5 flex flex-col shrink-0 overflow-hidden relative"
+                    className="h-screen bg-[var(--bg-sidebar)] border-l border-[var(--border)] flex flex-col shrink-0 overflow-hidden relative"
                     style={{ width: width }}
                 >
                     {/* Resize Handle */}
@@ -75,7 +75,7 @@ export const GeminiPanel = ({ isOpen, onClose }) => {
                     />
 
                     {/* Header */}
-                    <div className="flex items-center justify-between p-4 border-b border-white/5 bg-[#0f111a]">
+                    <div className="flex items-center justify-between p-4 border-b border-[var(--border)] bg-[var(--bg-sidebar)]">
                         <div className="flex items-center gap-2">
                             {/* <div className="p-1.5 bg-gradient-to-tr from-blue-500/20 to-purple-500/20 rounded-lg"> */}
                             <GeminiIcon size={20} className="text-blue-400" />
@@ -86,12 +86,12 @@ export const GeminiPanel = ({ isOpen, onClose }) => {
                         </div>
                         <div className="flex items-center gap-1">
                             {/* Potential Future: Pop-out button */}
-                            {/* <button className="p-1.5 text-gray-400 hover:text-white hover:bg-white/5 rounded-lg transition-colors">
+                            {/* <button className="p-1.5 text-[var(--text-muted)] hover:text-white hover:bg-[var(--card-hover)] rounded-lg transition-colors">
                                 <ExternalLink size={14} />
                             </button> */}
                             <button
                                 onClick={onClose}
-                                className="p-1.5 text-gray-400 hover:text-white hover:bg-white/5 rounded-lg transition-colors"
+                                className="p-1.5 text-[var(--text-muted)] hover:text-white hover:bg-[var(--card-hover)] rounded-lg transition-colors"
                             >
                                 <X size={16} />
                             </button>
@@ -99,7 +99,7 @@ export const GeminiPanel = ({ isOpen, onClose }) => {
                     </div>
 
                     {/* Content */}
-                    <div className="flex-1 overflow-hidden flex flex-col bg-[#0f111a]">
+                    <div className="flex-1 overflow-hidden flex flex-col bg-[var(--bg-sidebar)]">
                         <ChatInterface />
                     </div>
                 </motion.div>

@@ -104,7 +104,7 @@ const SortableAttachment = ({ attachment, onDelete, availableLabels, onClick, on
             style={style}
             {...attributes}
             {...listeners}
-            className="flex items-center gap-2 bg-white/5 border border-white/10 rounded-lg px-2 pl-3 py-1.5 text-xs text-gray-300 group/chip hover:bg-white/10 transition-colors cursor-pointer active:cursor-grabbing pr-1.5"
+            className="flex items-center gap-2 bg-[var(--input-bg)] border border-[var(--border)] rounded-lg px-2 pl-3 py-1.5 text-xs text-[var(--text-main)] group/chip hover:bg-[var(--card-hover)] transition-colors cursor-pointer active:cursor-grabbing pr-1.5"
             onClick={(e) => {
                 if (onSearch) {
                     onSearch(attachment.title);
@@ -120,7 +120,7 @@ const SortableAttachment = ({ attachment, onDelete, availableLabels, onClick, on
             <span className="truncate max-w-[150px]">{attachment.title}</span>
             {onDelete && (
                 <button
-                    className="ml-0.5 p-0.5 rounded-full hover:bg-white/10 text-gray-400 hover:text-white transition-colors opacity-0 group-hover/chip:opacity-100"
+                    className="ml-0.5 p-0.5 rounded-full hover:bg-[var(--card-hover)] text-[var(--text-muted)] hover:text-white transition-colors opacity-0 group-hover/chip:opacity-100"
                     onClick={(e) => {
                         e.stopPropagation();
                         onDelete();
@@ -162,7 +162,7 @@ const LabelPicker = ({ availableLabels, selectedLabels, onToggle, onClose, trigg
     return (
         <div
             ref={pickerRef}
-            className="absolute left-0 top-full mt-2 z-[100] bg-[#1a1d24] border border-white/10 rounded-lg shadow-2xl p-2 min-w-[200px] max-h-[300px] overflow-y-auto"
+            className="absolute left-0 top-full mt-2 z-[100] bg-[var(--bg-card)] border border-[var(--border)] rounded-lg shadow-2xl p-2 min-w-[200px] max-h-[300px] overflow-y-auto"
             onClick={(e) => e.stopPropagation()}
         >
             <div className="space-y-0.5">
@@ -172,7 +172,7 @@ const LabelPicker = ({ availableLabels, selectedLabels, onToggle, onClose, trigg
                         <button
                             key={label._id}
                             onClick={() => onToggle(label.name)}
-                            className={`w-full flex items-center gap-2 px-2 py-1.5 rounded hover:bg-white/5 transition-colors text-xs text-left ${isSelected ? 'text-white' : 'text-gray-400'}`}
+                            className={`w-full flex items-center gap-2 px-2 py-1.5 rounded hover:bg-[var(--input-bg)] transition-colors text-xs text-left ${isSelected ? 'text-white' : 'text-[var(--text-muted)]'}`}
                         >
                             <div
                                 className="w-2 h-2 rounded-full shrink-0"
@@ -185,7 +185,7 @@ const LabelPicker = ({ availableLabels, selectedLabels, onToggle, onClose, trigg
                 })}
             </div>
             {availableLabels.length === 0 && (
-                <div className="px-2 py-4 text-center text-gray-500 text-xs italic">
+                <div className="px-2 py-4 text-center text-[var(--text-muted)] text-xs italic">
                     No labels available
                 </div>
             )}
@@ -221,7 +221,7 @@ const AgentPicker = ({ availableAgents, selectedAgentIds, onToggle, onClose, tri
     return (
         <div
             ref={pickerRef}
-            className="absolute left-0 top-full mt-2 z-[100] bg-[#1a1d24] border border-white/10 rounded-lg shadow-2xl p-2 min-w-[200px] max-h-[300px] overflow-y-auto"
+            className="absolute left-0 top-full mt-2 z-[100] bg-[var(--bg-card)] border border-[var(--border)] rounded-lg shadow-2xl p-2 min-w-[200px] max-h-[300px] overflow-y-auto"
             onClick={(e) => e.stopPropagation()}
         >
             <div className="space-y-0.5">
@@ -231,9 +231,9 @@ const AgentPicker = ({ availableAgents, selectedAgentIds, onToggle, onClose, tri
                         <button
                             key={agent._id}
                             onClick={() => onToggle(agent._id)}
-                            className={`w-full flex items-center gap-2 px-2 py-1.5 rounded hover:bg-white/5 transition-colors text-xs text-left ${isSelected ? 'text-white' : 'text-gray-400'}`}
+                            className={`w-full flex items-center gap-2 px-2 py-1.5 rounded hover:bg-[var(--input-bg)] transition-colors text-xs text-left ${isSelected ? 'text-white' : 'text-[var(--text-muted)]'}`}
                         >
-                            <Bot size={14} className="text-gray-500" />
+                            <Bot size={14} className="text-[var(--text-muted)]" />
                             <span className="flex-1 truncate">{agent.name}</span>
                             {isSelected && <Check size={12} className="text-blue-500" />}
                         </button>
@@ -241,7 +241,7 @@ const AgentPicker = ({ availableAgents, selectedAgentIds, onToggle, onClose, tri
                 })}
             </div>
             {availableAgents.length === 0 && (
-                <div className="px-2 py-4 text-center text-gray-500 text-xs italic">
+                <div className="px-2 py-4 text-center text-[var(--text-muted)] text-xs italic">
                     No agents available
                 </div>
             )}
@@ -506,7 +506,7 @@ export const TaskItem = forwardRef(({ task, onUpdate, showTags, showFolders, fol
             initial={isOverlay ? false : { opacity: 0 }}
             animate={isOverlay ? false : { opacity: baseStyle.opacity }}
             exit={isOverlay ? false : { opacity: 0 }}
-            className={`group hover:bg-white/[0.03] transition-all duration-200 bg-transparent ${expanded || globalExpanded ? `mb-4 rounded-xl bg-blue-500/5 border-blue-500/30 border shadow-lg ${showLabelPicker ? 'z-[100]' : 'z-10'}` : 'border-b border-white/5 border-l border-l-transparent'}`}
+            className={`group hover:bg-white/[0.03] transition-all duration-200 bg-transparent ${expanded || globalExpanded ? `mb-4 rounded-xl bg-blue-500/5 border-blue-500/30 border shadow-lg ${showLabelPicker ? 'z-[100]' : 'z-10'}` : 'border-b border-[var(--border)] border-l border-l-transparent'}`}
         >
             <div
                 className="flex items-center gap-4 cursor-pointer pr-4 select-none"
@@ -550,7 +550,7 @@ export const TaskItem = forwardRef(({ task, onUpdate, showTags, showFolders, fol
                         )}
 
                         <div
-                            className={`drag-handle-btn p-1 text-gray-600 hover:text-gray-400 transition-colors ${expanded ? 'cursor-pointer' : 'cursor-grab active:cursor-grabbing'}`}
+                            className={`drag-handle-btn p-1 text-gray-600 hover:text-[var(--text-muted)] transition-colors ${expanded ? 'cursor-pointer' : 'cursor-grab active:cursor-grabbing'}`}
                             onClick={(e) => {
                                 if (expanded || globalExpanded) {
                                     e.stopPropagation();
@@ -622,7 +622,7 @@ export const TaskItem = forwardRef(({ task, onUpdate, showTags, showFolders, fol
                             value={editedTitle}
                             onChange={(e) => setEditedTitle(e.target.value)}
                             onBlur={handleSaveTitle}
-                            className="flex-1 bg-black/40 border border-blue-500/50 rounded px-2 py-0.5 text-gray-200 focus:outline-none resize-none overflow-hidden"
+                            className="flex-1 bg-black/40 border border-blue-500/50 rounded px-2 py-0.5 text-[var(--text-main)] focus:outline-none resize-none overflow-hidden"
                             onClick={(e) => e.stopPropagation()}
                             onPointerDown={(e) => e.stopPropagation()}
                             onKeyDown={(e) => {
@@ -638,7 +638,7 @@ export const TaskItem = forwardRef(({ task, onUpdate, showTags, showFolders, fol
                     ) : (
                         <div className="flex-1 min-w-0 flex items-center gap-2 group/title mobile-title-group">
                             <h3
-                                className={`font-medium text-gray-400 text-left select-text ${expanded || globalExpanded || showFullTitles ? 'break-words whitespace-pre-wrap cursor-text' : 'truncate'} ${(task.status === 'Deleted' || task.status === 'deleted') ? 'line-through opacity-50' : ''}`}
+                                className={`font-medium text-[var(--text-muted)] text-left select-text ${expanded || globalExpanded || showFullTitles ? 'break-words whitespace-pre-wrap cursor-text' : 'truncate'} ${(task.status === 'Deleted' || task.status === 'deleted') ? 'line-through opacity-50' : ''}`}
                                 style={{ fontSize: `${fontSize}px`, lineHeight: '1.4' }}
                                 onClick={(e) => {
                                     if (expanded || globalExpanded || showFullTitles) {
@@ -665,14 +665,14 @@ export const TaskItem = forwardRef(({ task, onUpdate, showTags, showFolders, fol
                                     {/* Folder Chip */}
                                     {showFolders && task.folderId && folders && (
                                         <div
-                                            className="inline-flex items-center gap-1.5 px-2 py-1 rounded border uppercase tracking-wider font-semibold text-[10px] group/folder transition-colors bg-white/5 border-white/10 text-gray-400 hover:bg-white/10 cursor-pointer"
+                                            className="inline-flex items-center gap-1.5 px-2 py-1 rounded border uppercase tracking-wider font-semibold text-[10px] group/folder transition-colors bg-[var(--input-bg)] border-[var(--border)] text-[var(--text-muted)] hover:bg-[var(--card-hover)] cursor-pointer"
                                             onClick={(e) => {
                                                 e.stopPropagation();
                                                 const folderName = folders.find(f => f._id === task.folderId)?.name;
                                                 if (folderName && onSearch) onSearch(folderName);
                                             }}
                                         >
-                                            <Folder size={10} className="text-gray-500" />
+                                            <Folder size={10} className="text-[var(--text-muted)]" />
                                             {folders.find(f => f._id === task.folderId)?.name || 'Unknown'}
                                         </div>
                                     )}
@@ -749,7 +749,7 @@ export const TaskItem = forwardRef(({ task, onUpdate, showTags, showFolders, fol
                                                         e.stopPropagation();
                                                         setShowAgentPicker(!showAgentPicker);
                                                     }}
-                                                    className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-white/5 border border-white/10 text-gray-400 hover:bg-white/10 hover:text-gray-200 transition-colors"
+                                                    className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-[var(--input-bg)] border border-[var(--border)] text-[var(--text-muted)] hover:bg-[var(--card-hover)] hover:text-[var(--text-main)] transition-colors"
                                                     title="Assign Agent"
                                                 >
                                                     <Plus size={10} />
@@ -783,7 +783,7 @@ export const TaskItem = forwardRef(({ task, onUpdate, showTags, showFolders, fol
                             {showCounts && !expanded && !globalExpanded && (
                                 <div className="flex items-center gap-3 ml-3 shrink-0">
                                     {task.updates && task.updates.length > 0 && (
-                                        <div className="flex items-center gap-1 text-gray-500" title={`${task.updates.length} updates`}>
+                                        <div className="flex items-center gap-1 text-[var(--text-muted)]" title={`${task.updates.length} updates`}>
                                             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                                                 <circle cx="12" cy="12" r="10" />
                                                 <polyline points="12 6 12 12 16 14" />
@@ -792,13 +792,13 @@ export const TaskItem = forwardRef(({ task, onUpdate, showTags, showFolders, fol
                                         </div>
                                     )}
                                     {localAttachments && localAttachments.length > 0 && (
-                                        <div className="flex items-center gap-1 text-gray-500" title={`${localAttachments.length} attachments`}>
+                                        <div className="flex items-center gap-1 text-[var(--text-muted)]" title={`${localAttachments.length} attachments`}>
                                             <Paperclip size={10} />
                                             <span className="text-[10px] font-medium">{localAttachments.length}</span>
                                         </div>
                                     )}
                                     {localAssignedAgentIds && localAssignedAgentIds.length > 0 && (
-                                        <div className="flex items-center gap-1 text-gray-500" title={`${localAssignedAgentIds.length} agents assigned`}>
+                                        <div className="flex items-center gap-1 text-[var(--text-muted)]" title={`${localAssignedAgentIds.length} agents assigned`}>
                                             <Bot size={10} />
                                             <span className="text-[10px] font-medium">{localAssignedAgentIds.length}</span>
                                         </div>
@@ -822,7 +822,7 @@ export const TaskItem = forwardRef(({ task, onUpdate, showTags, showFolders, fol
                                 : parseUTCDate(task.created_at),
                             'MMM d, yyyy, h:mm a'
                         )}
-                        className="text-xs text-gray-400 font-mono font-medium whitespace-nowrap"
+                        className="text-xs text-[var(--text-muted)] font-mono font-medium whitespace-nowrap"
                     >
                         {(() => {
                             const lastUpdate = task.updates && task.updates.length > 0
@@ -876,7 +876,7 @@ export const TaskItem = forwardRef(({ task, onUpdate, showTags, showFolders, fol
                         exit={{ height: 0, opacity: 0 }}
                         transition={{ duration: 0.2 }}
                     >
-                        <div className="px-4 pb-4 pt-0 border-t border-white/5 bg-black/20">
+                        <div className="px-4 pb-4 pt-0 border-t border-[var(--border)] bg-black/20">
                             <div className="py-4 space-y-1">
                                 {/* Attachments Chips */}
                                 {localAttachments && localAttachments.length > 0 && (
@@ -901,7 +901,7 @@ export const TaskItem = forwardRef(({ task, onUpdate, showTags, showFolders, fol
 
                                             {localAttachments.length > (attachmentLimit || 5) && (
                                                 <div
-                                                    className="inline-flex items-center justify-center px-2 py-1 rounded-lg border border-white/10 bg-white/5 text-[10px] text-gray-400 font-medium cursor-pointer hover:bg-white/10 transition-colors"
+                                                    className="inline-flex items-center justify-center px-2 py-1 rounded-lg border border-[var(--border)] bg-[var(--input-bg)] text-[10px] text-[var(--text-muted)] font-medium cursor-pointer hover:bg-[var(--card-hover)] transition-colors"
                                                     title="Show all attachments"
                                                 // In a real implementation, this would toggle a 'showAllAttachments' state.
                                                 // For now, let's just show the count. Or we can implement the toggle.
@@ -935,11 +935,11 @@ export const TaskItem = forwardRef(({ task, onUpdate, showTags, showFolders, fol
                                 />
                             </div>
 
-                            <div className="flex justify-between items-center gap-2 pt-2 border-t border-white/5 mx-[-16px] px-4 bg-black/40 pb-2 mb-[-16px] rounded-b-xl">
+                            <div className="flex justify-between items-center gap-2 pt-2 border-t border-[var(--border)] mx-[-16px] px-4 bg-black/40 pb-2 mb-[-16px] rounded-b-xl">
                                 {isDeleting ? (
                                     <div className="flex items-center gap-1">
                                         <button
-                                            className="p-1.5 text-gray-500 hover:text-gray-300 transition-colors"
+                                            className="p-1.5 text-[var(--text-muted)] hover:text-[var(--text-main)] transition-colors"
                                             onClick={(e) => { e.stopPropagation(); setIsDeleting(false); }}
                                             title="Cancel"
                                         >
@@ -956,14 +956,14 @@ export const TaskItem = forwardRef(({ task, onUpdate, showTags, showFolders, fol
                                 ) : (
                                     <div className="flex items-center gap-1">
                                         <button
-                                            className="p-1.5 text-gray-500 hover:text-red-400 transition-colors"
+                                            className="p-1.5 text-[var(--text-muted)] hover:text-red-400 transition-colors"
                                             onClick={(e) => { e.stopPropagation(); setIsDeleting(true); }}
                                             title="Delete Task"
                                         >
                                             <Trash2 size={14} />
                                         </button>
                                         <button
-                                            className={`p-1.5 text-gray-500 hover:text-blue-400 transition-colors ${isEditingTitle ? 'text-blue-400 bg-blue-400/10 rounded' : ''}`}
+                                            className={`p-1.5 text-[var(--text-muted)] hover:text-blue-400 transition-colors ${isEditingTitle ? 'text-blue-400 bg-blue-400/10 rounded' : ''}`}
                                             onMouseDown={(e) => e.preventDefault()}
                                             onClick={(e) => {
                                                 e.stopPropagation();

@@ -4,13 +4,56 @@
 :root {
   --primary: #3b82f6;
   --primary-hover: #2563eb;
+}
+
+[data-theme="dark"] {
   --bg-dark: #020617;
   --bg-sidebar: #0f172a;
   --bg-card: rgba(30, 41, 59, 0.4);
   --text-main: #f8fafc;
   --text-muted: #94a3b8;
   --border: rgba(148, 163, 184, 0.08);
+  /* Transparent borders for glassmorphism */
   --glass: blur(20px);
+  --glass-border: 1px solid rgba(255, 255, 255, 0.05);
+  --card-hover: rgba(255, 255, 255, 0.02);
+  --sidebar-active-bg: rgba(59, 130, 246, 0.1);
+  --sidebar-active-text: #60a5fa;
+  --input-bg: rgba(255, 255, 255, 0.05);
+  /* Slightly lighter than card */
+}
+
+[data-theme="light"] {
+  /* Main Background: Slate 50 - clean, professional off-white */
+  --bg-dark: #f8fafc;
+
+  /* Sidebar: Pure white for strong contrast against content */
+  --bg-sidebar: #ffffff;
+
+  /* Card: White with distinct shadow instead of glass */
+  --bg-card: #ffffff;
+
+  /* Text: Slate 900 for primary, Slate 500 for secondary */
+  --text-main: #0f172a;
+  --text-muted: #64748b;
+
+  /* Borders: Slate 200 - definitive but subtle */
+  --border: #e2e8f0;
+
+  /* Glass: Remove blur in light mode for cleaner, sharper UI */
+  --glass: none;
+
+  /* Card Hover: Very subtle slate tint */
+  --card-hover: #f1f5f9;
+
+  /* Active States */
+  --sidebar-active-bg: #eff6ff;
+  /* Blue 50 */
+  --sidebar-active-text: #2563eb;
+  /* Blue 600 */
+
+  /* Input Backgrounds */
+  --input-bg: #ffffff;
 }
 
 body {
@@ -422,13 +465,13 @@ body {
 }
 
 .message-bubble {
-  background: rgba(255, 255, 255, 0.05);
+  background: var(--input-bg);
   padding: 1rem 1.2rem;
   border-radius: 16px;
   border-top-left-radius: 4px;
   line-height: 1.6;
   font-size: 0.95rem;
-  color: #e2e8f0;
+  color: var(--text-main);
 }
 
 .message-wrapper.user .message-bubble {
@@ -440,7 +483,7 @@ body {
 
 .chat-input-area {
   padding: 1rem;
-  background: rgba(0, 0, 0, 0.2);
+  background: var(--bg-card);
   border-top: 1px solid var(--border);
   display: flex;
   gap: 1rem;
@@ -448,9 +491,9 @@ body {
 
 .chat-input-area input {
   flex: 1;
-  background: rgba(255, 255, 255, 0.05);
+  background: var(--input-bg);
   border: 1px solid var(--border);
-  color: white;
+  color: var(--text-main);
   padding: 0.8rem 1.2rem;
   border-radius: 12px;
   outline: none;

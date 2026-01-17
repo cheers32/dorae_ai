@@ -35,30 +35,30 @@ export const AgentList = ({ onFocusAgent, focusedAgentId, availableLabels, isCre
     return (
         <div className="px-6 pb-20">
             {isCreating && (
-                <div className="mb-6 bg-gray-900/50 border border-gray-800 rounded-xl p-4 animate-in fade-in slide-in-from-top-4">
+                <div className="mb-6 bg-[var(--bg-card)] border border-[var(--border)] rounded-xl p-4 animate-in fade-in slide-in-from-top-4">
                     <form onSubmit={handleCreateAgent} className="flex gap-4">
                         <div className="flex-1 relative">
-                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" size={16} />
+                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--text-muted)]" size={16} />
                             <input
                                 autoFocus
                                 type="text"
                                 value={newAgentName}
                                 onChange={(e) => setNewAgentName(e.target.value)}
                                 placeholder="Name your new assistant..."
-                                className="w-full bg-black/40 border border-gray-700 rounded-lg pl-10 pr-4 py-2 text-white focus:outline-none focus:border-blue-500/50 focus:ring-1 focus:ring-blue-500/20"
+                                className="w-full bg-[var(--input-bg)] border border-[var(--border)] rounded-lg pl-10 pr-4 py-2 text-[var(--text-main)] focus:outline-none focus:border-blue-500/50 focus:ring-1 focus:ring-blue-500/20"
                             />
                         </div>
                         <div className="flex gap-2">
                             <button
                                 type="button"
                                 onClick={() => setIsCreating(false)}
-                                className="px-4 py-2 text-gray-400 hover:text-white transition-colors text-sm font-medium"
+                                className="px-4 py-2 text-[var(--text-muted)] hover:text-[var(--text-main)] transition-colors text-sm font-medium"
                             >
                                 Cancel
                             </button>
                             <button
                                 type="submit"
-                                className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors flex items-center gap-2"
+                                className="bg-blue-500 hover:bg-blue-600 text-[var(--text-main)] px-4 py-2 rounded-lg text-sm font-medium transition-colors flex items-center gap-2"
                             >
                                 <Sparkles size={16} />
                                 Create Agent
@@ -70,7 +70,7 @@ export const AgentList = ({ onFocusAgent, focusedAgentId, availableLabels, isCre
 
             {agents.length === 0 ? (
                 <div className="text-center py-12">
-                    <p className="text-gray-500">No AI assistants found.</p>
+                    <p className="text-[var(--text-muted)]">No AI assistants found.</p>
                 </div>
             ) : (
                 <div>

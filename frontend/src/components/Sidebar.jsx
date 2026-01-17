@@ -18,13 +18,16 @@ import {
     ChevronRight,
     ChevronDown,
     ChevronUp,
-    Layers
+    Layers,
+    Moon,
+    Sun
 } from 'lucide-react';
 import { api } from '../api';
 import { useDroppable, useDraggable } from '@dnd-kit/core';
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable';
+import { useTheme } from '../context/ThemeContext';
 
 const SortableSidebarItem = ({ id, icon: Icon, label, isActive, onClick, data, isFolder, onDelete, count, onColorChange, color, isCollapsed, density = 5 }) => {
     const [isDeleting, setIsDeleting] = useState(false);
@@ -218,6 +221,7 @@ const DraggableSidebarLabel = ({ id, label, isActive, onClick, color, data, coun
 };
 
 export function Sidebar({ activeTab, onNavigate, labels = [], onLabelsChange, selectedLabel, folders = [], onFoldersChange, selectedFolder, sidebarItems = [], stats = {}, isCollapsed, onToggle, density = 5, isOpen = false, onCloseMobile }) {
+    const { theme, toggleTheme } = useTheme();
     const [isAddingLabel, setIsAddingLabel] = useState(false);
     const [newLabelName, setNewLabelName] = useState('');
     const [isAddingFolder, setIsAddingFolder] = useState(false);
@@ -313,7 +317,11 @@ export function Sidebar({ activeTab, onNavigate, labels = [], onLabelsChange, se
 
     return (
         <div
-            className={`sidebar h-screen bg-[#0f111a] border-r border-white/5 flex flex-col pt-8 transition-all duration-300 ease-in-out ${isCollapsed ? 'w-[80px]' : 'w-[280px]'} ${isOpen ? 'mobile-open' : ''}`}
+            className={`sidebar h-screen border-r flex flex-col pt-8 transition-all duration-300 ease-in-out ${isCollapsed ? 'w-[80px]' : 'w-[280px]'} ${isOpen ? 'mobile-open' : ''}`}
+            style={{
+                background: 'var(--bg-sidebar)',
+                borderColor: 'var(--border)'
+            }}
         >
             {/* Mobile Close Button */}
             <button
@@ -327,15 +335,15 @@ export function Sidebar({ activeTab, onNavigate, labels = [], onLabelsChange, se
                     className="flex items-start gap-3 cursor-pointer group"
                     onClick={() => onNavigate('active', null)}
                 >
-                    <div className="pt-1.5 pb-2.5 px-2.5 bg-blue-500/10 rounded-xl group-hover:bg-blue-500/20 transition-colors">
-                        <Sparkles size={24} className="text-blue-400" />
+                    <div className="pt-1.5 pb-2.5 px-2.5 rounded-xl transition-colors" style={{ background: 'var(--sidebar-active-bg)' }}>
+                        <Sparkles size={24} style={{ color: 'var(--sidebar-active-text)' }} />
                     </div>
                     {!isCollapsed && (
                         <div className="flex flex-col items-start px-1">
-                            <h2 className="text-xl font-semibold bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-blue-100 tracking-tight leading-none mb-1">
+                            <h2 className="text-xl font-semibold tracking-tight leading-none mb-1" style={{ color: 'var(--text-main)' }}>
                                 Task AI
                             </h2>
-                            <span className="text-[9px] text-gray-500/60 font-mono uppercase tracking-[0.3em] leading-none">
+                            <span className="text-[9px] font-mono uppercase tracking-[0.3em] leading-none" style={{ color: 'var(--text-muted)' }}>
                                 {__APP_VERSION__}
                             </span>
                         </div>
@@ -345,7 +353,10 @@ export function Sidebar({ activeTab, onNavigate, labels = [], onLabelsChange, se
                     {!isCollapsed && (
                         <button
                             onClick={() => window.location.href = '/'}
-                            className="p-2 rounded-xl hover:bg-white/5 border border-transparent hover:border-white/10 text-gray-500 hover:text-white transition-all flex items-center justify-center group"
+                            className="p-2 rounded-xl border border-transparent transition-all flex items-center justify-center group"
+                            style={{ color: 'var(--text-muted)' }}
+                            onMouseEnter={(e) => { e.currentTarget.style.color = 'var(--text-main)'; e.currentTarget.style.background = 'var(--card-hover)'; }}
+                            onMouseLeave={(e) => { e.currentTarget.style.color = 'var(--text-muted)'; e.currentTarget.style.background = 'transparent'; }}
                             title="Back to Home"
                         >
                             <Home size={18} className="group-hover:scale-110 transition-transform" />
@@ -356,8 +367,11 @@ export function Sidebar({ activeTab, onNavigate, labels = [], onLabelsChange, se
                             e.stopPropagation();
                             onToggle();
                         }}
-                        className={`p-2 rounded-xl hover:bg-white/5 border border-transparent hover:border-white/10 text-gray-500 hover:text-white transition-all flex items-center justify-center group ${isCollapsed ? 'mx-auto' : ''}`}
+                        className={`p-2 rounded-xl border border-transparent transition-all flex items-center justify-center group ${isCollapsed ? 'mx-auto' : ''}`}
                         title={isCollapsed ? "Expand Sidebar" : "Collapse Sidebar"}
+                        style={{ color: 'var(--text-muted)' }}
+                        onMouseEnter={(e) => { e.currentTarget.style.color = 'var(--text-main)'; e.currentTarget.style.background = 'var(--card-hover)'; }}
+                        onMouseLeave={(e) => { e.currentTarget.style.color = 'var(--text-muted)'; e.currentTarget.style.background = 'transparent'; }}
                     >
                         {isCollapsed ? <ChevronRight size={18} /> : <ChevronLeft size={18} />}
                     </button>
@@ -368,10 +382,11 @@ export function Sidebar({ activeTab, onNavigate, labels = [], onLabelsChange, se
                 <nav className={spacingClass}>
                     {!isCollapsed && (
                         <div className="flex items-center justify-between px-4 mb-2">
-                            <p className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">Main</p>
+                            <p className="text-[10px] font-bold uppercase tracking-widest" style={{ color: 'var(--text-muted)' }}>Main</p>
                             <button
                                 onClick={() => setIsAddingFolder(true)}
-                                className="p-1 text-gray-500 hover:text-blue-400 transition-colors"
+                                className="p-1 transition-colors hover:text-blue-400"
+                                style={{ color: 'var(--text-muted)' }}
                                 title="New Folder"
                             >
                                 <Plus size={14} />
@@ -442,7 +457,10 @@ export function Sidebar({ activeTab, onNavigate, labels = [], onLabelsChange, se
                     {sidebarItems.length > 10 && !isCollapsed && (
                         <button
                             onClick={() => setShowAllFolders(!showAllFolders)}
-                            className="w-full flex items-center gap-3 px-4 py-2 text-gray-500 hover:text-white hover:bg-white/5 rounded-xl transition-all text-sm font-medium group mt-1"
+                            className="w-full flex items-center gap-3 px-4 py-2 rounded-xl transition-all text-sm font-medium group mt-1"
+                            style={{ color: 'var(--text-muted)' }}
+                            onMouseEnter={(e) => { e.currentTarget.style.color = 'var(--text-main)'; e.currentTarget.style.background = 'var(--card-hover)'; }}
+                            onMouseLeave={(e) => { e.currentTarget.style.color = 'var(--text-muted)'; e.currentTarget.style.background = 'transparent'; }}
                         >
                             {showAllFolders ? (
                                 <>
@@ -458,7 +476,7 @@ export function Sidebar({ activeTab, onNavigate, labels = [], onLabelsChange, se
                         </button>
                     )}
 
-                    <div className="space-y-1 pt-2 border-t border-white/5 mt-2">
+                    <div className="space-y-1 pt-2 mt-2" style={{ borderTop: '1px solid var(--border)' }}>
                         <AnimatePresence>
                             {isAddingFolder && (
                                 <motion.form
@@ -475,10 +493,15 @@ export function Sidebar({ activeTab, onNavigate, labels = [], onLabelsChange, se
                                             onChange={(e) => setNewFolderName(e.target.value)}
                                             onBlur={handleAddFolder}
                                             placeholder="Folder name..."
-                                            className="w-full bg-white/5 border border-blue-500/30 rounded-lg px-3 py-1.5 text-sm text-white focus:outline-none focus:border-blue-500/50"
+                                            className="w-full rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:border-blue-500/50"
+                                            style={{
+                                                background: 'var(--input-bg)',
+                                                border: '1px solid var(--border)',
+                                                color: 'var(--text-main)'
+                                            }}
                                         />
                                         <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-1">
-                                            <X size={12} className="text-gray-500 cursor-pointer hover:text-gray-300" onClick={() => setIsAddingFolder(false)} />
+                                            <X size={12} className="cursor-pointer hover:text-gray-300" style={{ color: 'var(--text-muted)' }} onClick={() => setIsAddingFolder(false)} />
                                         </div>
                                     </div>
                                 </motion.form>
@@ -491,10 +514,11 @@ export function Sidebar({ activeTab, onNavigate, labels = [], onLabelsChange, se
                 <div className={spacingClass}>
                     {!isCollapsed && (
                         <div className="px-4 flex items-center justify-between mb-2">
-                            <p className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">Labels</p>
+                            <p className="text-[10px] font-bold uppercase tracking-widest" style={{ color: 'var(--text-muted)' }}>Labels</p>
                             <button
                                 onClick={() => setIsAddingLabel(true)}
-                                className="p-1 text-gray-500 hover:text-blue-400 transition-colors"
+                                className="p-1 hover:text-blue-400 transition-colors"
+                                style={{ color: 'var(--text-muted)' }}
                             >
                                 <Plus size={14} />
                             </button>
@@ -518,10 +542,15 @@ export function Sidebar({ activeTab, onNavigate, labels = [], onLabelsChange, se
                                             onChange={(e) => setNewLabelName(e.target.value)}
                                             onBlur={handleAddLabel}
                                             placeholder="Label name..."
-                                            className="w-full bg-white/5 border border-blue-500/30 rounded-lg px-3 py-1.5 text-sm text-white focus:outline-none focus:border-blue-500/50"
+                                            className="w-full rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:border-blue-500/50"
+                                            style={{
+                                                background: 'var(--input-bg)',
+                                                border: '1px solid var(--border)',
+                                                color: 'var(--text-main)'
+                                            }}
                                         />
                                         <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-1">
-                                            <X size={12} className="text-gray-500 cursor-pointer hover:text-gray-300" onClick={() => setIsAddingLabel(false)} />
+                                            <X size={12} className="cursor-pointer hover:text-gray-300" style={{ color: 'var(--text-muted)' }} onClick={() => setIsAddingLabel(false)} />
                                         </div>
                                     </div>
                                 </motion.form>
@@ -549,17 +578,36 @@ export function Sidebar({ activeTab, onNavigate, labels = [], onLabelsChange, se
 
 
                         {!isAddingLabel && labels.length === 0 && (
-                            <p className="px-4 py-2 text-xs text-gray-600 italic">No labels yet</p>
+                            <p className="px-4 py-2 text-xs italic" style={{ color: 'var(--text-muted)' }}>No labels yet</p>
                         )}
                     </div>
                 </div>
             </div >
 
-            <div className={`p-4 mt-auto border-t border-white/5 bg-black/20 ${isCollapsed ? 'px-0 flex justify-center' : ''}`}>
+            <div className={`p-4 mt-auto ${isCollapsed ? 'px-0 flex-col items-center gap-2' : ''}`} style={{ borderTop: '1px solid var(--border)', background: 'var(--card-hover)' }}>
+                {/* Theme Toggle */}
                 <button
-                    className={`nav-item w-full flex items-center gap-3 px-4 py-3 text-gray-400 hover:text-white hover:bg-white/5 rounded-xl transition-all ${isCollapsed ? 'px-0 justify-center' : ''}`}
+                    className={`nav-item w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all ${isCollapsed ? 'px-0 justify-center' : ''}`}
+                    onClick={() => {
+                        toggleTheme();
+                        // Optional: Add a small animation or transition effect here if desired
+                    }}
+                    title={isCollapsed ? (theme === 'dark' ? 'Switch to Light Mode' : 'Switch to Dark Mode') : ''}
+                    style={{ color: 'var(--text-muted)' }}
+                    onMouseEnter={(e) => { e.currentTarget.style.color = 'var(--text-main)'; e.currentTarget.style.background = 'var(--bg-dark)'; }}
+                    onMouseLeave={(e) => { e.currentTarget.style.color = 'var(--text-muted)'; e.currentTarget.style.background = 'transparent'; }}
+                >
+                    {theme === 'dark' ? <Sun size={18} /> : <Moon size={18} />}
+                    {!isCollapsed && <span className="text-sm font-medium">{theme === 'dark' ? 'Light Mode' : 'Dark Mode'}</span>}
+                </button>
+
+                <button
+                    className={`nav-item w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all ${isCollapsed ? 'px-0 justify-center' : ''}`}
                     onClick={() => api.logout()}
                     title={isCollapsed ? 'Log Out' : ''}
+                    style={{ color: 'var(--text-muted)' }}
+                    onMouseEnter={(e) => { e.currentTarget.style.color = 'var(--text-main)'; e.currentTarget.style.background = 'var(--bg-dark)'; }}
+                    onMouseLeave={(e) => { e.currentTarget.style.color = 'var(--text-muted)'; e.currentTarget.style.background = 'transparent'; }}
                 >
                     <LogOut size={18} />
                     {!isCollapsed && <span className="text-sm font-medium">Log Out</span>}

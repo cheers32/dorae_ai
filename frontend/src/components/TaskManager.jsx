@@ -1159,7 +1159,7 @@ export const TaskManager = () => {
             onDragEnd={handleDragEnd}
             onDragOver={handleDragOver}
         >
-            <div className="app-shell bg-[#020617] min-h-screen text-slate-50">
+            <div className="app-shell bg-[var(--bg-dark)] min-h-screen text-[var(--text-main)]">
                 {/* Mobile Sidebar Overlay */}
                 <div
                     className={`sidebar-overlay ${isMobileSidebarOpen ? 'visible' : ''}`}
@@ -1189,7 +1189,7 @@ export const TaskManager = () => {
                     {/* Gmail-Style Mobile Search Pill */}
                     <div className="search-pill-container mobile-only">
                         <div className="search-pill">
-                            <button onClick={() => setIsMobileSidebarOpen(true)} className="text-gray-400">
+                            <button onClick={() => setIsMobileSidebarOpen(true)} className="text-[var(--text-muted)]">
                                 <Menu size={20} />
                             </button>
                             <input
@@ -1248,7 +1248,7 @@ export const TaskManager = () => {
                                             placeholder="What needs to be done?"
                                             value={newTaskTitle}
                                             onChange={(e) => setNewTaskTitle(e.target.value)}
-                                            className="w-full bg-black/20 text-white rounded-xl p-3 mb-4 border border-white/10 focus:border-blue-500/50 outline-none resize-none"
+                                            className="w-full bg-black/20 text-white rounded-xl p-3 mb-4 border border-[var(--border)] focus:border-blue-500/50 outline-none resize-none"
                                             onKeyDown={(e) => {
                                                 if (e.key === 'Enter' && !e.shiftKey) {
                                                     e.preventDefault();
@@ -1261,7 +1261,7 @@ export const TaskManager = () => {
                                             <button
                                                 type="button"
                                                 onClick={() => setIsMobileCreateOpen(false)}
-                                                className="px-4 py-2 text-gray-400 font-medium"
+                                                className="px-4 py-2 text-[var(--text-muted)] font-medium"
                                             >
                                                 Cancel
                                             </button>
@@ -1280,7 +1280,7 @@ export const TaskManager = () => {
                     </AnimatePresence>
 
                     <div className="content-header">
-                        <header className="px-6 py-4 flex justify-between items-center bg-[#0f1014]/80 backdrop-blur-md sticky top-0 z-40 border-b border-white/5">
+                        <header className="px-6 py-4 flex justify-between items-center bg-[var(--bg-dark)]/80 backdrop-blur-md sticky top-0 z-40 border-b border-[var(--border)]">
                             <div className="flex items-center gap-4 shrink-0 mobile-hidden">
                                 <AnimatePresence mode="popLayout">
                                     <div className="flex items-center gap-1.5">
@@ -1290,7 +1290,7 @@ export const TaskManager = () => {
                                                 animate={{ opacity: 1, x: 0 }}
                                                 exit={{ opacity: 0, x: -10 }}
                                                 onClick={handleBack}
-                                                className="p-1.5 bg-white/5 border border-white/10 rounded-lg text-gray-400 hover:text-white hover:bg-white/10 transition-all flex items-center justify-center group"
+                                                className="p-1.5 bg-[var(--input-bg)] border border-[var(--border)] rounded-lg text-[var(--text-muted)] hover:text-white hover:bg-white/10 transition-all flex items-center justify-center group"
                                                 title="Go Back (Cmd + [)"
                                             >
                                                 <ArrowLeft size={16} className="group-hover:-translate-x-0.5 transition-transform" />
@@ -1303,7 +1303,7 @@ export const TaskManager = () => {
                                                 animate={{ opacity: 1, x: 0 }}
                                                 exit={{ opacity: 0, x: 10 }}
                                                 onClick={handleForward}
-                                                className="p-1.5 bg-white/5 border border-white/10 rounded-lg text-gray-400 hover:text-white hover:bg-white/10 transition-all flex items-center justify-center group"
+                                                className="p-1.5 bg-[var(--input-bg)] border border-[var(--border)] rounded-lg text-[var(--text-muted)] hover:text-white hover:bg-white/10 transition-all flex items-center justify-center group"
                                                 title="Go Forward (Cmd + ])"
                                             >
                                                 <ArrowRight size={16} className="group-hover:translate-x-0.5 transition-transform" />
@@ -1322,7 +1322,7 @@ export const TaskManager = () => {
                                         // Search Bar (Central)
                                         <div className="relative w-full">
                                             <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                                                <Search size={18} className="text-gray-400 group-focus-within:text-blue-400 transition-colors" />
+                                                <Search size={18} className="text-[var(--text-muted)] group-focus-within:text-blue-400 transition-colors" />
                                             </div>
                                             <input
                                                 ref={searchInputRef}
@@ -1339,13 +1339,13 @@ export const TaskManager = () => {
                                                         e.currentTarget.blur();
                                                     }
                                                 }}
-                                                className="w-full bg-white/5 border border-white/5 rounded-xl py-2 pl-12 pr-10 text-sm text-gray-200 placeholder:text-gray-500 focus:outline-none focus:bg-white/10 focus:border-blue-500/50 focus:ring-4 focus:ring-blue-500/10 transition-all shadow-inner"
+                                                className="w-full bg-[var(--input-bg)] border border-[var(--border)] rounded-xl py-2 pl-12 pr-10 text-sm text-[var(--text-main)] placeholder:text-[var(--text-muted)] focus:outline-none focus:bg-white/10 focus:border-blue-500/50 focus:ring-4 focus:ring-blue-500/10 transition-all shadow-inner"
                                             />
                                             {searchQuery && (
                                                 <button
                                                     type="button"
                                                     onClick={handleClearSearch}
-                                                    className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-500 hover:text-gray-300 transition-colors"
+                                                    className="absolute inset-y-0 right-0 pr-3 flex items-center text-[var(--text-muted)] hover:text-gray-300 transition-colors"
                                                 >
                                                     <X size={16} />
                                                 </button>
@@ -1360,10 +1360,10 @@ export const TaskManager = () => {
                                             className="relative w-full"
                                         >
                                             <div
-                                                className="flex items-center w-full bg-white/5 border border-white/5 rounded-xl px-4 py-2 focus-within:bg-white/10 focus-within:border-blue-500/50 focus-within:ring-4 focus-within:ring-blue-500/10 transition-all shadow-inner cursor-text"
+                                                className="flex items-center w-full bg-[var(--input-bg)] border border-[var(--border)] rounded-xl px-4 py-2 focus-within:bg-white/10 focus-within:border-blue-500/50 focus-within:ring-4 focus-within:ring-blue-500/10 transition-all shadow-inner cursor-text"
                                                 onClick={() => newTaskTextareaRef.current?.focus()}
                                             >
-                                                <Plus size={18} className="text-gray-400 group-focus-within:text-blue-400 transition-colors shrink-0 mr-3" />
+                                                <Plus size={18} className="text-[var(--text-muted)] group-focus-within:text-blue-400 transition-colors shrink-0 mr-3" />
                                                 <textarea
                                                     ref={newTaskTextareaRef}
                                                     rows={1}
@@ -1379,7 +1379,7 @@ export const TaskManager = () => {
                                                             e.currentTarget.blur();
                                                         }
                                                     }}
-                                                    className="flex-1 bg-transparent border-none outline-none text-sm text-gray-200 placeholder:text-gray-500 resize-none overflow-hidden py-0 leading-normal"
+                                                    className="flex-1 bg-transparent border-none outline-none text-sm text-[var(--text-main)] placeholder:text-[var(--text-muted)] resize-none overflow-hidden py-0 leading-normal"
                                                 />
                                                 {newTaskTitle && (
                                                     <button
@@ -1388,7 +1388,7 @@ export const TaskManager = () => {
                                                             e.stopPropagation(); // Prevent wrapper click
                                                             setNewTaskTitle('');
                                                         }}
-                                                        className="shrink-0 ml-2 flex items-center text-gray-500 hover:text-gray-300 transition-colors"
+                                                        className="shrink-0 ml-2 flex items-center text-[var(--text-muted)] hover:text-gray-300 transition-colors"
                                                     >
                                                         <X size={16} />
                                                     </button>
@@ -1403,8 +1403,8 @@ export const TaskManager = () => {
                                 {/* Search (Secondary) - Only show if not primary */}
                                 {!isSearchPrimary && (
                                     <div className="relative group/search">
-                                        <div className={`flex items-center transition-all duration-300 ${searchQuery ? 'w-64 bg-white/10' : 'w-8 hover:w-64 hover:bg-white/5'} rounded-lg overflow-hidden border border-transparent focus-within:w-64 focus-within:border-blue-500/30 focus-within:bg-white/10`}>
-                                            <div className="absolute left-2 flex items-center pointer-events-none text-gray-400">
+                                        <div className={`flex items-center transition-all duration-300 ${searchQuery ? 'w-64 bg-white/10' : 'w-8 hover:w-64 hover:bg-[var(--input-bg)]'} rounded-lg overflow-hidden border border-transparent focus-within:w-64 focus-within:border-blue-500/30 focus-within:bg-white/10`}>
+                                            <div className="absolute left-2 flex items-center pointer-events-none text-[var(--text-muted)]">
                                                 <Search size={16} />
                                             </div>
                                             <input
@@ -1422,12 +1422,12 @@ export const TaskManager = () => {
                                                         e.currentTarget.blur();
                                                     }
                                                 }}
-                                                className="w-full bg-transparent py-1.5 pl-8 pr-8 text-xs text-gray-200 placeholder:text-gray-500 focus:outline-none"
+                                                className="w-full bg-transparent py-1.5 pl-8 pr-8 text-xs text-[var(--text-main)] placeholder:text-[var(--text-muted)] focus:outline-none"
                                             />
                                             {searchQuery && (
                                                 <button
                                                     onClick={handleClearSearch}
-                                                    className="absolute right-2 flex items-center text-gray-500 hover:text-gray-300"
+                                                    className="absolute right-2 flex items-center text-[var(--text-muted)] hover:text-gray-300"
                                                 >
                                                     <X size={14} />
                                                 </button>
@@ -1452,7 +1452,7 @@ export const TaskManager = () => {
                                 <div className="relative" ref={menuRef}>
                                     <button
                                         onClick={() => setIsMenuOpen(!isMenuOpen)}
-                                        className={`p-2 rounded-lg transition-all flex items-center justify-center ${isMenuOpen ? 'bg-blue-500/20 text-blue-400 border border-blue-500/30' : 'bg-gray-900 border border-gray-800 text-gray-400 hover:text-gray-200 hover:border-gray-700'}`}
+                                        className={`p-2 rounded-lg transition-all flex items-center justify-center ${isMenuOpen ? 'bg-blue-500/20 text-blue-400 border border-blue-500/30' : 'bg-gray-900 border border-gray-800 text-[var(--text-muted)] hover:text-[var(--text-main)] hover:border-gray-700'}`}
                                         title="View Options"
                                     >
                                         <SlidersHorizontal size={18} />
@@ -1468,25 +1468,25 @@ export const TaskManager = () => {
                                                 className="absolute right-0 mt-2 w-56 bg-gray-950 border border-gray-800 rounded-xl shadow-2xl py-2 z-50 backdrop-blur-xl"
                                             >
                                                 <div className="px-3 py-1.5 mb-1">
-                                                    <span className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">Sort By</span>
+                                                    <span className="text-[10px] font-bold text-[var(--text-muted)] uppercase tracking-widest">Sort By</span>
                                                 </div>
                                                 <div className="px-2 pb-2">
                                                     <div className="flex bg-gray-900 rounded-lg p-1 border border-gray-800">
                                                         <button
                                                             onClick={() => setSortBy('manual')}
-                                                            className={`flex-1 py-1 text-[10px] font-medium rounded-md transition-all ${sortBy === 'manual' ? 'bg-blue-500/20 text-blue-400 shadow-sm' : 'text-gray-400 hover:text-gray-300'}`}
+                                                            className={`flex-1 py-1 text-[10px] font-medium rounded-md transition-all ${sortBy === 'manual' ? 'bg-blue-500/20 text-blue-400 shadow-sm' : 'text-[var(--text-muted)] hover:text-gray-300'}`}
                                                         >
                                                             Manual
                                                         </button>
                                                         <button
                                                             onClick={() => setSortBy('date')}
-                                                            className={`flex-1 py-1 text-[10px] font-medium rounded-md transition-all ${sortBy === 'date' ? 'bg-blue-500/20 text-blue-400 shadow-sm' : 'text-gray-400 hover:text-gray-300'}`}
+                                                            className={`flex-1 py-1 text-[10px] font-medium rounded-md transition-all ${sortBy === 'date' ? 'bg-blue-500/20 text-blue-400 shadow-sm' : 'text-[var(--text-muted)] hover:text-gray-300'}`}
                                                         >
                                                             Date
                                                         </button>
                                                         <button
                                                             onClick={() => setSortBy('title')}
-                                                            className={`flex-1 py-1 text-[10px] font-medium rounded-md transition-all ${sortBy === 'title' ? 'bg-blue-500/20 text-blue-400 shadow-sm' : 'text-gray-400 hover:text-gray-300'}`}
+                                                            className={`flex-1 py-1 text-[10px] font-medium rounded-md transition-all ${sortBy === 'title' ? 'bg-blue-500/20 text-blue-400 shadow-sm' : 'text-[var(--text-muted)] hover:text-gray-300'}`}
                                                         >
                                                             Title
                                                         </button>
@@ -1494,12 +1494,12 @@ export const TaskManager = () => {
                                                 </div>
                                                 <div className="h-px bg-gray-800 my-2 mx-2"></div>
                                                 <div className="px-3 py-1.5 mb-1">
-                                                    <span className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">Layout & Visibility</span>
+                                                    <span className="text-[10px] font-bold text-[var(--text-muted)] uppercase tracking-widest">Layout & Visibility</span>
                                                 </div>
 
                                                 <button
                                                     onClick={() => { setShowTags(!showTags); setIsMenuOpen(false); }}
-                                                    className={`w-full px-4 py-2 text-left flex items-center gap-3 transition-colors hover:bg-white/5 ${showTags ? 'text-blue-400' : 'text-gray-400'}`}
+                                                    className={`w-full px-4 py-2 text-left flex items-center gap-3 transition-colors hover:bg-[var(--input-bg)] ${showTags ? 'text-blue-400' : 'text-[var(--text-muted)]'}`}
                                                 >
                                                     <TagIcon size={16} />
                                                     <span className="text-xs font-medium">{showTags ? 'Hide Tags' : 'Show Tags'}</span>
@@ -1507,7 +1507,7 @@ export const TaskManager = () => {
 
                                                 <button
                                                     onClick={() => { setShowFolders(!showFolders); setIsMenuOpen(false); }}
-                                                    className={`w-full px-4 py-2 text-left flex items-center gap-3 transition-colors hover:bg-white/5 ${showFolders ? 'text-blue-400' : 'text-gray-400'}`}
+                                                    className={`w-full px-4 py-2 text-left flex items-center gap-3 transition-colors hover:bg-[var(--input-bg)] ${showFolders ? 'text-blue-400' : 'text-[var(--text-muted)]'}`}
                                                 >
                                                     <Folder size={16} />
                                                     <span className="text-xs font-medium">{showFolders ? 'Hide Folders' : 'Show Folders'}</span>
@@ -1517,7 +1517,7 @@ export const TaskManager = () => {
                                                     <>
                                                         <button
                                                             onClick={() => { setGlobalExpanded(!globalExpanded); setIsMenuOpen(false); }}
-                                                            className={`w-full px-4 py-2 text-left flex items-center gap-3 transition-colors hover:bg-white/5 ${globalExpanded ? 'text-blue-400' : 'text-gray-400'}`}
+                                                            className={`w-full px-4 py-2 text-left flex items-center gap-3 transition-colors hover:bg-[var(--input-bg)] ${globalExpanded ? 'text-blue-400' : 'text-[var(--text-muted)]'}`}
                                                         >
                                                             <ChevronsUpDown size={16} />
                                                             <span className="text-xs font-medium">{globalExpanded ? 'Collapse All' : 'Expand All'}</span>
@@ -1525,7 +1525,7 @@ export const TaskManager = () => {
 
                                                         <button
                                                             onClick={() => { setShowFullTitles(!showFullTitles); setIsMenuOpen(false); }}
-                                                            className={`w-full px-4 py-2 text-left flex items-center gap-3 transition-colors hover:bg-white/5 ${showFullTitles ? 'text-blue-400' : 'text-gray-400'}`}
+                                                            className={`w-full px-4 py-2 text-left flex items-center gap-3 transition-colors hover:bg-[var(--input-bg)] ${showFullTitles ? 'text-blue-400' : 'text-[var(--text-muted)]'}`}
                                                         >
                                                             <Type size={16} />
                                                             <span className="text-xs font-medium">{showFullTitles ? 'Truncate Titles' : 'Full Titles'}</span>
@@ -1533,7 +1533,7 @@ export const TaskManager = () => {
 
                                                         <button
                                                             onClick={() => { setShowPreview(!showPreview); setIsMenuOpen(false); }}
-                                                            className={`w-full px-4 py-2 text-left flex items-center gap-3 transition-colors hover:bg-white/5 ${showPreview ? 'text-blue-400' : 'text-gray-400'}`}
+                                                            className={`w-full px-4 py-2 text-left flex items-center gap-3 transition-colors hover:bg-[var(--input-bg)] ${showPreview ? 'text-blue-400' : 'text-[var(--text-muted)]'}`}
                                                         >
                                                             <MessageSquare size={16} />
                                                             <span className="text-xs font-medium">{showPreview ? 'Hide Preview' : 'Show Preview'}</span>
@@ -1541,7 +1541,7 @@ export const TaskManager = () => {
 
                                                         <button
                                                             onClick={() => { setShowPulse(!showPulse); setIsMenuOpen(false); }}
-                                                            className={`w-full px-4 py-2 text-left flex items-center gap-3 transition-colors hover:bg-white/5 ${showPulse ? 'text-blue-400' : 'text-gray-400'}`}
+                                                            className={`w-full px-4 py-2 text-left flex items-center gap-3 transition-colors hover:bg-[var(--input-bg)] ${showPulse ? 'text-blue-400' : 'text-[var(--text-muted)]'}`}
                                                         >
                                                             <Zap size={16} />
                                                             <span className="text-xs font-medium">{showPulse ? 'Disable Pulse' : 'Enable Pulse'}</span>
@@ -1549,7 +1549,7 @@ export const TaskManager = () => {
 
                                                         <button
                                                             onClick={() => { setShowDebugInfo(!showDebugInfo); setIsMenuOpen(false); }}
-                                                            className={`w-full px-4 py-2 text-left flex items-center gap-3 transition-colors hover:bg-white/5 ${showDebugInfo ? 'text-blue-400' : 'text-gray-400'}`}
+                                                            className={`w-full px-4 py-2 text-left flex items-center gap-3 transition-colors hover:bg-[var(--input-bg)] ${showDebugInfo ? 'text-blue-400' : 'text-[var(--text-muted)]'}`}
                                                         >
                                                             <Bug size={16} />
                                                             <span className="text-xs font-medium">{showDebugInfo ? 'Hide Debug Info' : 'Show Debug Info'}</span>
@@ -1560,7 +1560,7 @@ export const TaskManager = () => {
                                                 <div className="h-px bg-gray-800 my-2 mx-2"></div>
 
                                                 <div className="px-3 py-1.5 mb-1">
-                                                    <span className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">Actions</span>
+                                                    <span className="text-[10px] font-bold text-[var(--text-muted)] uppercase tracking-widest">Actions</span>
                                                 </div>
 
                                                 {(selectedFolder || activeTab === 'active' || activeTab === 'all') && (
@@ -1580,7 +1580,7 @@ export const TaskManager = () => {
                                                                     console.error("Failed to run importance analysis", err);
                                                                 }
                                                             }}
-                                                            className="w-full px-4 py-2 text-left flex items-center gap-3 transition-colors hover:bg-white/5 text-purple-400"
+                                                            className="w-full px-4 py-2 text-left flex items-center gap-3 transition-colors hover:bg-[var(--input-bg)] text-purple-400"
                                                         >
                                                             <Sparkles size={16} />
                                                             <span className="text-xs font-medium">Run Importance Analysis</span>
@@ -1601,7 +1601,7 @@ export const TaskManager = () => {
                                                                     console.error("Failed to run priority check", err);
                                                                 }
                                                             }}
-                                                            className="w-full px-4 py-2 text-left flex items-center gap-3 transition-colors hover:bg-white/5 text-red-400"
+                                                            className="w-full px-4 py-2 text-left flex items-center gap-3 transition-colors hover:bg-[var(--input-bg)] text-red-400"
                                                         >
                                                             <Zap size={16} />
                                                             <span className="text-xs font-medium">Run Priority Check</span>
@@ -1622,7 +1622,7 @@ export const TaskManager = () => {
                                                                     console.error("Failed to run duplicate check", err);
                                                                 }
                                                             }}
-                                                            className="w-full px-4 py-2 text-left flex items-center gap-3 transition-colors hover:bg-white/5 text-gray-400"
+                                                            className="w-full px-4 py-2 text-left flex items-center gap-3 transition-colors hover:bg-[var(--input-bg)] text-[var(--text-muted)]"
                                                         >
                                                             <Copy size={16} />
                                                             <span className="text-xs font-medium">Run Duplicate Check</span>
@@ -1633,25 +1633,25 @@ export const TaskManager = () => {
                                                 <div className="h-px bg-gray-800 my-2 mx-2"></div>
 
                                                 <div className="px-3 py-1.5 mb-1">
-                                                    <span className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">Preferences</span>
+                                                    <span className="text-[10px] font-bold text-[var(--text-muted)] uppercase tracking-widest">Preferences</span>
                                                 </div>
 
                                                 {/* Sidebar Density */}
                                                 <div className="px-4 py-2 flex items-center justify-between">
-                                                    <div className="flex items-center gap-3 text-gray-400">
+                                                    <div className="flex items-center gap-3 text-[var(--text-muted)]">
                                                         <SlidersHorizontal size={16} />
                                                         <span className="text-xs font-medium">Sidebar Density</span>
                                                     </div>
                                                     <div className="flex items-center bg-gray-900 border border-gray-800 rounded-lg overflow-hidden h-7">
                                                         <button
                                                             onClick={() => setSidebarDensity(prev => Math.max(1, prev - 1))}
-                                                            className="px-2 hover:bg-white/10 text-gray-400 hover:text-white border-r border-gray-800 h-full flex items-center"
+                                                            className="px-2 hover:bg-white/10 text-[var(--text-muted)] hover:text-white border-r border-gray-800 h-full flex items-center"
                                                         >
                                                             <ZoomOut size={12} />
                                                         </button>
                                                         <button
                                                             onClick={() => setSidebarDensity(prev => Math.min(10, prev + 1))}
-                                                            className="px-2 hover:bg-white/10 text-gray-400 hover:text-white h-full flex items-center"
+                                                            className="px-2 hover:bg-white/10 text-[var(--text-muted)] hover:text-white h-full flex items-center"
                                                         >
                                                             <ZoomIn size={12} />
                                                         </button>
@@ -1660,21 +1660,21 @@ export const TaskManager = () => {
 
                                                 {/* Timeline Limit */}
                                                 <div className="px-4 py-2 flex items-center justify-between">
-                                                    <div className="flex items-center gap-3 text-gray-400">
+                                                    <div className="flex items-center gap-3 text-[var(--text-muted)]">
                                                         <Clock size={16} />
                                                         <span className="text-xs font-medium">Timeline Updates</span>
                                                     </div>
                                                     <div className="flex items-center bg-gray-900 border border-gray-800 rounded-lg overflow-hidden h-7">
                                                         <button
                                                             onClick={() => setTimelineLimit(prev => Math.max(1, prev - 1))}
-                                                            className="px-2 hover:bg-white/10 text-gray-400 hover:text-white border-r border-gray-800 h-full flex items-center"
+                                                            className="px-2 hover:bg-white/10 text-[var(--text-muted)] hover:text-white border-r border-gray-800 h-full flex items-center"
                                                         >
                                                             <Minus size={12} />
                                                         </button>
                                                         <span className="px-2 text-xs text-gray-300 min-w-[20px] text-center">{timelineLimit}</span>
                                                         <button
                                                             onClick={() => setTimelineLimit(prev => Math.min(10, prev + 1))}
-                                                            className="px-2 hover:bg-white/10 text-gray-400 hover:text-white border-l border-gray-800 h-full flex items-center"
+                                                            className="px-2 hover:bg-white/10 text-[var(--text-muted)] hover:text-white border-l border-gray-800 h-full flex items-center"
                                                         >
                                                             <Plus size={12} />
                                                         </button>
@@ -1683,20 +1683,20 @@ export const TaskManager = () => {
 
                                                 {activeTab !== 'assistant' && tasks.length > 0 && (
                                                     <div className="px-4 py-2 flex items-center justify-between">
-                                                        <div className="flex items-center gap-3 text-gray-400">
+                                                        <div className="flex items-center gap-3 text-[var(--text-muted)]">
                                                             <Type size={16} />
                                                             <span className="text-xs font-medium">Text Size</span>
                                                         </div>
                                                         <div className="flex items-center bg-gray-900 border border-gray-800 rounded-lg overflow-hidden h-7">
                                                             <button
                                                                 onClick={() => setFontSize(prev => Math.max(9, prev - 1))}
-                                                                className="px-2 hover:bg-white/10 text-gray-400 hover:text-white border-r border-gray-800 h-full flex items-center"
+                                                                className="px-2 hover:bg-white/10 text-[var(--text-muted)] hover:text-white border-r border-gray-800 h-full flex items-center"
                                                             >
                                                                 <ZoomOut size={12} />
                                                             </button>
                                                             <button
                                                                 onClick={() => setFontSize(prev => Math.min(24, prev + 1))}
-                                                                className="px-2 hover:bg-white/10 text-gray-400 hover:text-white h-full flex items-center"
+                                                                className="px-2 hover:bg-white/10 text-[var(--text-muted)] hover:text-white h-full flex items-center"
                                                             >
                                                                 <ZoomIn size={12} />
                                                             </button>
@@ -1707,9 +1707,9 @@ export const TaskManager = () => {
                                                 {/* Show Count Toggle */}
                                                 <button
                                                     onClick={() => setShowCounts(!showCounts)}
-                                                    className="w-full px-4 py-2 text-left flex items-center justify-between transition-colors hover:bg-white/5"
+                                                    className="w-full px-4 py-2 text-left flex items-center justify-between transition-colors hover:bg-[var(--input-bg)]"
                                                 >
-                                                    <span className="text-xs font-medium text-gray-400">Show Counts</span>
+                                                    <span className="text-xs font-medium text-[var(--text-muted)]">Show Counts</span>
                                                     <div className={`w-8 h-4 rounded-full relative transition-colors ${showCounts ? 'bg-blue-500' : 'bg-gray-700'}`}>
                                                         <div className={`absolute top-0.5 w-3 h-3 bg-white rounded-full transition-all ${showCounts ? 'right-0.5' : 'left-0.5'}`} />
                                                     </div>
@@ -1733,7 +1733,7 @@ export const TaskManager = () => {
                                 </div>
                                 <button
                                     onClick={() => setIsGeminiOpen(!isGeminiOpen)}
-                                    className={`p-2 rounded-lg transition-all flex items-center justify-center ${isGeminiOpen ? 'bg-gradient-to-tr from-blue-500/20 to-purple-500/20 text-blue-400 border border-blue-500/30' : 'bg-gray-900 border border-gray-800 text-gray-400 hover:text-white hover:border-gray-700'}`}
+                                    className={`p-2 rounded-lg transition-all flex items-center justify-center ${isGeminiOpen ? 'bg-gradient-to-tr from-blue-500/20 to-purple-500/20 text-blue-400 border border-blue-500/30' : 'bg-gray-900 border border-gray-800 text-[var(--text-muted)] hover:text-white hover:border-gray-700'}`}
                                     title="Ask Gemini"
                                 >
                                     <GeminiIcon size={18} />
@@ -1769,9 +1769,9 @@ export const TaskManager = () => {
                                         initial={{ height: 0, opacity: 0 }}
                                         animate={{ height: 'auto', opacity: 1 }}
                                         exit={{ height: 0, opacity: 0 }}
-                                        className="bg-white/[0.03] border-b border-white/5 relative flex flex-col shrink-0"
+                                        className="bg-white/[0.03] border-b border-[var(--border)] relative flex flex-col shrink-0"
                                     >
-                                        <div className="px-6 py-3 bg-white/[0.02] backdrop-blur border-white/5 flex items-center justify-between sticky top-0 z-10">
+                                        <div className="px-6 py-3 bg-white/[0.02] backdrop-blur border-[var(--border)] flex items-center justify-between sticky top-0 z-10">
                                             <h2 className="text-sm font-bold uppercase tracking-widest text-blue-400">Current Focus</h2>
                                         </div>
                                         <div className="px-6 py-4">
@@ -1835,7 +1835,7 @@ export const TaskManager = () => {
                                         </div>
                                     </motion.div>
 
-                                    <div className="h-px bg-white/5 my-6 mx-6"></div>
+                                    <div className="h-px bg-[var(--input-bg)] my-6 mx-6"></div>
                                 </>
                             )}
                         </AnimatePresence>
@@ -1885,7 +1885,7 @@ export const TaskManager = () => {
                                                 null
                                             ) : tasks.length === 0 ? (
                                                 <div className="text-center py-20 bg-gray-900/50 rounded-2xl border border-gray-800/50 border-dashed">
-                                                    <p className="text-gray-500 text-lg">No {activeTab} tasks found.</p>
+                                                    <p className="text-[var(--text-muted)] text-lg">No {activeTab} tasks found.</p>
                                                 </div>
                                             ) : (
                                                 <>
@@ -1936,8 +1936,8 @@ export const TaskManager = () => {
 
                                                     {/* Pagination Controls */}
                                                     {totalTasks > 0 && (
-                                                        <div className="flex items-center justify-between px-4 py-4 border-t border-white/5 mt-auto">
-                                                            <div className="flex items-center gap-2 text-xs text-gray-500">
+                                                        <div className="flex items-center justify-between px-4 py-4 border-t border-[var(--border)] mt-auto">
+                                                            <div className="flex items-center gap-2 text-xs text-[var(--text-muted)]">
                                                                 <span>Rows per page:</span>
                                                                 <select
                                                                     value={pageSize}
@@ -1962,17 +1962,17 @@ export const TaskManager = () => {
                                                                 <button
                                                                     onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
                                                                     disabled={currentPage === 1}
-                                                                    className="p-1 rounded hover:bg-white/10 text-gray-400 disabled:opacity-30 disabled:hover:bg-transparent transition-colors"
+                                                                    className="p-1 rounded hover:bg-white/10 text-[var(--text-muted)] disabled:opacity-30 disabled:hover:bg-transparent transition-colors"
                                                                 >
                                                                     <ChevronLeft size={16} />
                                                                 </button>
-                                                                <div className="text-xs font-medium text-gray-400 px-2">
+                                                                <div className="text-xs font-medium text-[var(--text-muted)] px-2">
                                                                     Page {currentPage} of {totalPages}
                                                                 </div>
                                                                 <button
                                                                     onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
                                                                     disabled={currentPage === totalPages}
-                                                                    className="p-1 rounded hover:bg-white/10 text-gray-400 disabled:opacity-30 disabled:hover:bg-transparent transition-colors"
+                                                                    className="p-1 rounded hover:bg-white/10 text-[var(--text-muted)] disabled:opacity-30 disabled:hover:bg-transparent transition-colors"
                                                                 >
                                                                     <ChevronRight size={16} />
                                                                 </button>

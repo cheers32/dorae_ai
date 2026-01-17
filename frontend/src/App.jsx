@@ -6,23 +6,27 @@ import ProtectedRoute from './components/ProtectedRoute';
 import TrafficTracker from './components/TrafficTracker';
 import './App.css';
 
+import { ThemeProvider } from './context/ThemeContext';
+
 function App() {
   return (
-    <BrowserRouter>
-      <TrafficTracker />
-      <Routes>
-        <Route path="/" element={<LandingPage />} />
-        <Route
-          path="/tasks"
-          element={
-            <ProtectedRoute>
-              <TaskManager />
-            </ProtectedRoute>
-          }
-        />
-        <Route path="/futbin" element={<FutbinAI />} />
-      </Routes>
-    </BrowserRouter>
+    <ThemeProvider>
+      <BrowserRouter>
+        <TrafficTracker />
+        <Routes>
+          <Route path="/" element={<LandingPage />} />
+          <Route
+            path="/tasks"
+            element={
+              <ProtectedRoute>
+                <TaskManager />
+              </ProtectedRoute>
+            }
+          />
+          <Route path="/futbin" element={<FutbinAI />} />
+        </Routes>
+      </BrowserRouter>
+    </ThemeProvider>
   );
 }
 
