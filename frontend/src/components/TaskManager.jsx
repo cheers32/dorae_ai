@@ -1120,17 +1120,7 @@ export const TaskManager = () => {
         }
     };
 
-    const getHeaderTitle = () => {
-        if (selectedLabel) return selectedLabel;
-        if (selectedFolder) return folders.find(f => f._id === selectedFolder)?.name || 'Unknown';
-        switch (activeTab) {
-            case 'active': return 'Active Tasks';
-            case 'closed': return 'Closed Tasks';
-            case 'trash': return 'Deleted Tasks';
-            case 'assistant': return 'Agents';
-            default: return 'Tasks';
-        }
-    }
+
 
     const activeTask = activeId ? tasks.find(t => t._id === activeId) : null;
 
@@ -1322,19 +1312,7 @@ export const TaskManager = () => {
                                     </div>
                                 </AnimatePresence>
 
-                                <div className="flex items-baseline gap-3">
-                                    <h1 className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-blue-200 text-left leading-tight">
-                                        {getHeaderTitle()}
-                                        <span className="text-base text-gray-500 font-normal ml-2">
-                                            ({activeTab === 'active' && !selectedLabel && !selectedFolder ? stats.active :
-                                                activeTab === 'closed' ? stats.closed :
-                                                    activeTab === 'trash' ? stats.trash :
-                                                        activeTab === 'folder' && selectedFolder ? (stats.folders[selectedFolder] || 0) :
-                                                            selectedLabel ? (stats.labels[selectedLabel] || 0) :
-                                                                tasks.length})
-                                        </span>
-                                    </h1>
-                                </div>
+
                             </div>
 
                             {/* Create Task Bar OR Search Bar (Central Priority) */}
