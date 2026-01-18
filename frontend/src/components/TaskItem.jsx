@@ -20,6 +20,7 @@ import {
 } from 'lucide-react';
 import { api } from '../api';
 import { UpdatesTimeline } from './UpdatesTimeline';
+import { TaskDescriptionEditor } from './TaskDescriptionEditor';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useSortable, SortableContext, horizontalListSortingStrategy, arrayMove } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
@@ -565,10 +566,10 @@ export const TaskItem = forwardRef(({ task, onUpdate, showTags, showFolders, fol
                             <Star
                                 size={18}
                                 className={`transition-all duration-200 ${task.star_color === 'red' ? 'text-red-500 drop-shadow-[0_0_2px_rgba(239,68,68,0.5)]' :
-                                        task.star_color === 'green' ? 'text-green-500 drop-shadow-[0_0_2px_rgba(34,197,94,0.5)]' :
-                                            task.star_color === 'blue' ? 'text-blue-500 drop-shadow-[0_0_2px_rgba(59,130,246,0.5)]' :
-                                                (task.star_color === 'yellow' || task.is_starred) ? 'text-yellow-400 drop-shadow-[0_0_2px_rgba(250,204,21,0.5)]' :
-                                                    'text-gray-400 hover:text-gray-300 opacity-40 hover:opacity-100'
+                                    task.star_color === 'green' ? 'text-green-500 drop-shadow-[0_0_2px_rgba(34,197,94,0.5)]' :
+                                        task.star_color === 'blue' ? 'text-blue-500 drop-shadow-[0_0_2px_rgba(59,130,246,0.5)]' :
+                                            (task.star_color === 'yellow' || task.is_starred) ? 'text-yellow-400 drop-shadow-[0_0_2px_rgba(250,204,21,0.5)]' :
+                                                'text-gray-400 hover:text-gray-300 opacity-40 hover:opacity-100'
                                     }`}
                                 fill={task.star_color || task.is_starred ? "currentColor" : "transparent"}
                                 strokeWidth={task.star_color || task.is_starred ? 0 : 2}
@@ -928,7 +929,17 @@ export const TaskItem = forwardRef(({ task, onUpdate, showTags, showFolders, fol
                         transition={{ duration: 0.2 }}
                     >
                         <div className="px-4 pb-4 pt-0 border-t border-[var(--border)] bg-black/20">
-                            <div className="py-4 space-y-1">
+                            <div className="py-4 space-y-4">
+                                {/* Task Description Editor */}
+                                <div className="px-4">
+                                    <TaskDescriptionEditor
+                                        initialContent={task.description}
+                                        onSave={async (content) => {
+                                            await api.updateTask(task._id, { description: content });
+                                            // Optional: onUpdate(); if we want to refresh parent, but might cause editor reset if not careful
+                                        }}
+                                    />
+                                </div>
                                 {/* Attachments Chips */}
                                 {localAttachments && localAttachments.length > 0 && (
                                     <div className="mb-4 pl-28 pr-4">

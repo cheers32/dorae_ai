@@ -469,7 +469,7 @@ def update_task(task_id):
         update_fields = {}
         update_fields = {}
         update_fields = {}
-        allowed_fields = ['title', 'priority', 'category', 'status', 'importance', 'labels', 'folderId', 'attachments', 'assigned_agent_ids', 'star_color']
+        allowed_fields = ['title', 'priority', 'category', 'status', 'importance', 'labels', 'folderId', 'attachments', 'assigned_agent_ids', 'star_color', 'description']
         
         for field in allowed_fields:
             if field in data:
