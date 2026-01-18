@@ -2036,16 +2036,16 @@ export const TaskManager = () => {
                                                             },
                                                             {
                                                                 name: 'Silver Glass',
-                                                                bg: 'rgba(210, 209, 208, 0.6)',
-                                                                row: 'rgba(228, 227, 226, 0.5)',
+                                                                bg: 'rgba(224, 227, 230, 0.5)',
+                                                                row: 'rgba(255, 255, 255, 0.4)',
                                                                 text: '#1a1a1a',
                                                                 previewBg: '#d2d1d0',
                                                                 previewRow: '#e4e3e2'
                                                             },
                                                             {
-                                                                name: 'Warm Vellum',
-                                                                bg: 'rgba(245, 245, 244, 0.65)',
-                                                                row: 'rgba(255, 255, 255, 0.6)',
+                                                                name: 'Champagne',
+                                                                bg: 'rgba(255, 250, 245, 0.55)',
+                                                                row: 'rgba(255, 255, 255, 0.5)',
                                                                 text: '#44403c',
                                                                 previewBg: '#f5f5f4',
                                                                 previewRow: '#ffffff'
