@@ -294,6 +294,7 @@ export const TaskItem = forwardRef(({ task, onUpdate, showTags, showFolders, fol
     const agentTriggerRef = useRef(null);
     const localRef = useRef(null); // Local ref to track the DOM element
     const textareaRef = useRef(null);
+    const editorRef = useRef(null);
 
     useEffect(() => {
         setLocalLabels(task.labels || []);
@@ -336,6 +337,29 @@ export const TaskItem = forwardRef(({ task, onUpdate, showTags, showFolders, fol
             textareaRef.current.style.height = `${textareaRef.current.scrollHeight}px`;
         }
     }, [isEditingTitle, editedTitle]);
+
+    // [NEW] Global ESC handler for expanded state
+    useEffect(() => {
+        // Only active if expanded
+        if (!(expanded || globalExpanded)) return;
+
+        const handleGlobalKeyDown = (e) => {
+            if (e.key === 'Escape') {
+                // Ignore if sub-components are active/open that should handle ESC themselves
+                // or if the event was already handled (prevented) by a focused input/editor
+                if (showLabelPicker || showAgentPicker || isEditingTitle || isDeleting || isConfirmingClose || e.defaultPrevented) {
+                    return;
+                }
+
+                // Create a synthetic cancellation effect
+                if (onToggleExpand) onToggleExpand(task._id, false);
+                setExpanded(false);
+            }
+        };
+
+        window.addEventListener('keydown', handleGlobalKeyDown);
+        return () => window.removeEventListener('keydown', handleGlobalKeyDown);
+    }, [expanded, globalExpanded, showLabelPicker, showAgentPicker, isEditingTitle, isDeleting, isConfirmingClose, task._id, onToggleExpand]);
 
 
 
@@ -917,6 +941,7 @@ export const TaskItem = forwardRef(({ task, onUpdate, showTags, showFolders, fol
                                 {/* Task Description Editor */}
                                 <div className="px-4">
                                     <TaskDescriptionEditor
+                                        ref={editorRef}
                                         title={task.title}
                                         initialContent={task.description}
                                         onSave={async ({ title, description }) => {
@@ -931,6 +956,10 @@ export const TaskItem = forwardRef(({ task, onUpdate, showTags, showFolders, fol
                                                 // onUpdate should handle it
                                                 onUpdate();
                                             }
+                                        }}
+                                        onCancel={() => {
+                                            if (onToggleExpand) onToggleExpand(task._id, false);
+                                            setExpanded(false);
                                         }}
                                     />
                                 </div>
@@ -1081,6 +1110,28 @@ export const TaskItem = forwardRef(({ task, onUpdate, showTags, showFolders, fol
                                                 )}
                                             </AnimatePresence>
                                         </div>
+                                        <button
+                                            className="p-1.5 text-[var(--text-muted)] hover:text-[var(--text-main)] transition-colors"
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                editorRef.current?.cancel();
+                                            }}
+                                            title="Exit (Cancel)"
+                                        >
+                                            <X size={14} />
+                                        </button>
+                                        <button
+                                            className="p-1.5 text-[var(--text-muted)] hover:text-blue-500 transition-colors"
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                editorRef.current?.save();
+                                                if (onToggleExpand) onToggleExpand(task._id, false);
+                                                setExpanded(false);
+                                            }}
+                                            title="Save & Exit"
+                                        >
+                                            <Check size={14} />
+                                        </button>
                                     </div>
                                 )}
                                 <div className="flex items-center gap-2">

@@ -3,8 +3,8 @@ import { useEditor, EditorContent } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
 import Link from '@tiptap/extension-link';
 import Placeholder from '@tiptap/extension-placeholder';
-import { Bold, Italic, List, ListOrdered, Link as LinkIcon, Unlink } from 'lucide-react';
-import { useEffect } from 'react';
+import { Bold, Italic, List, ListOrdered, Link as LinkIcon, Unlink, X, Check } from 'lucide-react';
+import { useEffect, useRef, forwardRef, useImperativeHandle } from 'react';
 
 const MenuBar = ({ editor }) => {
     if (!editor) {
@@ -81,7 +81,7 @@ const MenuBar = ({ editor }) => {
     );
 };
 
-export const TaskDescriptionEditor = ({ title, initialContent, onSave, isEditable = true }) => {
+export const TaskDescriptionEditor = forwardRef(({ title, initialContent, onSave, onCancel, isEditable = true }, ref) => {
     // Merge title and content for initial editor state
     // Title becomes the first block (heading)
     const getCombinedContent = () => {
@@ -99,6 +99,8 @@ export const TaskDescriptionEditor = ({ title, initialContent, onSave, isEditabl
         // If initialContent exists, append it
         return titleHtml + content;
     };
+
+    const isCancellingRef = useRef(false);
 
     const editor = useEditor({
         extensions: [
@@ -125,53 +127,82 @@ export const TaskDescriptionEditor = ({ title, initialContent, onSave, isEditabl
             attributes: {
                 class: 'prose prose-sm prose-invert max-w-none focus:outline-none min-h-[150px] text-[var(--text-main)] [&>h1]:mt-0 [&>h1]:mb-4',
             },
-        },
-        onBlur: ({ editor }) => {
-            if (onSave) {
-                // Parse content to separate Title and Description
-                const json = editor.getJSON();
-                if (!json.content || json.content.length === 0) {
-                    onSave({ title: '', description: '' });
-                    return;
+            handleKeyDown: (view, event) => {
+                if (event.key === 'Escape') {
+                    event.preventDefault(); // Prevent default browser behavior
+                    isCancellingRef.current = true;
+                    if (onCancel) onCancel();
+                    return true;
                 }
-
-                // First node is Title
-                const firstNode = json.content[0];
-                let newTitle = '';
-                if (firstNode.content && firstNode.content.length > 0) {
-                    newTitle = firstNode.content.map(c => {
-                        if (c.type === 'text') return c.text;
-                        if (c.type === 'hardBreak') return '\n';
-                        return '';
-                    }).join('');
-                } else {
-                    // Empty title
-                    newTitle = '';
-                }
-
-                // Extract Description using DOM logic for robustness
-                // We want everything AFTER the first element (Title H1)
-                const html = editor.getHTML();
-                const tempDiv = document.createElement('div');
-                tempDiv.innerHTML = html;
-
-                // Remove the first element (which corresponds to the Title H1)
-                // Note: Tiptap ensures block structure, so first child is the H1.
-                if (tempDiv.firstElementChild) {
-                    tempDiv.removeChild(tempDiv.firstElementChild);
-                }
-
-                // The rest is the description
-                // trim() to remove leading newlines/whitespace caused by the split
-                let newDescription = tempDiv.innerHTML.trim();
-
-                // [Case] If description is empty string/br only, clear it?
-                // But user might want just a break? Let's keep it as is.
-
-                onSave({ title: newTitle, description: newDescription });
+                return false;
             }
         },
+        onBlur: ({ editor }) => {
+            // [FIX] If cancelling (ESC pressed), do not save
+            if (isCancellingRef.current) {
+                isCancellingRef.current = false; // Reset for next time if component remounts/persists
+                return;
+            }
+
+            saveContent(editor);
+        },
     });
+
+    const saveContent = (currentEditor) => {
+        if (!currentEditor) return;
+
+        if (onSave) {
+            // Parse content to separate Title and Description
+            const json = currentEditor.getJSON();
+            if (!json.content || json.content.length === 0) {
+                onSave({ title: '', description: '' });
+                return;
+            }
+
+            // First node is Title
+            const firstNode = json.content[0];
+            let newTitle = '';
+            if (firstNode.content && firstNode.content.length > 0) {
+                newTitle = firstNode.content.map(c => {
+                    if (c.type === 'text') return c.text;
+                    if (c.type === 'hardBreak') return '\n';
+                    return '';
+                }).join('');
+            } else {
+                // Empty title
+                newTitle = '';
+            }
+
+            // Extract Description using DOM logic for robustness
+            // We want everything AFTER the first element (Title H1)
+            const html = currentEditor.getHTML();
+            const tempDiv = document.createElement('div');
+            tempDiv.innerHTML = html;
+
+            // Remove the first element (which corresponds to the Title H1)
+            // Note: Tiptap ensures block structure, so first child is the H1.
+            if (tempDiv.firstElementChild) {
+                tempDiv.removeChild(tempDiv.firstElementChild);
+            }
+
+            // The rest is the description
+            // trim() to remove leading newlines/whitespace caused by the split
+            let newDescription = tempDiv.innerHTML.trim();
+
+            onSave({ title: newTitle, description: newDescription });
+        }
+    };
+
+    useImperativeHandle(ref, () => ({
+        save: () => {
+            // Trigger save manually
+            saveContent(editor);
+        },
+        cancel: () => {
+            isCancellingRef.current = true;
+            if (onCancel) onCancel();
+        }
+    }));
 
     useEffect(() => {
         // Handle external updates?
@@ -189,6 +220,9 @@ export const TaskDescriptionEditor = ({ title, initialContent, onSave, isEditabl
             {/* No MenuBar on top, it is below now */}
             <EditorContent editor={editor} />
             {isEditable && <MenuBar editor={editor} />}
+
         </div>
     );
-};
+});
+
+TaskDescriptionEditor.displayName = 'TaskDescriptionEditor';
