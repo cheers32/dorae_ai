@@ -261,6 +261,8 @@ const parseUTCDate = (dateString) => {
 
 export const TaskItem = forwardRef(({ task, onUpdate, showTags, showFolders, folders, style, dragHandleProps, isOverlay, availableLabels = [], onSendToWorkarea, onRemoveFromWorkarea, isWorkarea, defaultExpanded, onAttachmentClick, onTaskClick, globalExpanded, showFullTitles, showPreview, showDebugInfo,
     fontSize = 12,
+    textBrightness = 1,
+    textColor = '#9ca3af',
     timelineLimit = 3,
     attachmentLimit = 5,
     showCounts = false,
@@ -764,8 +766,14 @@ export const TaskItem = forwardRef(({ task, onUpdate, showTags, showFolders, fol
                             {/* Hide title in expanded mode because it's in the editor */}
                             {!(expanded || globalExpanded) && (
                                 <h3
-                                    className={`font-medium text-[var(--text-muted)] text-left select-text ${expanded || globalExpanded || showFullTitles ? 'break-words whitespace-pre-wrap cursor-text' : 'truncate'} ${(task.status === 'Deleted' || task.status === 'deleted') ? 'line-through opacity-50' : ''}`}
-                                    style={{ fontSize: `${fontSize}px`, lineHeight: '1.4' }}
+                                    className={`font-medium text-left select-text ${expanded || globalExpanded || showFullTitles ? 'break-words whitespace-pre-wrap cursor-text' : 'truncate'} ${(task.status === 'Deleted' || task.status === 'deleted') ? 'line-through opacity-50' : ''}`}
+                                    style={{
+                                        fontSize: `${fontSize}px`,
+                                        lineHeight: '1.4',
+                                        color: textColor,
+                                        filter: textBrightness > 1 ? `brightness(${1 + (textBrightness - 1) * 0.15}) contrast(${1 + (textBrightness - 1) * 0.1})` : 'none',
+                                        textShadow: textBrightness > 1 ? `0 0 ${(textBrightness - 1) * 2}px rgba(255, 255, 255, ${(textBrightness - 1) * 0.15})` : 'none'
+                                    }}
                                     onClick={(e) => {
                                         if (expanded || globalExpanded || showFullTitles) {
                                             e.stopPropagation();

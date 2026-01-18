@@ -6,7 +6,7 @@ import { ChatInterface } from './ChatInterface';
 import { AgentList } from './AgentList';
 import { AgentItem } from './AgentItem';
 import { GeminiPanel, GeminiIcon } from './GeminiPanel';
-import { Search, Plus, Home as HomeIcon, Tag as TagIcon, ArrowLeft, ArrowRight, Trash2, X, ChevronsUpDown, ChevronsDownUp, Type, MessageSquare, ZoomIn, ZoomOut, MoreVertical, SlidersHorizontal, Settings2, Bug, Calendar, ArrowDownAZ, GripVertical, Folder, Sparkles, Zap, Clock, Paperclip, Minus, Copy, Menu, Check, RotateCw } from 'lucide-react';
+import { Search, Plus, Home as HomeIcon, Tag as TagIcon, ArrowLeft, ArrowRight, Trash2, X, ChevronsUpDown, ChevronsDownUp, Type, MessageSquare, ZoomIn, ZoomOut, MoreVertical, SlidersHorizontal, Settings2, Bug, Calendar, ArrowDownAZ, GripVertical, Folder, Sparkles, Zap, Clock, Paperclip, Minus, Copy, Menu, Check, RotateCw, Palette } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import {
@@ -88,6 +88,14 @@ export const TaskManager = () => {
     const [fontSize, setFontSize] = useState(() => {
         const saved = localStorage.getItem('task_list_font_size');
         return saved ? parseInt(saved, 10) : 15;
+    });
+    const [textBrightness, setTextBrightness] = useState(() => {
+        const saved = localStorage.getItem('task_list_text_brightness');
+        return saved ? parseInt(saved, 10) : 1;
+    });
+    const [textColor, setTextColor] = useState(() => {
+        const saved = localStorage.getItem('task_list_text_color');
+        return saved || '#9ca3af'; // Default gray color
     });
     const [isMenuOpen, setIsMenuOpen] = useState(false);
     const menuRef = useRef(null);
@@ -767,6 +775,14 @@ export const TaskManager = () => {
     useEffect(() => {
         localStorage.setItem('task_list_font_size', fontSize);
     }, [fontSize]);
+
+    useEffect(() => {
+        localStorage.setItem('task_list_text_brightness', textBrightness);
+    }, [textBrightness]);
+
+    useEffect(() => {
+        localStorage.setItem('task_list_text_color', textColor);
+    }, [textColor]);
 
     useEffect(() => {
         localStorage.setItem('taskPageSize', pageSize);
@@ -1910,6 +1926,60 @@ export const TaskManager = () => {
                                                     </div>
                                                 )}
 
+                                                {activeTab !== 'assistant' && tasks.length > 0 && (
+                                                    <div className="px-4 py-2 flex items-center justify-between">
+                                                        <div className="flex items-center gap-3 text-[var(--text-muted)]">
+                                                            <Sparkles size={16} />
+                                                            <span className="text-xs font-medium">Text Clarity</span>
+                                                        </div>
+                                                        <div className="flex items-center bg-gray-900 border border-gray-800 rounded-lg overflow-hidden h-7">
+                                                            <button
+                                                                onClick={() => setTextBrightness(prev => Math.max(1, prev - 1))}
+                                                                className="px-2 hover:bg-white/10 text-[var(--text-muted)] hover:text-white border-r border-gray-800 h-full flex items-center"
+                                                            >
+                                                                <Minus size={12} />
+                                                            </button>
+                                                            <button
+                                                                onClick={() => setTextBrightness(prev => Math.min(5, prev + 1))}
+                                                                className="px-2 hover:bg-white/10 text-[var(--text-muted)] hover:text-white h-full flex items-center"
+                                                            >
+                                                                <Plus size={12} />
+                                                            </button>
+                                                        </div>
+                                                    </div>
+                                                )}
+
+                                                {activeTab !== 'assistant' && tasks.length > 0 && (
+                                                    <div className="px-4 py-2">
+                                                        <div className="flex items-center gap-3 text-[var(--text-muted)] mb-2">
+                                                            <Type size={16} />
+                                                            <span className="text-xs font-medium">Text Color</span>
+                                                        </div>
+                                                        <div className="flex flex-wrap gap-2">
+                                                            {/* Custom Color Picker Only */}
+                                                            <div className="flex items-center gap-2">
+                                                                <label
+                                                                    className="relative w-8 h-8 rounded-full border border-[var(--border)] flex items-center justify-center cursor-pointer hover:scale-110 transition-all shadow-sm"
+                                                                    title="Pick Text Color"
+                                                                    style={{
+                                                                        backgroundColor: textColor,
+                                                                        boxShadow: `0 0 0 2px ${textColor}33`
+                                                                    }}
+                                                                >
+                                                                    <Palette size={14} className="text-white mix-blend-difference" />
+                                                                    <input
+                                                                        type="color"
+                                                                        value={textColor}
+                                                                        onChange={(e) => setTextColor(e.target.value)}
+                                                                        className="absolute inset-0 opacity-0 cursor-pointer"
+                                                                    />
+                                                                </label>
+                                                                <span className="text-xs text-[var(--text-muted)]">{textColor}</span>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                )}
+
                                                 {/* Show Count Toggle */}
                                                 <button
                                                     onClick={() => setShowCounts(!showCounts)}
@@ -2041,6 +2111,8 @@ export const TaskManager = () => {
                                                         showDebugInfo={showDebugInfo}
                                                         sortBy={sortBy}
                                                         fontSize={fontSize}
+                                                        textBrightness={textBrightness}
+                                                        textColor={textColor}
                                                         timelineLimit={timelineLimit}
                                                         showCounts={showCounts}
                                                         agents={agents}
@@ -2145,6 +2217,8 @@ export const TaskManager = () => {
                                                                     showDebugInfo={showDebugInfo}
                                                                     sortBy={sortBy}
                                                                     fontSize={fontSize}
+                                                                    textBrightness={textBrightness}
+                                                                    textColor={textColor}
                                                                     timelineLimit={timelineLimit}
                                                                     showCounts={showCounts}
                                                                     agents={agents}
