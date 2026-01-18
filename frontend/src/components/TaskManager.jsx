@@ -28,6 +28,7 @@ import {
 } from '@dnd-kit/sortable';
 import { createPortal } from 'react-dom';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { DynamicBackground } from './DynamicBackground';
 
 export const TaskManager = () => {
     const [tasks, setTasks] = useState([]);
@@ -105,6 +106,10 @@ export const TaskManager = () => {
     const [timelineLimit, setTimelineLimit] = useState(() => {
         const saved = localStorage.getItem('timelineLimit');
         return saved ? parseInt(saved, 10) : 3;
+    });
+    const [showDynamicBg, setShowDynamicBg] = useState(() => {
+        const saved = localStorage.getItem('task_manager_show_dynamic_bg');
+        return saved === null ? true : saved === 'true';
     });
 
     useEffect(() => {
@@ -623,6 +628,11 @@ export const TaskManager = () => {
     useEffect(() => {
         localStorage.setItem('task_manager_sidebar_density', sidebarDensity);
     }, [sidebarDensity]);
+
+    useEffect(() => {
+        localStorage.setItem('task_manager_show_dynamic_bg', showDynamicBg);
+        document.documentElement.setAttribute('data-dynamic-bg', showDynamicBg);
+    }, [showDynamicBg]);
 
     useEffect(() => {
         localStorage.setItem('task_list_font_size', fontSize);
@@ -1231,7 +1241,8 @@ export const TaskManager = () => {
             onDragEnd={handleDragEnd}
             onDragOver={handleDragOver}
         >
-            <div className="app-shell bg-[var(--bg-dark)] min-h-screen text-[var(--text-main)]">
+            {showDynamicBg && <DynamicBackground />}
+            <div className="app-shell bg-[var(--bg-dark)] min-h-screen text-[var(--text-main)] relative">
                 {/* Mobile Sidebar Overlay */}
                 <div
                     className={`sidebar-overlay ${isMobileSidebarOpen ? 'visible' : ''}`}
@@ -1769,6 +1780,16 @@ export const TaskManager = () => {
                                                     </div>
                                                 </button>
 
+                                                <button
+                                                    onClick={() => setShowDynamicBg(!showDynamicBg)}
+                                                    className="w-full px-4 py-2 text-left flex items-center justify-between transition-colors hover:bg-[var(--input-bg)]"
+                                                >
+                                                    <span className="text-xs font-medium text-[var(--text-muted)]">Dynamic Background</span>
+                                                    <div className={`w-8 h-4 rounded-full relative transition-colors ${showDynamicBg ? 'bg-blue-500' : 'bg-gray-700'}`}>
+                                                        <div className={`absolute top-0.5 w-3 h-3 bg-white rounded-full transition-all ${showDynamicBg ? 'right-0.5' : 'left-0.5'}`} />
+                                                    </div>
+                                                </button>
+
                                                 {activeTab === 'trash' && tasks.length > 0 && (
                                                     <>
                                                         <div className="h-px bg-gray-800 my-2 mx-2"></div>
@@ -1813,8 +1834,9 @@ export const TaskManager = () => {
                         </header>
                     </div>
 
+
                     {/* Main Scrollable Area */}
-                    <div className="flex-1 overflow-y-auto custom-scrollbar relative">
+                    <div className="flex-1 overflow-y-auto custom-scrollbar relative backdrop-blur-[2px]">
                         {/* [NEW] Workarea Section (Persistent across views) */}
                         <AnimatePresence>
                             {workareaTasks.length > 0 && (
