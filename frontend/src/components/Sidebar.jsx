@@ -303,6 +303,7 @@ export function Sidebar({ activeTab, onNavigate, labels = [], onLabelsChange, se
         'important': { label: 'Important', icon: ChevronsRight },
         'closed': { label: 'Closed Tasks', icon: CheckSquare },
         'assistant': { label: 'Agents', icon: MessageSquare },
+        'mindmap': { label: 'Mindset Map', icon: Layers },
         'trash': { label: 'Trash', icon: Trash2 },
     };
 

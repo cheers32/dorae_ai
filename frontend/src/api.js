@@ -375,5 +375,10 @@ export const api = {
             body: JSON.stringify({ content }),
         });
         return res.json();
+    },
+
+    getMindset: async () => {
+        const res = await fetch(`${API_BASE}/mindset`);
+        return res.json();
     }
 };

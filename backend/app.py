@@ -1788,5 +1788,22 @@ def _is_within_24h(timestamp_str):
     except:
         return False
 
+@app.route('/api/mindset', methods=['GET'])
+def get_mindset_map():
+    try:
+        # Fetch all active tasks
+        tasks = list(tasks_collection.find({'status': {'$ne': 'Closed'}}))
+        serialized_tasks = [serialize_doc(t) for t in tasks]
+        
+        mindset_data = ai_service.generate_mindset_map(serialized_tasks)
+        
+        if not mindset_data:
+            return jsonify({'error': 'Failed to generate mindset map'}), 500
+            
+        return jsonify(mindset_data), 200
+    except Exception as e:
+        print(f"Error fetching mindset map: {e}")
+        return jsonify({'error': str(e)}), 500
+
 if __name__ == '__main__':
     app.run(debug=True, port=5001, use_reloader=False)

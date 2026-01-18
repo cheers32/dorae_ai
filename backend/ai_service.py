@@ -453,3 +453,62 @@ CREATING TASKS:
             print(f"Instruction Error: {e}")
             return None
 
+    def generate_mindset_map(self, tasks):
+        if not self.client:
+            print("AI Service: Missing API Key")
+            return None
+
+        if not tasks:
+            return {"name": "Empty Mind", "children": []}
+
+        tasks_text = ""
+        for t in tasks:
+            tasks_text += f"- {t.get('title', 'Untitled')} (ID: {t['_id']})\n"
+
+        prompt = f"""
+        Analyze the following user tasks and synthesize a "Mindset Map".
+        
+        The user wants to know "what they are thinking in general".
+        Instead of listing tasks, group them into 3-5 high-level, abstract PHASES or THEMES of their life/work right now.
+        
+        Examples of Themes: "Building Foundation", "Exploration", "Maintenance", "Strategic Growth", "Health & Self".
+        
+        Tasks:
+        {tasks_text}
+        
+        Return a JSON object hierarchy:
+        {{
+            "name": "My Mindset",
+            "children": [
+                {{
+                    "name": "THEME NAME",
+                    "description": "Short philosophical summary of why this is a focus.",
+                    "value": 10,  # Approximate weight/number of tasks
+                    "children": [
+                         # Optional: Include specific high-level goals or just keep it abstract. 
+                         # User said "don't need details", so maybe just Key Keywords as children.
+                         {{ "name": "Keyword 1", "value": 1 }},
+                         {{ "name": "Keyword 2", "value": 1 }}
+                    ]
+                }}
+            ]
+        }}
+        """
+        
+        try:
+            response = self.client.models.generate_content(
+                model='gemini-2.0-flash-exp', 
+                contents=prompt,
+                config={
+                    'response_mime_type': 'application/json'
+                }
+            )
+            
+            if hasattr(response, 'parsed') and response.parsed:
+                return response.parsed
+                
+            return json.loads(response.text)
+        except Exception as e:
+            print(f"Mindset Map Error: {e}")
+            return None
+

@@ -29,6 +29,7 @@ import {
 import { createPortal } from 'react-dom';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { DynamicBackground } from './DynamicBackground';
+import { MindMap } from './MindMap';
 
 export const TaskManager = () => {
     const [tasks, setTasks] = useState([]);
@@ -417,14 +418,24 @@ export const TaskManager = () => {
             if (activeTab === 'all') status = null;
             if (activeTab === 'starred') status = 'Starred';
             if (activeTab === 'important') status = 'Important';
+            if (activeTab === 'mindmap') status = 'Active'; // Show all active tasks in mind map
 
             let queryFolderId = selectedFolder;
             // Exclusive visibility: If in 'Active' tab and no folder selected, only show unfiled tasks
+            // For Mind Map, we want to see ALL active tasks across folders, so we don't apply the 'null' filter
             if (activeTab === 'active' && !selectedLabel && !selectedFolder) {
                 queryFolderId = 'null';
             }
+            if (activeTab === 'mindmap') {
+                // Fetch a larger page size for mindmap visualization to likely get everything
+                // Or ideally, the API should support 'all' for this view. 
+                // For now, we rely on the default or larger page size if feasible, 
+                // but let's just let it use current logic.
+                // Reset queryFolderId so we get ALL folders
+                queryFolderId = null;
+            }
 
-            const response = await api.getTasks(status, selectedLabel, queryFolderId, currentPage, pageSize, searchQuery);
+            const response = await api.getTasks(status, selectedLabel, queryFolderId, currentPage, activeTab === 'mindmap' ? 100 : pageSize, searchQuery);
 
             // Race condition check: Only update if this is still the latest request
             if (requestId === fetchRequestId.current) {
@@ -463,7 +474,7 @@ export const TaskManager = () => {
 
     // Sync folders with sidebarItems
     useEffect(() => {
-        const systemItems = ['active', 'all', 'starred', 'important', 'closed', 'assistant', 'trash'];
+        const systemItems = ['active', 'all', 'starred', 'important', 'closed', 'assistant', 'mindmap', 'trash'];
         const folderIds = folders.map(f => `folder-${f._id}`);
 
         // Load saved order
@@ -2252,6 +2263,16 @@ export const TaskManager = () => {
                                         });
                                     }}
                                     onSearch={handleChipSearch}
+                                />
+                            </div>
+                        ) : activeTab === 'mindmap' ? (
+                            <div className="flex-1 h-full w-full relative" style={{ height: 'calc(100vh - 140px)' }}>
+                                <MindMap
+                                    tasks={tasks}
+                                    folders={folders}
+                                    onNodeClick={(taskId) => {
+                                        // Optional interaction
+                                    }}
                                 />
                             </div>
                         ) : (
