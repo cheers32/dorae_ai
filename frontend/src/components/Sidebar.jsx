@@ -4,7 +4,7 @@ import {
     Layout,
     CheckSquare,
     Home,
-    Sparkles,
+    Menu,
     Trash2,
     Plus,
     Tag as TagIcon,
@@ -341,14 +341,18 @@ export function Sidebar({ activeTab, onNavigate, labels = [], onLabelsChange, se
             </button>
             <div className={`px-6 mb-6 flex items-start justify-between ${isCollapsed ? 'px-0 justify-center' : ''}`}>
                 <div
-                    className="flex items-start gap-3 cursor-pointer group"
-                    onClick={() => onNavigate('active', null)}
+                    className="flex items-start gap-4 cursor-pointer group"
+                    onClick={onToggle}
                 >
-                    <div className="pt-1.5 pb-2.5 px-2.5 rounded-xl transition-colors" style={{ background: 'var(--sidebar-active-bg)' }}>
-                        <Sparkles size={24} style={{ color: 'var(--sidebar-active-text)' }} />
+                    <div
+                        className="p-2 rounded-xl transition-colors text-gray-400"
+                        onMouseEnter={(e) => { e.currentTarget.style.color = 'var(--text-main)'; e.currentTarget.style.background = 'var(--card-hover)'; }}
+                        onMouseLeave={(e) => { e.currentTarget.style.color = 'var(--text-muted)'; e.currentTarget.style.background = 'transparent'; }}
+                    >
+                        <Menu size={24} />
                     </div>
                     {!isCollapsed && (
-                        <div className="flex flex-col items-start px-1">
+                        <div className="flex flex-col items-start px-1 pt-0.5">
                             <h2 className="text-xl font-semibold tracking-tight leading-none mb-1" style={{ color: 'var(--text-main)' }}>
                                 Task AI
                             </h2>
@@ -371,19 +375,6 @@ export function Sidebar({ activeTab, onNavigate, labels = [], onLabelsChange, se
                             <Home size={18} className="group-hover:scale-110 transition-transform" />
                         </button>
                     )}
-                    <button
-                        onClick={(e) => {
-                            e.stopPropagation();
-                            onToggle();
-                        }}
-                        className={`p-2 rounded-xl border border-transparent transition-all flex items-center justify-center group ${isCollapsed ? 'mx-auto' : ''}`}
-                        title={isCollapsed ? "Expand Sidebar" : "Collapse Sidebar"}
-                        style={{ color: 'var(--text-muted)' }}
-                        onMouseEnter={(e) => { e.currentTarget.style.color = 'var(--text-main)'; e.currentTarget.style.background = 'var(--card-hover)'; }}
-                        onMouseLeave={(e) => { e.currentTarget.style.color = 'var(--text-muted)'; e.currentTarget.style.background = 'transparent'; }}
-                    >
-                        {isCollapsed ? <ChevronRight size={18} /> : <ChevronLeft size={18} />}
-                    </button>
                 </div>
             </div>
 
