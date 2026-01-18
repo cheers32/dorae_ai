@@ -1974,9 +1974,33 @@ export const TaskManager = () => {
                                                 )}
 
                                                 {activeTab !== 'assistant' && tasks.length > 0 && (
-                                                    <>
-                                                        {/* Removed Text Color and Background Color pickers */}
-                                                    </>
+                                                    <div className="px-4 py-2">
+                                                        <div className="flex items-center gap-3 text-[var(--text-muted)] mb-2">
+                                                            <Type size={16} />
+                                                            <span className="text-xs font-medium">Text Color</span>
+                                                        </div>
+                                                        <div className="flex flex-wrap gap-2">
+                                                            <div className="flex items-center gap-2">
+                                                                <label
+                                                                    className="relative w-8 h-8 rounded-full border border-[var(--border)] flex items-center justify-center cursor-pointer hover:scale-110 transition-all shadow-sm"
+                                                                    title="Pick Text Color"
+                                                                    style={{
+                                                                        backgroundColor: textColor,
+                                                                        boxShadow: `0 0 0 2px ${textColor}33`
+                                                                    }}
+                                                                >
+                                                                    <Palette size={14} className="text-white mix-blend-difference" />
+                                                                    <input
+                                                                        type="color"
+                                                                        value={textColor}
+                                                                        onChange={(e) => setTextColor(e.target.value)}
+                                                                        className="absolute inset-0 opacity-0 cursor-pointer"
+                                                                    />
+                                                                </label>
+                                                                <span className="text-xs text-[var(--text-muted)]">{textColor}</span>
+                                                            </div>
+                                                        </div>
+                                                    </div>
                                                 )}
 
                                                 <div className="px-4 py-2 border-t border-white/5">
