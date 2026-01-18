@@ -125,6 +125,7 @@ def get_tasks():
     try:
         status = request.args.get('status')
         label = request.args.get('label')
+        print(f"DEBUG: get_tasks params - status: {status}, label: {label}, args: {request.args}")
         query = {}
         
         if status == 'Deleted':
@@ -132,21 +133,17 @@ def get_tasks():
         elif status == 'Active':
             # Exclude completed/closed and deleted/trash/archived
             query['status'] = {
-                '$nin': ['Deleted', 'deleted', 'Archived', 'archived'],
+                '$nin': ['Deleted', 'deleted', 'Archived', 'archived', 'Closed', 'completed']
             }
-            # Special case for "Starred" view: we want tasks that are starred, regardless of being in a folder or not,
-            # BUT we still usually want to exclude trash/archived.
-            # However, the user might want to see starred tasks that are closed?
-            # Gmail shows starred emails even if archived (in "Starred" folder).
-            # For now, let's keep the exclusion of Deleted/Archived.
-            if status == 'Starred':
-                 query['star_color'] = {'$ne': None}
-                 pass
-            elif status:
-                query['status'] = status
-            else:
-                # Default: exclude deleted and archived
-                 query['status'] = {'$nin': ['Deleted', 'deleted', 'Archived', 'archived']}
+        elif status == 'Starred':
+             query['star_color'] = {'$ne': None}
+             # Starred folder should only show ACTIVE starred tasks
+             query['status'] = {'$nin': ['Deleted', 'deleted', 'Archived', 'archived', 'Closed', 'completed']}
+        elif status:
+            query['status'] = status
+        else:
+            # Default: exclude deleted and archived
+             query['status'] = {'$nin': ['Deleted', 'deleted', 'Archived', 'archived']}
 
         if label:
             query['labels'] = label
