@@ -45,8 +45,8 @@ const PHASE_STYLES = {
         background: 'linear-gradient(180deg, #42275a 0%, #734b6d 100%)',
         overlay: 'rgba(66, 39, 90, 0.2)',
         clouds: 'rgba(255, 200, 200, 0.3)',
-        sun: '#FF4500',
-        sunGlow: 'rgba(255, 69, 0, 0.3)',
+        sun: 'radial-gradient(circle, #FFFFFF 0%, #FFD700 30%, #FF4500 70%)',
+        sunGlow: 'rgba(255, 69, 0, 0.5)',
     },
     [TIME_PHASES.DUSK]: {
         background: 'linear-gradient(180deg, #2c3e50 0%, #000000 100%)',
@@ -146,7 +146,7 @@ export const DynamicBackground = () => {
                         transition={{ duration: 4, ease: "easeOut" }}
                         className="absolute left-1/2 -translate-x-1/2 w-64 h-64 rounded-full blur-[60px]"
                         style={{
-                            backgroundColor: currentStyle.sun,
+                            background: currentStyle.sun,
                             boxShadow: `0 0 120px ${currentStyle.sunGlow}`
                         }}
                     />
