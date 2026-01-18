@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
     Layout,
@@ -32,6 +32,37 @@ import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import { useTheme } from '../context/ThemeContext';
+
+const RealTimeClock = () => {
+    const [time, setTime] = useState(new Date());
+
+    useEffect(() => {
+        const timer = setInterval(() => {
+            setTime(new Date());
+        }, 1000);
+        return () => clearInterval(timer);
+    }, []);
+
+    const formatDateTime = (date) => {
+        const timeStr = date.toLocaleTimeString('en-US', {
+            hour: 'numeric',
+            minute: '2-digit',
+            second: '2-digit',
+            hour12: true
+        });
+        const dateStr = date.toLocaleDateString('en-US', {
+            month: 'short',
+            day: 'numeric'
+        });
+        return `${dateStr} ${timeStr}`;
+    };
+
+    return (
+        <span className="text-[10px] font-mono opacity-50" style={{ color: 'var(--text-muted)' }}>
+            {formatDateTime(time)}
+        </span>
+    );
+};
 
 const SortableSidebarItem = ({ id, icon: Icon, label, isActive, onClick, data, isFolder, onDelete, count, onColorChange, color, isCollapsed, density = 5 }) => {
     const [isDeleting, setIsDeleting] = useState(false);
@@ -386,8 +417,9 @@ export function Sidebar({ activeTab, onNavigate, labels = [], onLabelsChange, se
             </div>
 
             {!isCollapsed && (
-                <div className="px-6 mb-4 -mt-2">
-                    <span className="text-[9px] font-mono uppercase tracking-[0.3em] leading-none opacity-50 block text-right" style={{ color: 'var(--text-muted)' }}>
+                <div className="px-6 mb-4 -mt-2 flex flex-col items-start gap-1">
+                    <RealTimeClock />
+                    <span className="text-[9px] font-mono uppercase tracking-[0.3em] leading-none opacity-50 block" style={{ color: 'var(--text-muted)' }}>
                         {__APP_VERSION__}
                     </span>
                 </div>
