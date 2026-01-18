@@ -269,7 +269,8 @@ export const TaskItem = forwardRef(({ task, onUpdate, showTags, showFolders, fol
     onSearch, // [NEW] Callback for chip search
     showPulse, // [NEW] Pulse preference
     isSelected, // [NEW] Selection state
-    onToggleSelect // [NEW] Selection toggle callback
+    onToggleSelect, // [NEW] Selection toggle callback
+    sortBy // [NEW] Current sort mode
 }, ref) => {
     const [expanded, setExpanded] = useState(defaultExpanded || false);
     const [isSubmitting, setIsSubmitting] = useState(false);
@@ -345,9 +346,17 @@ export const TaskItem = forwardRef(({ task, onUpdate, showTags, showFolders, fol
 
         const handleGlobalKeyDown = (e) => {
             if (e.key === 'Escape') {
+                if (isDeleting) {
+                    setIsDeleting(false);
+                    return;
+                }
+                if (isConfirmingClose) {
+                    setIsConfirmingClose(false);
+                    return;
+                }
                 // Ignore if sub-components are active/open that should handle ESC themselves
                 // or if the event was already handled (prevented) by a focused input/editor
-                if (showLabelPicker || showAgentPicker || isEditingTitle || isDeleting || isConfirmingClose || e.defaultPrevented) {
+                if (showLabelPicker || showAgentPicker || isEditingTitle || e.defaultPrevented) {
                     return;
                 }
 
@@ -355,6 +364,31 @@ export const TaskItem = forwardRef(({ task, onUpdate, showTags, showFolders, fol
                 editorRef.current?.save();
                 if (onToggleExpand) onToggleExpand(task._id, false);
                 setExpanded(false);
+            }
+
+            if (e.key === 'Enter') {
+                if (isDeleting) {
+                    e.preventDefault();
+                    confirmDelete(e);
+                    return;
+                }
+                if (isConfirmingClose) {
+                    e.preventDefault();
+                    handleComplete(e);
+                    return;
+                }
+            }
+
+            if (e.key === 'Delete' || e.key === 'Backspace') {
+                // Only trigger if not already deleting and not typing in title/editor
+                if (!isDeleting && !isConfirmingClose && !isEditingTitle && !showLabelPicker && !showAgentPicker && !e.defaultPrevented) {
+                    // Check if focused element is a contenteditable or input
+                    const isTyping = ['INPUT', 'TEXTAREA'].includes(document.activeElement.tagName) || document.activeElement.isContentEditable;
+                    if (!isTyping) {
+                        e.preventDefault();
+                        setIsDeleting(true);
+                    }
+                }
             }
         };
 
@@ -562,6 +596,11 @@ export const TaskItem = forwardRef(({ task, onUpdate, showTags, showFolders, fol
                     }}
                 >
                     <div className="flex items-center gap-1 mobile-control-group">
+                        {sortBy === 'manual' && !expanded && !globalExpanded && (
+                            <div className="mr-1.5 opacity-30 group-hover:opacity-100 transition-opacity cursor-grab shrink-0">
+                                <GripVertical size={12} className="text-[var(--text-muted)]" />
+                            </div>
+                        )}
                         {/* [NEW] Selection Checkbox */}
                         {/* [NEW] Selection Checkbox */}
                         <div

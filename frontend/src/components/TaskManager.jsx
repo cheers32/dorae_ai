@@ -530,6 +530,14 @@ export const TaskManager = () => {
                         searchInputRef.current.focus();
                     }
                 }
+
+                // Delete selected tasks
+                if (event.key === 'Delete' || event.key === 'Backspace') {
+                    if (selectedTaskIds.size > 0) {
+                        event.preventDefault();
+                        handleDeleteSelected();
+                    }
+                }
             }
 
             // Command + [ for back navigation
@@ -1871,6 +1879,7 @@ export const TaskManager = () => {
                                                         showPreview={showPreview && !(globalExpanded || expandedTaskIds.has(item._id))}
                                                         showPulse={showPulse}
                                                         showDebugInfo={showDebugInfo}
+                                                        sortBy={sortBy}
                                                         fontSize={fontSize}
                                                         timelineLimit={timelineLimit}
                                                         showCounts={showCounts}
@@ -1971,6 +1980,7 @@ export const TaskManager = () => {
                                                                     showFullTitles={showFullTitles}
                                                                     showPreview={showPreview}
                                                                     showDebugInfo={showDebugInfo}
+                                                                    sortBy={sortBy}
                                                                     fontSize={fontSize}
                                                                     timelineLimit={timelineLimit}
                                                                     showCounts={showCounts}
@@ -2067,6 +2077,7 @@ export const TaskManager = () => {
                                 showDebugInfo={showDebugInfo}
                                 showCounts={showCounts}
                                 agents={agents}
+                                sortBy={sortBy}
                             />
                         ) : (activeId && activeId.toString().startsWith('workarea-task-')) ? (
                             <TaskItem
@@ -2081,6 +2092,7 @@ export const TaskManager = () => {
                                 showDebugInfo={showDebugInfo}
                                 showCounts={showCounts}
                                 agents={agents}
+                                sortBy={sortBy}
                             />
                         ) : null}
                     </DragOverlay >,
