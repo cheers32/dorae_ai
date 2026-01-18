@@ -139,6 +139,10 @@ def get_tasks():
              query['star_color'] = {'$ne': None}
              # Starred folder should only show ACTIVE starred tasks
              query['status'] = {'$nin': ['Deleted', 'deleted', 'Archived', 'archived', 'Closed', 'completed']}
+        elif status == 'Important':
+             # Active tasks with 'Important' or 'Notable' labels
+             query['status'] = {'$nin': ['Deleted', 'deleted', 'Archived', 'archived', 'Closed', 'completed']}
+             # Label filtering handled below to mix with potentially selected label
         elif status:
             query['status'] = status
         else:
@@ -146,7 +150,17 @@ def get_tasks():
              query['status'] = {'$nin': ['Deleted', 'deleted', 'Archived', 'archived']}
 
         if label:
-            query['labels'] = label
+            if status == 'Important':
+                # If we are in Important folder AND filtering by a label, strictly AND them
+                query['$and'] = [
+                    {'labels': label},
+                    {'labels': {'$in': ['Important', 'Notable']}}
+                ]
+            else:
+                query['labels'] = label
+        elif status == 'Important':
+            # No specific label selected, just show all Important/Notable
+            query['labels'] = {'$in': ['Important', 'Notable']}
 
         star_color = request.args.get('star_color')
         if star_color:
@@ -396,11 +410,19 @@ def get_stats():
             
         # 6. Starred
         starred_query = {
-            'status': {'$nin': ['Deleted', 'deleted', 'Archived', 'archived']},
+            'status': {'$nin': ['Deleted', 'deleted', 'Archived', 'archived', 'Closed', 'completed']},
             'star_color': {'$ne': None}
         }
         starred_query.update(base_query)
         starred_count = tasks_collection.count_documents(starred_query)
+
+        # 7. Important
+        important_query = {
+            'status': {'$nin': ['Deleted', 'deleted', 'Archived', 'archived', 'Closed', 'completed']},
+            'labels': {'$in': ['Important', 'Notable']}
+        }
+        important_query.update(base_query)
+        important_count = tasks_collection.count_documents(important_query)
 
         return jsonify({
             'active': active_count,
@@ -408,6 +430,7 @@ def get_stats():
             'closed': closed_count,
             'trash': trash_count,
             'starred': starred_count,
+            'important': important_count,
             'folders': folder_counts,
             'labels': label_counts
         }), 200
