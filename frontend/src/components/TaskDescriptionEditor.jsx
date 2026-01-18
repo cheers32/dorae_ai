@@ -86,9 +86,16 @@ export const TaskDescriptionEditor = ({ title, initialContent, onSave, isEditabl
     // Title becomes the first block (heading)
     const getCombinedContent = () => {
         const titleHtml = `<h1>${title || ''}</h1>`;
-        // If initialContent is empty, just title
+        let content = initialContent || '<p></p>';
+
+        // [FIX] Detect plain text and convert to HTML to preserve newlines
+        // If it doesn't contain HTML tags, treat as plain text
+        if (content && !/<[a-z][\s\S]*>/i.test(content)) {
+            content = content.split('\n').map(line => `<p>${line || '<br>'}</p>`).join('');
+        }
+
         // If initialContent exists, append it
-        return titleHtml + (initialContent || '<p></p>');
+        return titleHtml + content;
     };
 
     const editor = useEditor({
@@ -130,64 +137,34 @@ export const TaskDescriptionEditor = ({ title, initialContent, onSave, isEditabl
                 const firstNode = json.content[0];
                 let newTitle = '';
                 if (firstNode.content && firstNode.content.length > 0) {
-                    newTitle = firstNode.content.map(c => c.text).join('');
+                    newTitle = firstNode.content.map(c => {
+                        if (c.type === 'text') return c.text;
+                        if (c.type === 'hardBreak') return '\n';
+                        return '';
+                    }).join('');
                 } else {
                     // Empty title
                     newTitle = '';
                 }
 
-                // Rest is Description
-                // We need to convert the rest of the nodes back to HTML
-                // This is a bit tricky without a serializer instance, but we can assume the editor can do it if we slice?
-                // Actually, easier to get HTML then perform regex? No, risky.
-                // Best way: Use editor.view.state to serialize a slice?
-                // Or just: Remove first node from JSON and stringify?
-                // But we need HTML specifically for the backend 'description' field.
-
-                // Let's try to reconstruct HTML from the remaining JSON nodes?
-                // Or simpler: Just save the raw HTML of everything AFTER the first closing tag of the first element?
-                // No, that's brittle.
-
-                // Better approach for stability: 
-                // Don't modify the data model yet. Just keep the title in the editor as a visual.
-                // But the user expects the title to update.
-
-                // Let's use the JSON approach since Tiptap is good at it.
-                // But we need to return HTML for description.
-                // We can clone the editor content, delete range 0..firstNodeSize, then getHTML()?
-                // Too heavy.
-
-                // Hacky but effective: 
-                // Get full HTML. 
-                // Regex replace the first Header? <h1>...</h1>
-                // <h1 ...>Title</h1>Description...
+                // Extract Description using DOM logic for robustness
+                // We want everything AFTER the first element (Title H1)
                 const html = editor.getHTML();
-                const match = html.match(/^<h1.*?>(.*?)<\/h1>(.*)/s);
-                let newDescription = '';
-                if (match) {
-                    // match[1] is title html (might contain inner tags if user bolded title), match[2] is rest
-                    // But we want plain text for Title.
-                    // So rely on JSON for Title.
-                    newDescription = match[2];
-                } else {
-                    // Fallback if user deleted H1 or changed it to P
-                    // If no H1, maybe the first paragraph is title? 
-                    // Let's stick to JSON for title extraction, and maybe html for description removal.
-                    // Actually, if the structure changes (user deleted H1), we accept "Untitled" or first line?
-                    // Let's relax: Title = firstNode.text. Description = full HTML.
-                    // But then we duplicate title in description view.
+                const tempDiv = document.createElement('div');
+                tempDiv.innerHTML = html;
 
-                    // Okay, let's use a temporary DOM parser
-                    const tempDiv = document.createElement('div');
-                    tempDiv.innerHTML = html;
-                    const firstEl = tempDiv.firstElementChild;
-                    if (firstEl) {
-                        tempDiv.removeChild(firstEl);
-                        newDescription = tempDiv.innerHTML;
-                    } else {
-                        newDescription = '';
-                    }
+                // Remove the first element (which corresponds to the Title H1)
+                // Note: Tiptap ensures block structure, so first child is the H1.
+                if (tempDiv.firstElementChild) {
+                    tempDiv.removeChild(tempDiv.firstElementChild);
                 }
+
+                // The rest is the description
+                // trim() to remove leading newlines/whitespace caused by the split
+                let newDescription = tempDiv.innerHTML.trim();
+
+                // [Case] If description is empty string/br only, clear it?
+                // But user might want just a break? Let's keep it as is.
 
                 onSave({ title: newTitle, description: newDescription });
             }
