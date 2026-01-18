@@ -85,7 +85,9 @@ export const TaskDescriptionEditor = ({ title, initialContent, onSave, isEditabl
     // Merge title and content for initial editor state
     // Title becomes the first block (heading)
     const getCombinedContent = () => {
-        const titleHtml = `<h1>${title || ''}</h1>`;
+        // [FIX] Convert newlines to <br> for Tiptap to recognize them as HardBreaks in H1
+        const titleSafe = (title || '').replace(/\n/g, '<br>');
+        const titleHtml = `<h1>${titleSafe}</h1>`;
         let content = initialContent || '<p></p>';
 
         // [FIX] Detect plain text and convert to HTML to preserve newlines
