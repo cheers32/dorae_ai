@@ -264,7 +264,9 @@ export const TaskItem = forwardRef(({ task, onUpdate, showTags, showFolders, fol
     agents = [],
     onToggleExpand, // [NEW] Callback for expansion tracking
     onSearch, // [NEW] Callback for chip search
-    showPulse // [NEW] Pulse preference
+    showPulse, // [NEW] Pulse preference
+    isSelected, // [NEW] Selection state
+    onToggleSelect // [NEW] Selection toggle callback
 }, ref) => {
     const [expanded, setExpanded] = useState(defaultExpanded || false);
     const [isSubmitting, setIsSubmitting] = useState(false);
@@ -525,6 +527,21 @@ export const TaskItem = forwardRef(({ task, onUpdate, showTags, showFolders, fol
                     }}
                 >
                     <div className="flex items-center gap-1 mobile-control-group">
+                        {/* [NEW] Selection Checkbox */}
+                        {/* [NEW] Selection Checkbox */}
+                        <div
+                            className={`w-4 h-4 rounded-sm border flex items-center justify-center cursor-pointer mr-2 transition-all ${isSelected
+                                ? 'bg-blue-500 border-blue-500 opacity-100'
+                                : 'border-gray-600 hover:border-blue-500 opacity-0 group-hover:opacity-100' // Hidden by default, show on hover
+                                }`}
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                if (onToggleSelect) onToggleSelect();
+                            }}
+                        >
+                            {isSelected && <Check size={10} className="text-white" strokeWidth={4} />}
+                        </div>
+
                         {/* Gmail-style Importance Marker */}
                         {localLabels.includes('Important') ? (
                             <div

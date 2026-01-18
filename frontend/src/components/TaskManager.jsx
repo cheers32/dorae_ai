@@ -6,7 +6,7 @@ import { ChatInterface } from './ChatInterface';
 import { AgentList } from './AgentList';
 import { AgentItem } from './AgentItem';
 import { GeminiPanel, GeminiIcon } from './GeminiPanel';
-import { Search, Plus, Home as HomeIcon, Tag as TagIcon, ArrowLeft, ArrowRight, Trash2, X, ChevronsUpDown, ChevronsDownUp, Type, MessageSquare, ZoomIn, ZoomOut, MoreVertical, SlidersHorizontal, Settings2, Bug, Calendar, ArrowDownAZ, GripVertical, Folder, Sparkles, Zap, Clock, Paperclip, Minus, Copy, Menu } from 'lucide-react';
+import { Search, Plus, Home as HomeIcon, Tag as TagIcon, ArrowLeft, ArrowRight, Trash2, X, ChevronsUpDown, ChevronsDownUp, Type, MessageSquare, ZoomIn, ZoomOut, MoreVertical, SlidersHorizontal, Settings2, Bug, Calendar, ArrowDownAZ, GripVertical, Folder, Sparkles, Zap, Clock, Paperclip, Minus, Copy, Menu, Check } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import {
@@ -38,6 +38,19 @@ export const TaskManager = () => {
     const [expandedAgentIds, setExpandedAgentIds] = useState(new Set()); // [NEW] Track expanded agents
     const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false); // [NEW] Mobile sidebar state
     const [isMobileCreateOpen, setIsMobileCreateOpen] = useState(false); // [NEW] Mobile create modal state
+    const [selectedTaskIds, setSelectedTaskIds] = useState(new Set()); // [NEW] Selection state
+
+    const handleToggleTask = (taskId) => {
+        const newSelected = new Set(selectedTaskIds);
+        if (newSelected.has(taskId)) {
+            newSelected.delete(taskId);
+        } else {
+            newSelected.add(taskId);
+        }
+        setSelectedTaskIds(newSelected);
+    };
+
+
 
     const [labels, setLabels] = useState([]);
     const [folders, setFolders] = useState([]);
@@ -141,6 +154,32 @@ export const TaskManager = () => {
             // Manual sort is handled by the order in the array from backend (which is by 'order' field)
             return 0;
         });
+
+    const handleSelectAll = () => {
+        if (!visibleTasks) return;
+        if (selectedTaskIds.size === visibleTasks.length && visibleTasks.length > 0) {
+            setSelectedTaskIds(new Set());
+        } else {
+            setSelectedTaskIds(new Set(visibleTasks.map(t => t._id)));
+        }
+    };
+
+    const handleDeleteSelected = async () => {
+        if (selectedTaskIds.size === 0) return;
+        if (!window.confirm(`Are you sure you want to delete ${selectedTaskIds.size} tasks?`)) return;
+
+        try {
+            // Delete all selected tasks
+            const idsToDelete = Array.from(selectedTaskIds);
+            await Promise.all(idsToDelete.map(id => api.deleteTask(id)));
+
+            setSelectedTaskIds(new Set());
+            fetchTasks(false);
+            fetchStats();
+        } catch (err) {
+            console.error("Failed to delete selected tasks", err);
+        }
+    };
 
     // Sidebar Order State
     const [sidebarItems, setSidebarItems] = useState([]);
@@ -1286,6 +1325,25 @@ export const TaskManager = () => {
                     <div className="content-header">
                         <header className="px-6 py-4 flex justify-between items-center bg-[var(--bg-dark)]/80 backdrop-blur-md sticky top-0 z-40 border-b border-[var(--border)]">
                             <div className="flex items-center gap-4 shrink-0 mobile-hidden">
+                                {/* [NEW] Master Checkbox */}
+                                <div className="flex items-center justify-center mr-2">
+                                    <div
+                                        className={`w-4 h-4 rounded-sm border flex items-center justify-center cursor-pointer transition-all ${selectedTaskIds.size > 0
+                                            ? 'bg-blue-500 border-blue-500 opacity-100'
+                                            : 'border-gray-600 hover:border-blue-500 opacity-50 hover:opacity-100'
+                                            }`}
+                                        onClick={handleSelectAll}
+                                        title="Select All"
+                                    >
+                                        {selectedTaskIds.size > 0 && selectedTaskIds.size === visibleTasks.length && (
+                                            <Check size={10} className="text-white" strokeWidth={4} />
+                                        )}
+                                        {selectedTaskIds.size > 0 && selectedTaskIds.size < visibleTasks.length && (
+                                            <Minus size={10} className="text-white" strokeWidth={4} />
+                                        )}
+                                    </div>
+                                </div>
+
                                 <AnimatePresence mode="popLayout">
                                     <div className="flex items-center gap-1.5">
                                         {history.length > 0 && (
@@ -1319,52 +1377,79 @@ export const TaskManager = () => {
 
                             </div>
 
-                            {/* Create Task Bar (Central Priority) - Search moved to Sidebar */}
+                            {/* Create Task or Action Toolbar */}
                             <div className="flex-[3] flex justify-center mx-6 min-w-[300px]">
                                 <div className="w-full max-w-xl group relative transition-all duration-300 focus-within:max-w-2xl">
-                                    {/* Create Task Bar */}
-                                    <form
-                                        onSubmit={(e) => {
-                                            handleCreateTask(e);
-                                        }}
-                                        className="relative w-full"
-                                    >
-                                        <div
-                                            className="flex items-center w-full bg-[var(--input-bg)] border border-[var(--border)] rounded-xl px-4 py-2 focus-within:bg-white/10 focus-within:border-blue-500/50 focus-within:ring-4 focus-within:ring-blue-500/10 transition-all shadow-inner cursor-text"
-                                            onClick={() => newTaskTextareaRef.current?.focus()}
-                                        >
-                                            <Plus size={18} className="text-[var(--text-muted)] group-focus-within:text-blue-400 transition-colors shrink-0 mr-3" />
-                                            <textarea
-                                                ref={newTaskTextareaRef}
-                                                rows={1}
-                                                placeholder={selectedFolder ? `Add task to ${stats.folders[selectedFolder] ? folders.find(f => f._id === selectedFolder)?.name : 'folder'}...` : selectedLabel ? `Add task to ${selectedLabel}...` : "What needs to be done?"}
-                                                value={newTaskTitle}
-                                                onChange={(e) => setNewTaskTitle(e.target.value)}
-                                                onKeyDown={(e) => {
-                                                    if (e.key === 'Enter' && !e.shiftKey) {
-                                                        e.preventDefault();
-                                                        handleCreateTask(e);
-                                                    } else if (e.key === 'Escape') {
-                                                        setNewTaskTitle('');
-                                                        e.currentTarget.blur();
-                                                    }
-                                                }}
-                                                className="flex-1 bg-transparent border-none outline-none text-sm text-[var(--text-main)] placeholder:text-[var(--text-muted)] resize-none overflow-hidden py-0 leading-normal"
-                                            />
-                                            {newTaskTitle && (
+                                    {selectedTaskIds.size > 0 ? (
+                                        // [NEW] Action Toolbar
+                                        <div className="flex items-center justify-between w-full bg-[var(--input-bg)] border border-blue-500/30 rounded-xl px-4 py-2 shadow-lg shadow-blue-500/5 animate-in fade-in slide-in-from-top-2 duration-200">
+                                            <div className="flex items-center gap-3">
+                                                <span className="font-bold text-blue-400 text-sm">
+                                                    {selectedTaskIds.size} selected
+                                                </span>
                                                 <button
-                                                    type="button"
-                                                    onClick={(e) => {
-                                                        e.stopPropagation(); // Prevent wrapper click
-                                                        setNewTaskTitle('');
-                                                    }}
-                                                    className="shrink-0 ml-2 flex items-center text-[var(--text-muted)] hover:text-gray-300 transition-colors"
+                                                    onClick={() => setSelectedTaskIds(new Set())}
+                                                    className="text-[var(--text-muted)] hover:text-white transition-colors text-xs hover:underline"
                                                 >
-                                                    <X size={16} />
+                                                    Clear selection
                                                 </button>
-                                            )}
+                                            </div>
+                                            <div className="flex items-center gap-2">
+                                                <button
+                                                    onClick={handleDeleteSelected}
+                                                    className="p-1.5 rounded-lg hover:bg-red-500/20 text-[var(--text-muted)] hover:text-red-400 transition-colors"
+                                                    title="Delete Selected"
+                                                >
+                                                    <Trash2 size={18} />
+                                                </button>
+                                                {/* Future actions can go here (e.g., Mark Done, Move to Folder) */}
+                                            </div>
                                         </div>
-                                    </form>
+                                    ) : (
+                                        // Default Create Task Bar
+                                        <form
+                                            onSubmit={(e) => {
+                                                handleCreateTask(e);
+                                            }}
+                                            className="relative w-full"
+                                        >
+                                            <div
+                                                className="flex items-center w-full bg-[var(--input-bg)] border border-[var(--border)] rounded-xl px-4 py-2 focus-within:bg-white/10 focus-within:border-blue-500/50 focus-within:ring-4 focus-within:ring-blue-500/10 transition-all shadow-inner cursor-text"
+                                                onClick={() => newTaskTextareaRef.current?.focus()}
+                                            >
+                                                <Plus size={18} className="text-[var(--text-muted)] group-focus-within:text-blue-400 transition-colors shrink-0 mr-3" />
+                                                <textarea
+                                                    ref={newTaskTextareaRef}
+                                                    rows={1}
+                                                    placeholder={selectedFolder ? `Add task to ${stats.folders[selectedFolder] ? folders.find(f => f._id === selectedFolder)?.name : 'folder'}...` : selectedLabel ? `Add task to ${selectedLabel}...` : "What needs to be done?"}
+                                                    value={newTaskTitle}
+                                                    onChange={(e) => setNewTaskTitle(e.target.value)}
+                                                    onKeyDown={(e) => {
+                                                        if (e.key === 'Enter' && !e.shiftKey) {
+                                                            e.preventDefault();
+                                                            handleCreateTask(e);
+                                                        } else if (e.key === 'Escape') {
+                                                            setNewTaskTitle('');
+                                                            e.currentTarget.blur();
+                                                        }
+                                                    }}
+                                                    className="flex-1 bg-transparent border-none outline-none text-sm text-[var(--text-main)] placeholder:text-[var(--text-muted)] resize-none overflow-hidden py-0 leading-normal"
+                                                />
+                                                {newTaskTitle && (
+                                                    <button
+                                                        type="button"
+                                                        onClick={(e) => {
+                                                            e.stopPropagation(); // Prevent wrapper click
+                                                            setNewTaskTitle('');
+                                                        }}
+                                                        className="shrink-0 ml-2 flex items-center text-[var(--text-muted)] hover:text-gray-300 transition-colors"
+                                                    >
+                                                        <X size={16} />
+                                                    </button>
+                                                )}
+                                            </div>
+                                        </form>
+                                    )}
                                 </div>
                             </div>
 
@@ -1865,6 +1950,9 @@ export const TaskManager = () => {
                                                                     agents={agents}
                                                                     onSearch={handleChipSearch}
                                                                     showPulse={showPulse}
+                                                                    // [NEW] Selection props
+                                                                    isSelected={selectedTaskIds.has(task._id)}
+                                                                    onToggleSelect={() => handleToggleTask(task._id)}
                                                                 />
                                                             ))}
                                                         </div>
