@@ -272,7 +272,8 @@ export const TaskItem = forwardRef(({ task, onUpdate, showTags, showFolders, fol
     showPulse, // [NEW] Pulse preference
     isSelected, // [NEW] Selection state
     onToggleSelect, // [NEW] Selection toggle callback
-    sortBy // [NEW] Current sort mode
+    sortBy, // [NEW] Current sort mode
+    rowColor, // [NEW] Row background color preference
 }, ref) => {
     const [expanded, setExpanded] = useState(defaultExpanded || false);
     const [isSubmitting, setIsSubmitting] = useState(false);
@@ -298,6 +299,14 @@ export const TaskItem = forwardRef(({ task, onUpdate, showTags, showFolders, fol
     const localRef = useRef(null); // Local ref to track the DOM element
     const textareaRef = useRef(null);
     const editorRef = useRef(null);
+
+    // [NEW] Apply row color if provided
+    const itemStyle = {
+        ...style,
+        backgroundColor: rowColor || style?.backgroundColor,
+        // Add subtle border if row color is light to maintain separation
+        borderColor: rowColor && rowColor !== 'rgba(31, 41, 55, 0.4)' ? 'var(--border)' : undefined
+    };
 
     useEffect(() => {
         setLocalLabels(task.labels || []);
@@ -578,9 +587,8 @@ export const TaskItem = forwardRef(({ task, onUpdate, showTags, showFolders, fol
 
     return (
         <motion.div
-
             ref={localRef}
-            style={baseStyle}
+            style={itemStyle}
             initial={isOverlay ? false : { opacity: 0 }}
             animate={isOverlay ? false : { opacity: baseStyle.opacity }}
             exit={isOverlay ? false : { opacity: 0 }}

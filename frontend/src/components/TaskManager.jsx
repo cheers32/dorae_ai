@@ -97,6 +97,14 @@ export const TaskManager = () => {
         const saved = localStorage.getItem('task_list_text_color');
         return saved || '#9ca3af'; // Default gray color
     });
+    const [backgroundColor, setBackgroundColor] = useState(() => {
+        const saved = localStorage.getItem('task_list_background_color');
+        return saved || null; // Default null (inherit from theme)
+    });
+    const [rowColor, setRowColor] = useState(() => {
+        const saved = localStorage.getItem('task_list_row_color');
+        return saved || 'rgba(31, 41, 55, 0.4)'; // Default dark row
+    });
     const [isMenuOpen, setIsMenuOpen] = useState(false);
     const menuRef = useRef(null);
     const [history, setHistory] = useState([]);
@@ -785,6 +793,18 @@ export const TaskManager = () => {
     }, [textColor]);
 
     useEffect(() => {
+        if (backgroundColor) {
+            localStorage.setItem('task_list_background_color', backgroundColor);
+        } else {
+            localStorage.removeItem('task_list_background_color');
+        }
+    }, [backgroundColor]);
+
+    useEffect(() => {
+        localStorage.setItem('task_list_row_color', rowColor);
+    }, [rowColor]);
+
+    useEffect(() => {
         localStorage.setItem('taskPageSize', pageSize);
     }, [pageSize]);
 
@@ -1419,7 +1439,11 @@ export const TaskManager = () => {
                 />
 
 
-                <div className={`main-content transition-all duration-300 ${isSidebarCollapsed ? 'ml-0' : 'ml-0'}`} onClick={() => setFocusArea('tasklist')}>
+                <div
+                    className={`main-content transition-all duration-300 ${isSidebarCollapsed ? 'ml-0' : 'ml-0'}`}
+                    onClick={() => setFocusArea('tasklist')}
+                    style={{ backgroundColor: backgroundColor || 'var(--bg-primary)' }}
+                >
 
                     {/* Gmail-Style Mobile Search Pill */}
                     <div className="search-pill-container mobile-only">
@@ -1950,35 +1974,89 @@ export const TaskManager = () => {
                                                 )}
 
                                                 {activeTab !== 'assistant' && tasks.length > 0 && (
-                                                    <div className="px-4 py-2">
-                                                        <div className="flex items-center gap-3 text-[var(--text-muted)] mb-2">
-                                                            <Type size={16} />
-                                                            <span className="text-xs font-medium">Text Color</span>
-                                                        </div>
-                                                        <div className="flex flex-wrap gap-2">
-                                                            {/* Custom Color Picker Only */}
-                                                            <div className="flex items-center gap-2">
-                                                                <label
-                                                                    className="relative w-8 h-8 rounded-full border border-[var(--border)] flex items-center justify-center cursor-pointer hover:scale-110 transition-all shadow-sm"
-                                                                    title="Pick Text Color"
-                                                                    style={{
-                                                                        backgroundColor: textColor,
-                                                                        boxShadow: `0 0 0 2px ${textColor}33`
-                                                                    }}
-                                                                >
-                                                                    <Palette size={14} className="text-white mix-blend-difference" />
-                                                                    <input
-                                                                        type="color"
-                                                                        value={textColor}
-                                                                        onChange={(e) => setTextColor(e.target.value)}
-                                                                        className="absolute inset-0 opacity-0 cursor-pointer"
-                                                                    />
-                                                                </label>
-                                                                <span className="text-xs text-[var(--text-muted)]">{textColor}</span>
-                                                            </div>
-                                                        </div>
-                                                    </div>
+                                                    <>
+                                                        {/* Removed Text Color and Background Color pickers */}
+                                                    </>
                                                 )}
+
+                                                <div className="px-4 py-2 border-t border-white/5">
+                                                    <div className="flex items-center gap-3 text-[var(--text-muted)] mb-3">
+                                                        <Palette size={16} />
+                                                        <span className="text-xs font-medium">Theme</span>
+                                                    </div>
+                                                    <div className="grid grid-cols-3 gap-2">
+                                                        {[
+                                                            {
+                                                                name: 'Modern Dark',
+                                                                bg: null,
+                                                                row: 'rgba(31, 41, 55, 0.4)',
+                                                                text: '#9ca3af',
+                                                                previewBg: '#111827',
+                                                                previewRow: '#1f2937'
+                                                            },
+                                                            {
+                                                                name: 'Classic Light',
+                                                                bg: '#f3f4f6',
+                                                                row: '#ffffff',
+                                                                text: '#374151',
+                                                                previewBg: '#f3f4f6',
+                                                                previewRow: '#ffffff'
+                                                            },
+                                                            {
+                                                                name: 'Midnight',
+                                                                bg: '#000000',
+                                                                row: '#121212',
+                                                                text: '#a1a1aa',
+                                                                previewBg: '#000000',
+                                                                previewRow: '#121212'
+                                                            },
+                                                            {
+                                                                name: 'Soft Sepia',
+                                                                bg: '#fdf6e3',
+                                                                row: '#eee8d5',
+                                                                text: '#5c6b73',
+                                                                previewBg: '#fdf6e3',
+                                                                previewRow: '#eee8d5'
+                                                            },
+                                                            {
+                                                                name: 'Deep Navy',
+                                                                bg: '#0f172a',
+                                                                row: '#1e293b',
+                                                                text: '#94a3b8',
+                                                                previewBg: '#0f172a',
+                                                                previewRow: '#1e293b'
+                                                            },
+                                                            {
+                                                                name: 'Cool Mist',
+                                                                bg: '#eef2f6',
+                                                                row: '#ffffff',
+                                                                text: '#475569',
+                                                                previewBg: '#eef2f6',
+                                                                previewRow: '#ffffff'
+                                                            }
+                                                        ].map((theme) => (
+                                                            <button
+                                                                key={theme.name}
+                                                                onClick={() => {
+                                                                    setBackgroundColor(theme.bg);
+                                                                    setRowColor(theme.row);
+                                                                    setTextColor(theme.text);
+                                                                }}
+                                                                className="flex flex-col items-center gap-1 group"
+                                                            >
+                                                                <div
+                                                                    className="w-full aspect-[4/3] rounded-lg border border-[var(--border)] shadow-sm relative overflow-hidden transition-all group-hover:scale-105 group-hover:border-blue-500/50"
+                                                                    style={{ backgroundColor: theme.previewBg }}
+                                                                >
+                                                                    <div className="absolute inset-x-2 top-2 h-2 rounded opacity-50" style={{ backgroundColor: theme.previewRow }} />
+                                                                    <div className="absolute inset-x-2 top-5 h-2 rounded opacity-50" style={{ backgroundColor: theme.previewRow }} />
+                                                                </div>
+                                                                <span className="text-[10px] text-[var(--text-muted)] group-hover:text-[var(--text-main)]">{theme.name}</span>
+                                                            </button>
+                                                        ))}
+                                                    </div>
+                                                </div>
+
 
                                                 {/* Show Count Toggle */}
                                                 <button
@@ -2113,6 +2191,7 @@ export const TaskManager = () => {
                                                         fontSize={fontSize}
                                                         textBrightness={textBrightness}
                                                         textColor={textColor}
+                                                        rowColor={rowColor}
                                                         timelineLimit={timelineLimit}
                                                         showCounts={showCounts}
                                                         agents={agents}
@@ -2219,6 +2298,7 @@ export const TaskManager = () => {
                                                                     fontSize={fontSize}
                                                                     textBrightness={textBrightness}
                                                                     textColor={textColor}
+                                                                    rowColor={rowColor}
                                                                     timelineLimit={timelineLimit}
                                                                     showCounts={showCounts}
                                                                     agents={agents}
