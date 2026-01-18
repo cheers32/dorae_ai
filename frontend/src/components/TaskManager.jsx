@@ -314,6 +314,14 @@ export const TaskManager = () => {
     };
 
     const handleBack = () => {
+        // If there are expanded tasks or agents, collapse them first instead of navigating
+        if (expandedTaskIds.size > 0 || expandedAgentIds.size > 0 || globalExpanded) {
+            setExpandedTaskIds(new Set());
+            setExpandedAgentIds(new Set());
+            setGlobalExpanded(false);
+            return;
+        }
+
         if (history.length === 0) return;
         const lastView = history[history.length - 1];
 
@@ -547,7 +555,8 @@ export const TaskManager = () => {
 
             // Command + [ for back navigation
             if ((event.metaKey || event.ctrlKey) && event.key === '[') {
-                if (history.length > 0) {
+                const isExpanded = expandedTaskIds.size > 0 || expandedAgentIds.size > 0 || globalExpanded;
+                if (history.length > 0 || isExpanded) {
                     event.preventDefault();
                     handleBack();
                 }
@@ -1390,14 +1399,14 @@ export const TaskManager = () => {
 
                                 <AnimatePresence mode="popLayout">
                                     <div className="flex items-center gap-1.5">
-                                        {history.length > 0 && (
+                                        {(history.length > 0 || expandedTaskIds.size > 0 || expandedAgentIds.size > 0 || globalExpanded) && (
                                             <motion.button
                                                 initial={{ opacity: 0, x: -10 }}
                                                 animate={{ opacity: 1, x: 0 }}
                                                 exit={{ opacity: 0, x: -10 }}
                                                 onClick={handleBack}
                                                 className="p-1.5 bg-[var(--input-bg)] border border-[var(--border)] rounded-lg text-[var(--text-muted)] hover:text-white hover:bg-white/10 transition-all flex items-center justify-center group"
-                                                title="Go Back (Cmd + [)"
+                                                title="Go Back (Cmd + [) / Collapse"
                                             >
                                                 <ArrowLeft size={16} className="group-hover:-translate-x-0.5 transition-transform" />
                                             </motion.button>

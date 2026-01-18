@@ -345,7 +345,10 @@ export const TaskItem = forwardRef(({ task, onUpdate, showTags, showFolders, fol
         if (!(expanded || globalExpanded)) return;
 
         const handleGlobalKeyDown = (e) => {
-            if (e.key === 'Escape') {
+            if (e.key === 'Escape' || ((e.metaKey || e.ctrlKey) && e.key === '[')) {
+                if (e.key === '[') {
+                    e.preventDefault();
+                }
                 if (isDeleting) {
                     setIsDeleting(false);
                     return;
@@ -361,7 +364,9 @@ export const TaskItem = forwardRef(({ task, onUpdate, showTags, showFolders, fol
                 }
 
                 // Create a synthetic save and exit effect
-                editorRef.current?.save();
+                if (editorRef.current) {
+                    editorRef.current.save();
+                }
                 if (onToggleExpand) onToggleExpand(task._id, false);
                 setExpanded(false);
             }

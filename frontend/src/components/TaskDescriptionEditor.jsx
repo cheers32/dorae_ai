@@ -128,7 +128,7 @@ export const TaskDescriptionEditor = forwardRef(({ title, initialContent, onSave
                 class: 'prose prose-sm prose-invert max-w-none focus:outline-none min-h-[150px] text-[var(--text-main)] [&>h1]:mt-0 [&>h1]:mb-4',
             },
             handleKeyDown: (view, event) => {
-                if (event.key === 'Escape') {
+                if (event.key === 'Escape' || ((event.metaKey || event.ctrlKey) && event.key === '[')) {
                     event.preventDefault(); // Prevent default browser behavior
                     if (onCancel) onCancel();
                     return true;
