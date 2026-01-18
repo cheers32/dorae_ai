@@ -316,7 +316,7 @@ export function Sidebar({ activeTab, onNavigate, labels = [], onLabelsChange, se
 
     return (
         <div
-            className={`sidebar h-screen border-r flex flex-col pt-8 transition-all duration-300 ease-in-out ${isCollapsed ? 'w-[80px]' : 'w-[280px]'} ${isOpen ? 'mobile-open' : ''}`}
+            className={`sidebar shrink-0 h-screen border-r flex flex-col pt-8 transition-all duration-300 ease-in-out ${isCollapsed ? 'w-[80px]' : 'w-[280px]'} ${isOpen ? 'mobile-open' : ''}`}
             style={{
                 background: 'var(--bg-sidebar)',
                 borderColor: 'var(--border)'
