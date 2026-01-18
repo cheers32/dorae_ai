@@ -41,6 +41,8 @@ export const TaskManager = () => {
     const [isMobileCreateOpen, setIsMobileCreateOpen] = useState(false); // [NEW] Mobile create modal state
     const [selectedTaskIds, setSelectedTaskIds] = useState(new Set()); // [NEW] Selection state
     const [lastCollapsedTaskId, setLastCollapsedTaskId] = useState(null); // [NEW] Track last collapsed task for re-expansion
+    const [focusArea, setFocusArea] = useState('tasklist'); // [NEW] Track focus area: 'sidebar' or 'tasklist'
+    const [highlightedSidebarIndex, setHighlightedSidebarIndex] = useState(0); // [NEW] Track highlighted sidebar item
 
     const handleToggleTask = (taskId) => {
         const newSelected = new Set(selectedTaskIds);
@@ -597,8 +599,8 @@ export const TaskManager = () => {
                 }
             }
 
-            // Enter key to expand first task or re-expand last collapsed task
-            if (!isTyping && event.key === 'Enter' && expandedTaskIds.size === 0) {
+            // Enter key to expand first task or re-expand last collapsed task (only when task list is focused)
+            if (!isTyping && event.key === 'Enter' && expandedTaskIds.size === 0 && focusArea === 'tasklist') {
                 event.preventDefault();
                 // First try to re-expand the last collapsed task if it exists
                 if (lastCollapsedTaskId) {
@@ -634,6 +636,75 @@ export const TaskManager = () => {
                     setLastCollapsedTaskId(null);
                 }
             }
+
+            // Left/Right arrow keys for sidebar-tasklist navigation (only when no tasks are expanded)
+            if (!isTyping && expandedTaskIds.size === 0) {
+                if (event.key === 'ArrowLeft') {
+                    event.preventDefault();
+                    setFocusArea('sidebar');
+                    setHighlightedSidebarIndex(0); // Start at first item
+                } else if (event.key === 'ArrowRight') {
+                    event.preventDefault();
+                    setFocusArea('tasklist');
+                    // Auto-expand first task when moving to task list
+                    if (visibleTasks.length > 0) {
+                        setExpandedTaskIds(new Set([visibleTasks[0]._id]));
+                    }
+                }
+            }
+
+            // Sidebar navigation with Up/Down arrows when sidebar is focused
+            if (!isTyping && focusArea === 'sidebar' && expandedTaskIds.size === 0) {
+                // Build list of navigable sidebar items (system items + folders + labels)
+                const navigableItems = [];
+
+                // Add system items and folders based on sidebarItems order
+                sidebarItems.forEach(itemId => {
+                    if (!itemId.startsWith('folder-')) {
+                        // System item
+                        navigableItems.push({ type: 'system', id: itemId });
+                    } else {
+                        // Folder
+                        const folderId = itemId.replace('folder-', '');
+                        const folder = folders.find(f => f._id === folderId);
+                        if (folder) {
+                            navigableItems.push({ type: 'folder', id: folder._id, data: folder });
+                        }
+                    }
+                });
+
+                // Add labels
+                labels.forEach(label => {
+                    navigableItems.push({ type: 'label', id: label.name, data: label });
+                });
+
+                if (event.key === 'ArrowDown') {
+                    event.preventDefault();
+                    setHighlightedSidebarIndex(prev =>
+                        prev < navigableItems.length - 1 ? prev + 1 : prev
+                    );
+                } else if (event.key === 'ArrowUp') {
+                    event.preventDefault();
+                    setHighlightedSidebarIndex(prev => prev > 0 ? prev - 1 : 0);
+                } else if (event.key === 'Enter') {
+                    event.preventDefault();
+                    const selectedItem = navigableItems[highlightedSidebarIndex];
+                    if (selectedItem) {
+                        if (selectedItem.type === 'system') {
+                            changeView(selectedItem.id, null);
+                        } else if (selectedItem.type === 'folder') {
+                            changeView('folder', null, selectedItem.id);
+                        } else if (selectedItem.type === 'label') {
+                            changeView(activeTab, selectedItem.id);
+                        }
+                        // Switch focus to task list after selection
+                        setFocusArea('tasklist');
+                        if (visibleTasks.length > 0) {
+                            setExpandedTaskIds(new Set([visibleTasks[0]._id]));
+                        }
+                    }
+                }
+            }
         };
 
         const handleClickOutside = (event) => {
@@ -648,7 +719,7 @@ export const TaskManager = () => {
             window.removeEventListener('keydown', handleKeyDown);
             window.removeEventListener('mousedown', handleClickOutside);
         };
-    }, [history, forwardHistory, handleBack, handleForward, activeTab, selectedLabel, expandedTaskIds, lastCollapsedTaskId, visibleTasks, selectedTaskIds, currentPage, totalPages]);
+    }, [history, forwardHistory, handleBack, handleForward, activeTab, selectedLabel, expandedTaskIds, lastCollapsedTaskId, visibleTasks, selectedTaskIds, currentPage, totalPages, focusArea, highlightedSidebarIndex, sidebarItems, folders, labels]);
 
     useEffect(() => {
         fetchTasks(true);
@@ -1347,9 +1418,12 @@ export const TaskManager = () => {
                     onSearchChange={setSearchQuery}
                     onClearSearch={handleClearSearch}
                     searchInputRef={searchInputRef}
+                    isFocused={focusArea === 'sidebar'}
+                    highlightedIndex={focusArea === 'sidebar' ? highlightedSidebarIndex : -1}
                 />
 
-                <div className={`main-content transition-all duration-300 ${isSidebarCollapsed ? 'ml-0' : 'ml-0'}`}>
+
+                <div className={`main-content transition-all duration-300 ${isSidebarCollapsed ? 'ml-0' : 'ml-0'}`} onClick={() => setFocusArea('tasklist')}>
 
                     {/* Gmail-Style Mobile Search Pill */}
                     <div className="search-pill-container mobile-only">

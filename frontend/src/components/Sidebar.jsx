@@ -64,7 +64,7 @@ const RealTimeClock = () => {
     );
 };
 
-const SortableSidebarItem = ({ id, icon: Icon, label, isActive, onClick, data, isFolder, onDelete, count, onColorChange, color, isCollapsed, density = 5 }) => {
+const SortableSidebarItem = ({ id, icon: Icon, label, isActive, onClick, data, isFolder, onDelete, count, onColorChange, color, isCollapsed, density = 5, isHighlighted = false }) => {
     const [isDeleting, setIsDeleting] = useState(false);
 
     // Calculate padding based on numeric density (1=compact, 10=comfortable)
@@ -90,13 +90,20 @@ const SortableSidebarItem = ({ id, icon: Icon, label, isActive, onClick, data, i
         zIndex: isDragging ? 999 : undefined,
     };
 
+
     return (
         <div ref={setNodeRef} style={style} {...attributes} {...listeners} className="relative group">
             <button
-                className={`nav-item w-full flex items-center gap-3 px-4 rounded-xl transition-all ${isActive ? 'bg-blue-500/10 text-blue-400' : 'text-gray-400 hover:text-gray-200 hover:bg-white/5'
+                className={`nav-item w-full flex items-center gap-3 px-4 rounded-xl transition-all ${isActive ? 'bg-blue-500/10 text-blue-400' : isHighlighted ? 'bg-blue-500/5 text-blue-300 ring-2 ring-blue-500/50' : 'text-gray-400 hover:text-gray-200 hover:bg-white/5'}
                     } ${isOver && !isDragging ? 'bg-blue-500/20 border-blue-400 shadow-[0_0_15px_rgba(59,130,246,0.3)]' : ''} ${isCollapsed ? '!justify-center !px-0' : ''}`}
                 style={{ paddingTop: `${paddingY}px`, paddingBottom: `${paddingY}px` }}
                 onClick={onClick}
+                onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                        e.preventDefault();
+                        // Don't stopPropagation - let it bubble to TaskManager
+                    }
+                }}
                 title={isCollapsed ? label : ''}
             >
                 {Icon && (
@@ -159,7 +166,7 @@ const SortableSidebarItem = ({ id, icon: Icon, label, isActive, onClick, data, i
     );
 };
 
-const DraggableSidebarLabel = ({ id, label, isActive, onClick, color, data, count, onDelete, onColorChange, isCollapsed, density = 5 }) => {
+const DraggableSidebarLabel = ({ id, label, isActive, onClick, color, data, count, onDelete, onColorChange, isCollapsed, density = 5, isHighlighted = false }) => {
     const [isDeleting, setIsDeleting] = useState(false);
 
     const getPaddingPx = (density) => {
@@ -196,10 +203,16 @@ const DraggableSidebarLabel = ({ id, label, isActive, onClick, color, data, coun
             className="relative group w-full"
         >
             <button
-                className={`nav-item w-full flex items-center gap-3 px-4 rounded-xl transition-all touch-none cursor-grab active:cursor-grabbing ${isActive ? 'bg-blue-500/10 text-blue-400' : 'text-gray-400 hover:text-gray-200 hover:bg-white/5'
+                className={`nav-item w-full flex items-center gap-3 px-4 rounded-xl transition-all touch-none cursor-grab active:cursor-grabbing ${isActive ? 'bg-blue-500/10 text-blue-400' : isHighlighted ? 'bg-blue-500/5 text-blue-300 ring-2 ring-blue-500/50' : 'text-gray-400 hover:text-gray-200 hover:bg-white/5'}
                     } ${isOver && !isDragging ? 'bg-blue-500/20 border-blue-400 shadow-[0_0_15px_rgba(59,130,246,0.3)]' : ''} ${isCollapsed ? '!justify-center !px-0' : ''}`}
                 style={{ paddingTop: `${paddingY}px`, paddingBottom: `${paddingY}px` }}
                 onClick={onClick}
+                onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                        e.preventDefault();
+                        // Don't stopPropagation - let it bubble to TaskManager
+                    }
+                }}
                 title={isCollapsed ? label : ''}
             >
                 <div className="flex items-center justify-center h-5 w-5 shrink-0">
@@ -264,7 +277,7 @@ const DraggableSidebarLabel = ({ id, label, isActive, onClick, color, data, coun
     );
 };
 
-export function Sidebar({ activeTab, onNavigate, labels = [], onLabelsChange, selectedLabel, folders = [], onFoldersChange, selectedFolder, sidebarItems = [], stats = {}, isCollapsed, onToggle, density = 5, isOpen = false, onCloseMobile, searchQuery, onSearchChange, onClearSearch, searchInputRef }) {
+export function Sidebar({ activeTab, onNavigate, labels = [], onLabelsChange, selectedLabel, folders = [], onFoldersChange, selectedFolder, sidebarItems = [], stats = {}, isCollapsed, onToggle, density = 5, isOpen = false, onCloseMobile, searchQuery, onSearchChange, onClearSearch, searchInputRef, isFocused = false, highlightedIndex = -1 }) {
     const { theme, toggleTheme } = useTheme();
     const [isAddingLabel, setIsAddingLabel] = useState(false);
     const [newLabelName, setNewLabelName] = useState('');
@@ -363,10 +376,11 @@ export function Sidebar({ activeTab, onNavigate, labels = [], onLabelsChange, se
 
     return (
         <div
-            className={`sidebar shrink-0 h-screen border-r flex flex-col pt-8 transition-all duration-300 ease-in-out ${isCollapsed ? 'w-[80px]' : 'w-[280px]'} ${isOpen ? 'mobile-open' : ''}`}
+            className={`sidebar shrink-0 h-screen border-r flex flex-col pt-8 transition-all duration-300 ease-in-out ${isCollapsed ? 'w-[80px]' : 'w-[280px]'} ${isOpen ? 'mobile-open' : ''} ${isFocused ? 'border-r-blue-500/50' : ''}`}
             style={{
                 background: 'var(--bg-sidebar)',
-                borderColor: 'var(--border)'
+                borderColor: isFocused ? 'rgba(59, 130, 246, 0.5)' : 'var(--border)',
+                boxShadow: isFocused ? '0 0 20px rgba(59, 130, 246, 0.15)' : 'none'
             }}
         >
             {/* Mobile Close Button */}
@@ -445,6 +459,7 @@ export function Sidebar({ activeTab, onNavigate, labels = [], onLabelsChange, se
                     <SortableContext items={sidebarItems.map(id => `sidebar-${id}`)} strategy={verticalListSortingStrategy}>
                         {(() => {
                             let itemCount = 0;
+                            let currentIndex = 0;
                             const itemLimit = 10;
 
                             return sidebarItems.map(itemId => {
@@ -455,6 +470,9 @@ export function Sidebar({ activeTab, onNavigate, labels = [], onLabelsChange, se
 
                                     itemCount++;
                                     if (!showAllFolders && itemCount > itemLimit) return null;
+
+                                    const isHighlighted = currentIndex === highlightedIndex;
+                                    currentIndex++;
 
                                     return (
                                         <SortableSidebarItem
@@ -468,6 +486,7 @@ export function Sidebar({ activeTab, onNavigate, labels = [], onLabelsChange, se
                                             count={stats[itemId]}
                                             isCollapsed={isCollapsed}
                                             density={density}
+                                            isHighlighted={isHighlighted}
                                         />
                                     );
                                 }
@@ -479,6 +498,9 @@ export function Sidebar({ activeTab, onNavigate, labels = [], onLabelsChange, se
 
                                     itemCount++;
                                     if (!showAllFolders && itemCount > itemLimit) return null;
+
+                                    const isHighlighted = currentIndex === highlightedIndex;
+                                    currentIndex++;
 
                                     return (
                                         <SortableSidebarItem
@@ -494,6 +516,7 @@ export function Sidebar({ activeTab, onNavigate, labels = [], onLabelsChange, se
                                             count={stats.folders && stats.folders[folder._id]}
                                             isCollapsed={isCollapsed}
                                             density={density}
+                                            isHighlighted={isHighlighted}
                                         />
                                     );
                                 }
@@ -606,22 +629,30 @@ export function Sidebar({ activeTab, onNavigate, labels = [], onLabelsChange, se
                         </AnimatePresence>
 
                         <SortableContext items={labels.map(l => `sidebar-label-${l.name}`)} strategy={verticalListSortingStrategy}>
-                            {labels.map((label) => (
-                                <DraggableSidebarLabel
-                                    key={label._id}
-                                    id={`sidebar-label-${label.name}`}
-                                    label={label.name}
-                                    isActive={selectedLabel === label.name}
-                                    onClick={() => onNavigate(activeTab, label.name)}
-                                    color={label.color}
-                                    data={{ type: 'sidebar-label', target: label.name, color: label.color }}
-                                    count={stats.labels && stats.labels[label.name]}
-                                    onDelete={(e) => handleDeleteLabel(e, label._id)}
-                                    onColorChange={(e) => handleColorChange(e, label._id)}
-                                    isCollapsed={isCollapsed}
-                                    density={density}
-                                />
-                            ))}
+                            {(() => {
+                                // Calculate starting index for labels (after system items and folders)
+                                let labelStartIndex = sidebarItems.length;
+                                return labels.map((label, idx) => {
+                                    const isHighlighted = (labelStartIndex + idx) === highlightedIndex;
+                                    return (
+                                        <DraggableSidebarLabel
+                                            key={label._id}
+                                            id={`sidebar-label-${label.name}`}
+                                            label={label.name}
+                                            isActive={selectedLabel === label.name}
+                                            onClick={() => onNavigate(activeTab, label.name)}
+                                            color={label.color}
+                                            data={{ type: 'sidebar-label', target: label.name, color: label.color }}
+                                            count={stats.labels && stats.labels[label.name]}
+                                            onDelete={(e) => handleDeleteLabel(e, label._id)}
+                                            onColorChange={(e) => handleColorChange(e, label._id)}
+                                            isCollapsed={isCollapsed}
+                                            density={density}
+                                            isHighlighted={isHighlighted}
+                                        />
+                                    );
+                                });
+                            })()}
                         </SortableContext>
 
 
