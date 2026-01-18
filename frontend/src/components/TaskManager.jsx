@@ -568,6 +568,27 @@ export const TaskManager = () => {
                     handleForward();
                 }
             }
+
+            // Arrow Up/Down navigation for expanded tasks
+            if (!isTyping && expandedTaskIds.size === 1) {
+                const currentId = Array.from(expandedTaskIds)[0];
+                const currentIndex = visibleTasks.findIndex(t => t._id === currentId);
+
+                if (event.key === 'ArrowDown') {
+                    if (currentIndex !== -1 && currentIndex < visibleTasks.length - 1) {
+                        event.preventDefault();
+                        const nextTask = visibleTasks[currentIndex + 1];
+                        setExpandedTaskIds(new Set([nextTask._id]));
+                        // Optionally scroll into view if needed, but standard expansion might handle it
+                    }
+                } else if (event.key === 'ArrowUp') {
+                    if (currentIndex > 0) {
+                        event.preventDefault();
+                        const prevTask = visibleTasks[currentIndex - 1];
+                        setExpandedTaskIds(new Set([prevTask._id]));
+                    }
+                }
+            }
         };
 
         const handleClickOutside = (event) => {

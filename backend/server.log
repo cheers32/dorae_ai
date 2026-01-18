@@ -447,3 +447,14 @@ DEBUG: get_tasks params - status: Active, label: None, args: ImmutableMultiDict(
 127.0.0.1 - - [18/Jan/2026 00:17:30] "GET /api/stats?user_email=weiteng32@gmail.com HTTP/1.1" 200 -
 127.0.0.1 - - [18/Jan/2026 00:17:44] "GET /api/tasks?user_email=weiteng32@gmail.com&status=Active&folderId=null&page=1&per_page=25 HTTP/1.1" 200 -
 127.0.0.1 - - [18/Jan/2026 00:17:45] "GET /api/stats?user_email=weiteng32@gmail.com HTTP/1.1" 200 -
+127.0.0.1 - - [18/Jan/2026 00:20:04] "POST /api/traffic HTTP/1.1" 200 -
+127.0.0.1 - - [18/Jan/2026 00:20:04] "POST /api/traffic HTTP/1.1" 200 -
+127.0.0.1 - - [18/Jan/2026 00:20:33] "POST /api/traffic HTTP/1.1" 200 -
+127.0.0.1 - - [18/Jan/2026 00:20:33] "POST /api/traffic HTTP/1.1" 200 -
+127.0.0.1 - - [18/Jan/2026 00:22:28] "PUT /api/tasks/696c61ccee086be364ea368f HTTP/1.1" 200 -
+127.0.0.1 - - [18/Jan/2026 00:22:28] "GET /api/tasks?user_email=weiteng32@gmail.com&status=Active&folderId=null&page=1&per_page=25 HTTP/1.1" 200 -
+127.0.0.1 - - [18/Jan/2026 00:22:29] "GET /api/stats?user_email=weiteng32@gmail.com HTTP/1.1" 200 -
+127.0.0.1 - - [18/Jan/2026 00:22:33] "GET /api/tasks?user_email=weiteng32@gmail.com&status=Active&folderId=null&page=1&per_page=25 HTTP/1.1" 200 -
+127.0.0.1 - - [18/Jan/2026 00:22:34] "GET /api/stats?user_email=weiteng32@gmail.com HTTP/1.1" 200 -
+127.0.0.1 - - [18/Jan/2026 00:22:43] "GET /api/tasks?user_email=weiteng32@gmail.com&status=Active&folderId=null&page=1&per_page=25 HTTP/1.1" 200 -
+127.0.0.1 - - [18/Jan/2026 00:22:44] "GET /api/stats?user_email=weiteng32@gmail.com HTTP/1.1" 200 -
