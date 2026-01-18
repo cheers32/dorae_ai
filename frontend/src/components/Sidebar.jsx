@@ -64,8 +64,16 @@ const SortableSidebarItem = ({ id, icon: Icon, label, isActive, onClick, data, i
                 onClick={onClick}
                 title={isCollapsed ? label : ''}
             >
-                {Icon && <Icon size={18} className={`shrink-0 ${isOver ? 'text-blue-400' : ''}`} />}
-                {!Icon && <div className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: data?.color || '#3B82F6' }} />}
+                {Icon && (
+                    <div className="flex items-center justify-center h-5 w-5 shrink-0">
+                        <Icon size={18} className={`${isOver ? 'text-blue-400' : ''}`} />
+                    </div>
+                )}
+                {!Icon && (
+                    <div className="flex items-center justify-center h-5 w-5 shrink-0">
+                        <div className="w-2 h-2 rounded-full" style={{ backgroundColor: data?.color || '#3B82F6' }} />
+                    </div>
+                )}
                 {!isCollapsed && <span className={`text-sm font-medium truncate ${isOver ? 'text-blue-400' : ''}`}>{label}</span>}
                 {!isCollapsed && count !== undefined && count > 0 && (
                     <span className={`ml-auto text-xs ${isActive ? 'text-blue-400' : 'text-gray-600'}`}>{count}</span>
@@ -159,7 +167,9 @@ const DraggableSidebarLabel = ({ id, label, isActive, onClick, color, data, coun
                 onClick={onClick}
                 title={isCollapsed ? label : ''}
             >
-                <div className="w-2 h-2 rounded-full pointer-events-none shrink-0" style={{ backgroundColor: color || '#3B82F6' }} />
+                <div className="flex items-center justify-center h-5 w-5 shrink-0">
+                    <div className="w-2 h-2 rounded-full pointer-events-none" style={{ backgroundColor: color || '#3B82F6' }} />
+                </div>
                 {!isCollapsed && <span className={`text-sm font-medium pointer-events-none truncate ${isOver ? 'text-blue-400' : ''}`}>{label}</span>}
                 {!isCollapsed && count !== undefined && count > 0 && (
                     <span className={`ml-auto text-xs transition-opacity group-hover:opacity-0 ${isActive ? 'text-blue-400' : 'text-gray-600'}`}>{count}</span>
