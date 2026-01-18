@@ -532,7 +532,7 @@ export const TaskItem = forwardRef(({ task, onUpdate, showTags, showFolders, fol
                         <div
                             className={`w-4 h-4 rounded-sm border flex items-center justify-center cursor-pointer mr-2 transition-all ${isSelected
                                 ? 'bg-blue-500 border-blue-500 opacity-100'
-                                : 'border-gray-600 hover:border-blue-500 opacity-0 group-hover:opacity-100' // Hidden by default, show on hover
+                                : 'border-gray-600 hover:border-blue-500 opacity-50 hover:opacity-100' // Visible but fainter by default
                                 }`}
                             onClick={(e) => {
                                 e.stopPropagation();

@@ -167,7 +167,7 @@ body {
 /* Main Content - Legacy rule removed to prevent conflicts */
 
 .content-header {
-  margin-bottom: 3rem;
+  margin-bottom: 0;
 }
 
 .content-header h1 {
