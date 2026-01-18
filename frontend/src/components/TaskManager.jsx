@@ -140,11 +140,6 @@ export const TaskManager = () => {
         return [];
     }); // [NEW] Workarea logic
     const [autoExpandTaskId, setAutoExpandTaskId] = useState(null); // ID of task to auto-expand after navigation
-    const [lastScanTrigger, setLastScanTrigger] = useState(0);
-
-    const triggerScanRefresh = () => {
-        setLastScanTrigger(Date.now());
-    };
 
     // Note: Auto-refresh after scans has been removed to prevent UI bugs.
     // Scans still run automatically in the background, but users must manually refresh to see results.
@@ -914,7 +909,6 @@ export const TaskManager = () => {
 
             fetchTasks(false);
             fetchStats();
-            triggerScanRefresh();
         } catch (err) {
             console.error(err);
         }
@@ -2029,10 +2023,7 @@ export const TaskManager = () => {
                                                         id={`workarea-task-${item._id}`}
                                                         task={item}
                                                         onUpdate={() => {
-                                                            fetchTasks(false);
-                                                            fetchStats();
                                                             refreshWorkareaTask(item._id);
-                                                            triggerScanRefresh();
                                                         }}
                                                         showTags={true}
                                                         showFolders={showFolders}
@@ -2125,9 +2116,7 @@ export const TaskManager = () => {
                                                                     id={task._id}
                                                                     task={task}
                                                                     onUpdate={() => {
-                                                                        fetchTasks(false);
-                                                                        fetchStats();
-                                                                        triggerScanRefresh();
+                                                                        // Auto-refresh disabled - use manual refresh button
                                                                     }}
                                                                     showTags={showTags}
                                                                     showFolders={showFolders}
