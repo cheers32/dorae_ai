@@ -22,7 +22,8 @@ import {
     MessageSquare,
     Palette,
     Moon,
-    Sun
+    Sun,
+    Star
 } from 'lucide-react';
 import { api } from '../api';
 import { useDroppable, useDraggable } from '@dnd-kit/core';
@@ -253,6 +254,7 @@ export function Sidebar({ activeTab, onNavigate, labels = [], onLabelsChange, se
     const systemItems = {
         'active': { label: 'Active Tasks', icon: Layout },
         'all': { label: 'All Tasks', icon: Layers },
+        'starred': { label: 'Starred', icon: Star },
         'closed': { label: 'Closed Tasks', icon: CheckSquare },
         'assistant': { label: 'Agents', icon: MessageSquare },
         'trash': { label: 'Trash', icon: Trash2 },

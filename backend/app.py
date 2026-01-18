@@ -131,15 +131,29 @@ def get_tasks():
             query['status'] = {'$in': ['Deleted', 'deleted']}
         elif status == 'Active':
             # Exclude completed/closed and deleted/trash/archived
-            query['status'] = {'$nin': ['Closed', 'completed', 'Deleted', 'deleted', 'Archived', 'archived']}
-        elif status:
-            query['status'] = status
-        else:
-            # Default: exclude deleted and archived
-            query['status'] = {'$nin': ['Deleted', 'deleted', 'Archived', 'archived']}
+            query['status'] = {
+                '$nin': ['Deleted', 'deleted', 'Archived', 'archived'],
+            }
+            # Special case for "Starred" view: we want tasks that are starred, regardless of being in a folder or not,
+            # BUT we still usually want to exclude trash/archived.
+            # However, the user might want to see starred tasks that are closed?
+            # Gmail shows starred emails even if archived (in "Starred" folder).
+            # For now, let's keep the exclusion of Deleted/Archived.
+            if status == 'Starred':
+                 query['star_color'] = {'$ne': None}
+                 pass
+            elif status:
+                query['status'] = status
+            else:
+                # Default: exclude deleted and archived
+                 query['status'] = {'$nin': ['Deleted', 'deleted', 'Archived', 'archived']}
 
         if label:
             query['labels'] = label
+
+        star_color = request.args.get('star_color')
+        if star_color:
+            query['star_color'] = star_color
 
         user_email = request.args.get('user_email')
         if user_email:
@@ -383,11 +397,20 @@ def get_stats():
             count = tasks_collection.count_documents(l_count_query)
             label_counts[label_name] = count
             
+        # 6. Starred
+        starred_query = {
+            'status': {'$nin': ['Deleted', 'deleted', 'Archived', 'archived']},
+            'star_color': {'$ne': None}
+        }
+        starred_query.update(base_query)
+        starred_count = tasks_collection.count_documents(starred_query)
+
         return jsonify({
             'active': active_count,
             'all': all_active_count,
             'closed': closed_count,
             'trash': trash_count,
+            'starred': starred_count,
             'folders': folder_counts,
             'labels': label_counts
         }), 200
@@ -425,7 +448,8 @@ def update_task(task_id):
         data = request.json
         update_fields = {}
         update_fields = {}
-        allowed_fields = ['title', 'priority', 'category', 'status', 'importance', 'labels', 'folderId', 'attachments', 'assigned_agent_ids']
+        update_fields = {}
+        allowed_fields = ['title', 'priority', 'category', 'status', 'importance', 'labels', 'folderId', 'attachments', 'assigned_agent_ids', 'star_color']
         
         for field in allowed_fields:
             if field in data:
@@ -504,6 +528,8 @@ def create_task():
             "labels": data.get('labels', []), # Use provided labels or empty array
             "folderId": data.get('folderId'),
             "folderId": data.get('folderId'),
+            "folderId": data.get('folderId'),
+            "star_color": None, # Default
             "assigned_agent_ids": [], # [NEW]
             "user_email": data.get('user_email'), # Associate with user
             "updates": [{ # Initial update for task creation

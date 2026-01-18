@@ -376,6 +376,7 @@ export const TaskManager = () => {
             if (activeTab === 'trash') status = 'Deleted';
             if (activeTab === 'folder') status = null;
             if (activeTab === 'all') status = null;
+            if (activeTab === 'starred') status = 'Starred';
 
             let queryFolderId = selectedFolder;
             // Exclusive visibility: If in 'Active' tab and no folder selected, only show unfiled tasks
@@ -422,7 +423,7 @@ export const TaskManager = () => {
 
     // Sync folders with sidebarItems
     useEffect(() => {
-        const systemItems = ['active', 'all', 'closed', 'assistant', 'trash'];
+        const systemItems = ['active', 'all', 'starred', 'closed', 'assistant', 'trash'];
         const folderIds = folders.map(f => `folder-${f._id}`);
 
         // Load saved order

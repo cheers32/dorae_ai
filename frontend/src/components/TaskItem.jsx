@@ -15,7 +15,8 @@ import {
     Bot,
     Plus,
     ChevronsRight,
-    ChevronRight
+    ChevronRight,
+    Star
 } from 'lucide-react';
 import { api } from '../api';
 import { UpdatesTimeline } from './UpdatesTimeline';
@@ -542,6 +543,38 @@ export const TaskItem = forwardRef(({ task, onUpdate, showTags, showFolders, fol
                             {isSelected && <Check size={10} className="text-white" strokeWidth={4} />}
                         </div>
 
+                        {/* [NEW] Star Toggle - Gmail Style Multi-Color */}
+                        <div
+                            className="cursor-pointer mr-1 relative group/star shrink-0"
+                            onClick={async (e) => {
+                                e.stopPropagation();
+                                try {
+                                    // Cycle: null -> yellow -> red -> green -> blue -> null
+                                    const colors = [null, 'yellow', 'red', 'green', 'blue'];
+                                    const currentColor = task.star_color || (task.is_starred ? 'yellow' : null); // Fallback for migration
+                                    const currentIndex = colors.indexOf(currentColor);
+                                    const nextColor = colors[(currentIndex + 1) % colors.length];
+
+                                    await api.updateTask(task._id, { star_color: nextColor });
+                                    onUpdate();
+                                } catch (err) {
+                                    console.error("Failed to toggle star", err);
+                                }
+                            }}
+                        >
+                            <Star
+                                size={18}
+                                className={`transition-all duration-200 ${task.star_color === 'red' ? 'text-red-500 drop-shadow-[0_0_2px_rgba(239,68,68,0.5)]' :
+                                        task.star_color === 'green' ? 'text-green-500 drop-shadow-[0_0_2px_rgba(34,197,94,0.5)]' :
+                                            task.star_color === 'blue' ? 'text-blue-500 drop-shadow-[0_0_2px_rgba(59,130,246,0.5)]' :
+                                                (task.star_color === 'yellow' || task.is_starred) ? 'text-yellow-400 drop-shadow-[0_0_2px_rgba(250,204,21,0.5)]' :
+                                                    'text-gray-400 hover:text-gray-300 opacity-40 hover:opacity-100'
+                                    }`}
+                                fill={task.star_color || task.is_starred ? "currentColor" : "transparent"}
+                                strokeWidth={task.star_color || task.is_starred ? 0 : 2}
+                            />
+                        </div>
+
                         {/* Gmail-style Importance Marker */}
                         {localLabels.includes('Important') ? (
                             <div
@@ -584,6 +617,7 @@ export const TaskItem = forwardRef(({ task, onUpdate, showTags, showFolders, fol
                             {expanded || globalExpanded ? <ChevronUp size={16} /> : <GripVertical size={16} />}
                         </div>
                     </div>
+
 
                     <div className="relative flex items-center justify-center mobile-dot-group">
                         <div
@@ -883,7 +917,7 @@ export const TaskItem = forwardRef(({ task, onUpdate, showTags, showFolders, fol
                         )
                     )}
                 </div>
-            </div>
+            </div >
 
             <AnimatePresence>
                 {(expanded || globalExpanded) && (
