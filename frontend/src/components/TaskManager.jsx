@@ -1182,6 +1182,10 @@ export const TaskManager = () => {
                     density={sidebarDensity}
                     isOpen={isMobileSidebarOpen}
                     onCloseMobile={() => setIsMobileSidebarOpen(false)}
+                    searchQuery={searchQuery}
+                    onSearchChange={setSearchQuery}
+                    onClearSearch={handleClearSearch}
+                    searchInputRef={searchInputRef}
                 />
 
                 <div className={`main-content transition-all duration-300 ${isSidebarCollapsed ? 'ml-0' : 'ml-0'}`}>
@@ -1315,126 +1319,58 @@ export const TaskManager = () => {
 
                             </div>
 
-                            {/* Create Task Bar OR Search Bar (Central Priority) */}
+                            {/* Create Task Bar (Central Priority) - Search moved to Sidebar */}
                             <div className="flex-[3] flex justify-center mx-6 min-w-[300px]">
                                 <div className="w-full max-w-xl group relative transition-all duration-300 focus-within:max-w-2xl">
-                                    {isSearchPrimary ? (
-                                        // Search Bar (Central)
-                                        <div className="relative w-full">
-                                            <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                                                <Search size={18} className="text-[var(--text-muted)] group-focus-within:text-blue-400 transition-colors" />
-                                            </div>
-                                            <input
-                                                ref={searchInputRef}
-                                                type="text"
-                                                placeholder={`Search ${activeTab === 'trash' ? 'deleted' : activeTab === 'closed' ? 'closed' : 'all'} tasks...`}
-                                                value={searchQuery}
-                                                onFocus={() => {
-                                                    setShouldFocusSearch(true);
-                                                }}
-                                                onChange={(e) => setSearchQuery(e.target.value)}
+                                    {/* Create Task Bar */}
+                                    <form
+                                        onSubmit={(e) => {
+                                            handleCreateTask(e);
+                                        }}
+                                        className="relative w-full"
+                                    >
+                                        <div
+                                            className="flex items-center w-full bg-[var(--input-bg)] border border-[var(--border)] rounded-xl px-4 py-2 focus-within:bg-white/10 focus-within:border-blue-500/50 focus-within:ring-4 focus-within:ring-blue-500/10 transition-all shadow-inner cursor-text"
+                                            onClick={() => newTaskTextareaRef.current?.focus()}
+                                        >
+                                            <Plus size={18} className="text-[var(--text-muted)] group-focus-within:text-blue-400 transition-colors shrink-0 mr-3" />
+                                            <textarea
+                                                ref={newTaskTextareaRef}
+                                                rows={1}
+                                                placeholder={selectedFolder ? `Add task to ${stats.folders[selectedFolder] ? folders.find(f => f._id === selectedFolder)?.name : 'folder'}...` : selectedLabel ? `Add task to ${selectedLabel}...` : "What needs to be done?"}
+                                                value={newTaskTitle}
+                                                onChange={(e) => setNewTaskTitle(e.target.value)}
                                                 onKeyDown={(e) => {
-                                                    if (e.key === 'Escape') {
-                                                        handleClearSearch();
+                                                    if (e.key === 'Enter' && !e.shiftKey) {
+                                                        e.preventDefault();
+                                                        handleCreateTask(e);
+                                                    } else if (e.key === 'Escape') {
+                                                        setNewTaskTitle('');
                                                         e.currentTarget.blur();
                                                     }
                                                 }}
-                                                className="w-full bg-[var(--input-bg)] border border-[var(--border)] rounded-xl py-2 pl-12 pr-10 text-sm text-[var(--text-main)] placeholder:text-[var(--text-muted)] focus:outline-none focus:bg-white/10 focus:border-blue-500/50 focus:ring-4 focus:ring-blue-500/10 transition-all shadow-inner"
+                                                className="flex-1 bg-transparent border-none outline-none text-sm text-[var(--text-main)] placeholder:text-[var(--text-muted)] resize-none overflow-hidden py-0 leading-normal"
                                             />
-                                            {searchQuery && (
+                                            {newTaskTitle && (
                                                 <button
                                                     type="button"
-                                                    onClick={handleClearSearch}
-                                                    className="absolute inset-y-0 right-0 pr-3 flex items-center text-[var(--text-muted)] hover:text-gray-300 transition-colors"
+                                                    onClick={(e) => {
+                                                        e.stopPropagation(); // Prevent wrapper click
+                                                        setNewTaskTitle('');
+                                                    }}
+                                                    className="shrink-0 ml-2 flex items-center text-[var(--text-muted)] hover:text-gray-300 transition-colors"
                                                 >
                                                     <X size={16} />
                                                 </button>
                                             )}
                                         </div>
-                                    ) : (
-                                        // Create Task Bar
-                                        <form
-                                            onSubmit={(e) => {
-                                                handleCreateTask(e);
-                                            }}
-                                            className="relative w-full"
-                                        >
-                                            <div
-                                                className="flex items-center w-full bg-[var(--input-bg)] border border-[var(--border)] rounded-xl px-4 py-2 focus-within:bg-white/10 focus-within:border-blue-500/50 focus-within:ring-4 focus-within:ring-blue-500/10 transition-all shadow-inner cursor-text"
-                                                onClick={() => newTaskTextareaRef.current?.focus()}
-                                            >
-                                                <Plus size={18} className="text-[var(--text-muted)] group-focus-within:text-blue-400 transition-colors shrink-0 mr-3" />
-                                                <textarea
-                                                    ref={newTaskTextareaRef}
-                                                    rows={1}
-                                                    placeholder={selectedFolder ? `Add task to ${stats.folders[selectedFolder] ? folders.find(f => f._id === selectedFolder)?.name : 'folder'}...` : selectedLabel ? `Add task to ${selectedLabel}...` : "What needs to be done?"}
-                                                    value={newTaskTitle}
-                                                    onChange={(e) => setNewTaskTitle(e.target.value)}
-                                                    onKeyDown={(e) => {
-                                                        if (e.key === 'Enter' && !e.shiftKey) {
-                                                            e.preventDefault();
-                                                            handleCreateTask(e);
-                                                        } else if (e.key === 'Escape') {
-                                                            setNewTaskTitle('');
-                                                            e.currentTarget.blur();
-                                                        }
-                                                    }}
-                                                    className="flex-1 bg-transparent border-none outline-none text-sm text-[var(--text-main)] placeholder:text-[var(--text-muted)] resize-none overflow-hidden py-0 leading-normal"
-                                                />
-                                                {newTaskTitle && (
-                                                    <button
-                                                        type="button"
-                                                        onClick={(e) => {
-                                                            e.stopPropagation(); // Prevent wrapper click
-                                                            setNewTaskTitle('');
-                                                        }}
-                                                        className="shrink-0 ml-2 flex items-center text-[var(--text-muted)] hover:text-gray-300 transition-colors"
-                                                    >
-                                                        <X size={16} />
-                                                    </button>
-                                                )}
-                                            </div>
-                                        </form>
-                                    )}
+                                    </form>
                                 </div>
                             </div>
 
                             <div className="flex items-center gap-4 shrink-0">
                                 {/* Search (Secondary) - Only show if not primary */}
-                                {!isSearchPrimary && (
-                                    <div className="relative group/search">
-                                        <div className={`flex items-center transition-all duration-300 ${searchQuery ? 'w-64 bg-white/10' : 'w-8 hover:w-64 hover:bg-[var(--input-bg)]'} rounded-lg overflow-hidden border border-transparent focus-within:w-64 focus-within:border-blue-500/30 focus-within:bg-white/10`}>
-                                            <div className="absolute left-2 flex items-center pointer-events-none text-[var(--text-muted)]">
-                                                <Search size={16} />
-                                            </div>
-                                            <input
-                                                ref={searchInputRef}
-                                                type="text"
-                                                placeholder="Search"
-                                                value={searchQuery}
-                                                onFocus={() => {
-                                                    setShouldFocusSearch(true);
-                                                }}
-                                                onChange={(e) => setSearchQuery(e.target.value)}
-                                                onKeyDown={(e) => {
-                                                    if (e.key === 'Escape') {
-                                                        handleClearSearch();
-                                                        e.currentTarget.blur();
-                                                    }
-                                                }}
-                                                className="w-full bg-transparent py-1.5 pl-8 pr-8 text-xs text-[var(--text-main)] placeholder:text-[var(--text-muted)] focus:outline-none"
-                                            />
-                                            {searchQuery && (
-                                                <button
-                                                    onClick={handleClearSearch}
-                                                    className="absolute right-2 flex items-center text-[var(--text-muted)] hover:text-gray-300"
-                                                >
-                                                    <X size={14} />
-                                                </button>
-                                            )}
-                                        </div>
-                                    </div>
-                                )}
+
 
                                 {activeTab === 'assistant' && (
                                     <button

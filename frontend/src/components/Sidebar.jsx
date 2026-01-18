@@ -7,18 +7,20 @@ import {
     Menu,
     Trash2,
     Plus,
+
     Tag as TagIcon,
+    Search as SearchIcon,
     X,
+    Layers,
     LogOut,
-    MessageSquare,
-    Palette,
-    Folder,
     Check,
     ChevronLeft,
     ChevronRight,
     ChevronDown,
     ChevronUp,
-    Layers,
+    Folder,
+    MessageSquare,
+    Palette,
     Moon,
     Sun
 } from 'lucide-react';
@@ -229,7 +231,7 @@ const DraggableSidebarLabel = ({ id, label, isActive, onClick, color, data, coun
     );
 };
 
-export function Sidebar({ activeTab, onNavigate, labels = [], onLabelsChange, selectedLabel, folders = [], onFoldersChange, selectedFolder, sidebarItems = [], stats = {}, isCollapsed, onToggle, density = 5, isOpen = false, onCloseMobile }) {
+export function Sidebar({ activeTab, onNavigate, labels = [], onLabelsChange, selectedLabel, folders = [], onFoldersChange, selectedFolder, sidebarItems = [], stats = {}, isCollapsed, onToggle, density = 5, isOpen = false, onCloseMobile, searchQuery, onSearchChange, onClearSearch, searchInputRef }) {
     const { theme, toggleTheme } = useTheme();
     const [isAddingLabel, setIsAddingLabel] = useState(false);
     const [newLabelName, setNewLabelName] = useState('');
@@ -341,42 +343,52 @@ export function Sidebar({ activeTab, onNavigate, labels = [], onLabelsChange, se
             </button>
             <div className={`px-6 mb-6 flex items-start justify-between ${isCollapsed ? 'px-0 justify-center' : ''}`}>
                 <div
-                    className="flex items-start gap-4 cursor-pointer group"
-                    onClick={onToggle}
+                    className="flex items-center gap-4 w-full"
                 >
                     <div
-                        className="p-2 rounded-xl transition-colors text-gray-400"
+                        className="p-2 rounded-xl transition-colors text-gray-400 shrink-0 cursor-pointer"
                         onMouseEnter={(e) => { e.currentTarget.style.color = 'var(--text-main)'; e.currentTarget.style.background = 'var(--card-hover)'; }}
                         onMouseLeave={(e) => { e.currentTarget.style.color = 'var(--text-muted)'; e.currentTarget.style.background = 'transparent'; }}
+                        onClick={onToggle}
                     >
                         <Menu size={24} />
                     </div>
+
                     {!isCollapsed && (
-                        <div className="flex flex-col items-start px-1 pt-0.5">
-                            <h2 className="text-xl font-semibold tracking-tight leading-none mb-1" style={{ color: 'var(--text-main)' }}>
-                                Task AI
-                            </h2>
-                            <span className="text-[9px] font-mono uppercase tracking-[0.3em] leading-none" style={{ color: 'var(--text-muted)' }}>
-                                {__APP_VERSION__}
-                            </span>
+                        <div className="flex-1 relative group">
+                            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                <SearchIcon size={16} className="text-[var(--text-muted)]" />
+                            </div>
+                            <input
+                                ref={searchInputRef}
+                                type="text"
+                                value={searchQuery || ''}
+                                onChange={(e) => onSearchChange && onSearchChange(e.target.value)}
+                                onKeyDown={(e) => {
+                                    if (e.key === 'Escape' && onClearSearch) {
+                                        onClearSearch();
+                                        e.currentTarget.blur();
+                                    }
+                                }}
+                                placeholder="Search"
+                                className="w-full bg-[var(--input-bg)] bg-opacity-50 hover:bg-opacity-100 focus:bg-opacity-100 border border-transparent focus:border-blue-500/30 rounded-lg py-2 pl-9 pr-3 text-sm transition-all outline-none"
+                                style={{
+                                    color: 'var(--text-main)',
+                                }}
+                            />
                         </div>
                     )}
                 </div>
-                <div className="flex items-center gap-1">
-                    {!isCollapsed && (
-                        <button
-                            onClick={() => window.location.href = '/'}
-                            className="p-2 rounded-xl border border-transparent transition-all flex items-center justify-center group"
-                            style={{ color: 'var(--text-muted)' }}
-                            onMouseEnter={(e) => { e.currentTarget.style.color = 'var(--text-main)'; e.currentTarget.style.background = 'var(--card-hover)'; }}
-                            onMouseLeave={(e) => { e.currentTarget.style.color = 'var(--text-muted)'; e.currentTarget.style.background = 'transparent'; }}
-                            title="Back to Home"
-                        >
-                            <Home size={18} className="group-hover:scale-110 transition-transform" />
-                        </button>
-                    )}
-                </div>
             </div>
+
+            {!isCollapsed && (
+                <div className="px-6 mb-4 -mt-2">
+                    <span className="text-[9px] font-mono uppercase tracking-[0.3em] leading-none opacity-50 block text-right" style={{ color: 'var(--text-muted)' }}>
+                        {__APP_VERSION__}
+                    </span>
+                </div>
+            )}
+
 
             <div className="flex-1 px-4 overflow-y-auto space-y-4 scrollbar-hide">
                 <nav className={spacingClass}>
@@ -613,6 +625,6 @@ export function Sidebar({ activeTab, onNavigate, labels = [], onLabelsChange, se
                     {!isCollapsed && <span className="text-sm font-medium">Log Out</span>}
                 </button>
             </div>
-        </div>
+        </div >
     );
 }
