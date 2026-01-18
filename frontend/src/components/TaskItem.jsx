@@ -165,7 +165,7 @@ const LabelPicker = ({ availableLabels, selectedLabels, onToggle, onClose, trigg
     return (
         <div
             ref={pickerRef}
-            className="absolute left-0 top-full mt-2 z-[100] bg-[var(--bg-card)] border border-[var(--border)] rounded-lg shadow-2xl p-2 min-w-[200px] max-h-[300px] overflow-y-auto"
+            className="absolute left-0 top-full mt-2 z-[100] bg-black/90 backdrop-blur-xl border border-white/10 rounded-lg shadow-2xl p-2 min-w-[200px]"
             onClick={(e) => e.stopPropagation()}
         >
             <div className="space-y-0.5">
