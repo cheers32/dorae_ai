@@ -6,7 +6,7 @@ import { ChatInterface } from './ChatInterface';
 import { AgentList } from './AgentList';
 import { AgentItem } from './AgentItem';
 import { GeminiPanel, GeminiIcon } from './GeminiPanel';
-import { Search, Plus, Home as HomeIcon, Tag as TagIcon, ArrowLeft, ArrowRight, Trash2, X, ChevronsUpDown, ChevronsDownUp, Type, MessageSquare, ZoomIn, ZoomOut, MoreVertical, SlidersHorizontal, Settings2, Bug, Calendar, ArrowDownAZ, GripVertical, Folder, Sparkles, Zap, Clock, Paperclip, Minus, Copy, Menu, Check } from 'lucide-react';
+import { Search, Plus, Home as HomeIcon, Tag as TagIcon, ArrowLeft, ArrowRight, Trash2, X, ChevronsUpDown, ChevronsDownUp, Type, MessageSquare, ZoomIn, ZoomOut, MoreVertical, SlidersHorizontal, Settings2, Bug, Calendar, ArrowDownAZ, GripVertical, Folder, Sparkles, Zap, Clock, Paperclip, Minus, Copy, Menu, Check, RotateCw } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import {
@@ -146,22 +146,8 @@ export const TaskManager = () => {
         setLastScanTrigger(Date.now());
     };
 
-    // Polling for importance scan results
-    useEffect(() => {
-        if (!lastScanTrigger) return;
-
-        const now = Date.now();
-        if (now - lastScanTrigger > 45000) return; // Stop after 45s
-
-        const timers = [
-            setTimeout(() => { fetchTasks(false); fetchStats(); }, 5000),
-            setTimeout(() => { fetchTasks(false); fetchStats(); }, 15000),
-            setTimeout(() => { fetchTasks(false); fetchStats(); }, 30000),
-            setTimeout(() => { fetchTasks(false); fetchStats(); }, 45000),
-        ];
-
-        return () => timers.forEach(clearTimeout);
-    }, [lastScanTrigger]);
+    // Note: Auto-refresh after scans has been removed to prevent UI bugs.
+    // Scans still run automatically in the background, but users must manually refresh to see results.
 
     // Filter out workarea tasks from main list and apply search
     // Filter out workarea tasks from main list
@@ -1663,8 +1649,17 @@ export const TaskManager = () => {
                                     </button>
                                 )}
 
-
-
+                                {/* Refresh Button */}
+                                <button
+                                    onClick={() => {
+                                        fetchTasks(true);
+                                        fetchStats();
+                                    }}
+                                    className="p-2 rounded-lg transition-all flex items-center justify-center bg-gray-900 border border-gray-800 text-[var(--text-muted)] hover:text-[var(--text-main)] hover:border-gray-700 hover:rotate-180"
+                                    title="Refresh Tasks"
+                                >
+                                    <RotateCw size={18} className="transition-transform duration-500" />
+                                </button>
 
                                 <div className="relative" ref={menuRef}>
                                     <button
