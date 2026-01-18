@@ -40,6 +40,7 @@ export const TaskManager = () => {
     const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false); // [NEW] Mobile sidebar state
     const [isMobileCreateOpen, setIsMobileCreateOpen] = useState(false); // [NEW] Mobile create modal state
     const [selectedTaskIds, setSelectedTaskIds] = useState(new Set()); // [NEW] Selection state
+    const [lastCollapsedTaskId, setLastCollapsedTaskId] = useState(null); // [NEW] Track last collapsed task for re-expansion
 
     const handleToggleTask = (taskId) => {
         const newSelected = new Set(selectedTaskIds);
@@ -316,6 +317,10 @@ export const TaskManager = () => {
     const handleBack = () => {
         // If there are expanded tasks or agents, collapse them first instead of navigating
         if (expandedTaskIds.size > 0 || expandedAgentIds.size > 0 || globalExpanded) {
+            // Track the last collapsed task for re-expansion
+            if (expandedTaskIds.size === 1) {
+                setLastCollapsedTaskId(Array.from(expandedTaskIds)[0]);
+            }
             setExpandedTaskIds(new Set());
             setExpandedAgentIds(new Set());
             setGlobalExpanded(false);
@@ -579,6 +584,7 @@ export const TaskManager = () => {
                         event.preventDefault();
                         const nextTask = visibleTasks[currentIndex + 1];
                         setExpandedTaskIds(new Set([nextTask._id]));
+                        setLastCollapsedTaskId(null); // Clear last collapsed when navigating
                         // Optionally scroll into view if needed, but standard expansion might handle it
                     }
                 } else if (event.key === 'ArrowUp') {
@@ -586,7 +592,46 @@ export const TaskManager = () => {
                         event.preventDefault();
                         const prevTask = visibleTasks[currentIndex - 1];
                         setExpandedTaskIds(new Set([prevTask._id]));
+                        setLastCollapsedTaskId(null); // Clear last collapsed when navigating
                     }
+                }
+            }
+
+            // Enter key to expand first task or re-expand last collapsed task
+            if (!isTyping && event.key === 'Enter' && expandedTaskIds.size === 0) {
+                event.preventDefault();
+                // First try to re-expand the last collapsed task if it exists
+                if (lastCollapsedTaskId) {
+                    const taskStillExists = visibleTasks.find(t => t._id === lastCollapsedTaskId);
+                    if (taskStillExists) {
+                        setExpandedTaskIds(new Set([lastCollapsedTaskId]));
+                        setLastCollapsedTaskId(null); // Clear after re-expanding
+                        return;
+                    }
+                }
+                // Otherwise, expand the first visible task
+                if (visibleTasks.length > 0) {
+                    setExpandedTaskIds(new Set([visibleTasks[0]._id]));
+                }
+            }
+
+            // PageDown for next page
+            if (!isTyping && event.key === 'PageDown') {
+                if (currentPage < totalPages) {
+                    event.preventDefault();
+                    setCurrentPage(prev => prev + 1);
+                    setExpandedTaskIds(new Set()); // Clear expanded tasks when changing pages
+                    setLastCollapsedTaskId(null);
+                }
+            }
+
+            // PageUp for previous page
+            if (!isTyping && event.key === 'PageUp') {
+                if (currentPage > 1) {
+                    event.preventDefault();
+                    setCurrentPage(prev => prev - 1);
+                    setExpandedTaskIds(new Set()); // Clear expanded tasks when changing pages
+                    setLastCollapsedTaskId(null);
                 }
             }
         };
@@ -603,11 +648,14 @@ export const TaskManager = () => {
             window.removeEventListener('keydown', handleKeyDown);
             window.removeEventListener('mousedown', handleClickOutside);
         };
-    }, [history, forwardHistory, handleBack, handleForward, activeTab, selectedLabel]);
+    }, [history, forwardHistory, handleBack, handleForward, activeTab, selectedLabel, expandedTaskIds, lastCollapsedTaskId, visibleTasks, selectedTaskIds]);
 
     useEffect(() => {
         fetchTasks(true);
         fetchStats();
+        // Clear expanded tasks when changing views
+        setExpandedTaskIds(new Set());
+        setLastCollapsedTaskId(null);
     }, [activeTab, selectedLabel, selectedFolder, currentPage, pageSize, searchQuery]);
 
     // [NEW] Auto-focus search when switching to 'all' for search purposes
@@ -2022,8 +2070,13 @@ export const TaskManager = () => {
                                                                     onToggleExpand={(taskId, isExpanded) => {
                                                                         setExpandedTaskIds(prev => {
                                                                             const newSet = new Set(prev);
-                                                                            if (isExpanded) newSet.add(taskId);
-                                                                            else newSet.delete(taskId);
+                                                                            if (isExpanded) {
+                                                                                newSet.add(taskId);
+                                                                                setLastCollapsedTaskId(null); // Clear when expanding
+                                                                            } else {
+                                                                                newSet.delete(taskId);
+                                                                                setLastCollapsedTaskId(taskId); // Track when collapsing
+                                                                            }
                                                                             return newSet;
                                                                         });
                                                                     }}
