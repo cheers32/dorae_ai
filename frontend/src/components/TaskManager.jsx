@@ -2019,30 +2019,6 @@ export const TaskManager = () => {
                                                                 previewRow: '#1f2937'
                                                             },
                                                             {
-                                                                name: 'Classic Light',
-                                                                bg: '#f3f4f6',
-                                                                row: '#ffffff',
-                                                                text: '#374151',
-                                                                previewBg: '#f3f4f6',
-                                                                previewRow: '#ffffff'
-                                                            },
-                                                            {
-                                                                name: 'Midnight',
-                                                                bg: '#000000',
-                                                                row: '#121212',
-                                                                text: '#a1a1aa',
-                                                                previewBg: '#000000',
-                                                                previewRow: '#121212'
-                                                            },
-                                                            {
-                                                                name: 'Soft Sepia',
-                                                                bg: '#fdf6e3',
-                                                                row: '#eee8d5',
-                                                                text: '#5c6b73',
-                                                                previewBg: '#fdf6e3',
-                                                                previewRow: '#eee8d5'
-                                                            },
-                                                            {
                                                                 name: 'Deep Navy',
                                                                 bg: '#0f172a',
                                                                 row: '#1e293b',
@@ -2051,11 +2027,35 @@ export const TaskManager = () => {
                                                                 previewRow: '#1e293b'
                                                             },
                                                             {
-                                                                name: 'Cool Mist',
-                                                                bg: '#eef2f6',
+                                                                name: 'Silver',
+                                                                bg: '#d2d1d0',
+                                                                row: '#e4e3e2',
+                                                                text: '#1a1a1a',
+                                                                previewBg: '#d2d1d0',
+                                                                previewRow: '#e4e3e2'
+                                                            },
+                                                            {
+                                                                name: 'Warm Paper',
+                                                                bg: '#f5f5f4',
                                                                 row: '#ffffff',
-                                                                text: '#475569',
-                                                                previewBg: '#eef2f6',
+                                                                text: '#44403c',
+                                                                previewBg: '#f5f5f4',
+                                                                previewRow: '#ffffff'
+                                                            },
+                                                            {
+                                                                name: 'Graphite',
+                                                                bg: '#18181b',
+                                                                row: '#27272a',
+                                                                text: '#a1a1aa',
+                                                                previewBg: '#18181b',
+                                                                previewRow: '#27272a'
+                                                            },
+                                                            {
+                                                                name: 'Glacier',
+                                                                bg: '#f0f9ff',
+                                                                row: '#ffffff',
+                                                                text: '#0c4a6e',
+                                                                previewBg: '#f0f9ff',
                                                                 previewRow: '#ffffff'
                                                             }
                                                         ].map((theme) => (
