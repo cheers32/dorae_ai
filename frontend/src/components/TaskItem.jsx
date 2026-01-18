@@ -272,6 +272,9 @@ export const TaskItem = forwardRef(({ task, onUpdate, showTags, showFolders, fol
 }, ref) => {
     const [expanded, setExpanded] = useState(defaultExpanded || false);
     const [isSubmitting, setIsSubmitting] = useState(false);
+    const [isCompleting, setIsCompleting] = useState(false);
+    const [isDeleting, setIsDeleting] = useState(false);
+    const [isConfirmingClose, setIsConfirmingClose] = useState(false);
     const [isEditingTitle, setIsEditingTitle] = useState(false);
     const [editedTitle, setEditedTitle] = useState(task.title);
     const [localLabels, setLocalLabels] = useState(task.labels || []);
@@ -426,8 +429,7 @@ export const TaskItem = forwardRef(({ task, onUpdate, showTags, showFolders, fol
         }
     };
 
-    const [isDeleting, setIsDeleting] = useState(false);
-    const [isCompleting, setIsCompleting] = useState(false);
+
 
     const confirmDelete = async (e) => {
         e.stopPropagation();
@@ -444,7 +446,7 @@ export const TaskItem = forwardRef(({ task, onUpdate, showTags, showFolders, fol
     };
 
     const handleComplete = async (e) => {
-        e.stopPropagation();
+        if (e) e.stopPropagation();
         setIsCompleting(true);
         try {
             // Add "Completed" label if not present
@@ -455,16 +457,14 @@ export const TaskItem = forwardRef(({ task, onUpdate, showTags, showFolders, fol
                 await api.updateTask(task._id, { labels: newLabels });
             }
 
-            // Short pause to show the label
-            await new Promise(resolve => setTimeout(resolve, 800));
-
-            // Close the task
+            // Close the task immediately (no delay)
             await api.updateTask(task._id, { status: 'Closed' });
             onUpdate();
         } catch (err) {
             console.error("Failed to complete task", err);
         } finally {
             setIsCompleting(false);
+            setIsConfirmingClose(false);
         }
     };
 
@@ -755,7 +755,7 @@ export const TaskItem = forwardRef(({ task, onUpdate, showTags, showFolders, fol
                                                                 await api.updateTask(task._id, { labels: newLabels });
                                                                 onUpdate();
                                                             }}
-                                                            onSearch={onSearch}
+                                                        // onSearch={onSearch} // Disabled per user request
                                                         />
                                                     );
                                                 })}
@@ -797,38 +797,7 @@ export const TaskItem = forwardRef(({ task, onUpdate, showTags, showFolders, fol
                                                 );
                                             })}
 
-                                            <div className="relative">
-                                                <button
-                                                    ref={agentTriggerRef}
-                                                    onClick={(e) => {
-                                                        e.stopPropagation();
-                                                        setShowAgentPicker(!showAgentPicker);
-                                                    }}
-                                                    className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-[var(--input-bg)] border border-[var(--border)] text-[var(--text-muted)] hover:bg-[var(--card-hover)] hover:text-[var(--text-main)] transition-colors"
-                                                    title="Assign Agent"
-                                                >
-                                                    <Plus size={10} />
-                                                </button>
-                                                <AnimatePresence>
-                                                    {showAgentPicker && (
-                                                        <AgentPicker
-                                                            availableAgents={agents}
-                                                            selectedAgentIds={localAssignedAgentIds}
-                                                            triggerRef={agentTriggerRef}
-                                                            onToggle={async (agentId) => {
-                                                                const newIds = localAssignedAgentIds.includes(agentId)
-                                                                    ? localAssignedAgentIds.filter(id => id !== agentId)
-                                                                    : [...localAssignedAgentIds, agentId];
-                                                                setLocalAssignedAgentIds(newIds);
-                                                                await api.updateTask(task._id, { assigned_agent_ids: newIds });
-                                                                window.dispatchEvent(new CustomEvent('agent-updated'));
-                                                                onUpdate();
-                                                            }}
-                                                            onClose={() => setShowAgentPicker(false)}
-                                                        />
-                                                    )}
-                                                </AnimatePresence>
-                                            </div>
+
                                         </div>
                                     )}
                                 </div>
@@ -1030,6 +999,37 @@ export const TaskItem = forwardRef(({ task, onUpdate, showTags, showFolders, fol
                                     </div>
                                 ) : (
                                     <div className="flex items-center gap-1">
+                                        {isConfirmingClose ? (
+                                            <div className="flex items-center gap-1">
+                                                <button
+                                                    className="p-1.5 text-[var(--text-muted)] hover:text-[var(--text-main)] transition-colors"
+                                                    onClick={(e) => { e.stopPropagation(); setIsConfirmingClose(false); }}
+                                                    title="Cancel"
+                                                >
+                                                    <X size={14} />
+                                                </button>
+                                                <button
+                                                    className="p-1.5 text-blue-400 hover:text-blue-300 transition-colors bg-blue-400/10 rounded"
+                                                    onClick={handleComplete}
+                                                    disabled={isCompleting}
+                                                    title="Confirm Close"
+                                                >
+                                                    {isCompleting ? <span className="text-[10px]">...</span> : <Check size={14} />}
+                                                </button>
+                                            </div>
+                                        ) : (
+                                            <button
+                                                className="p-1.5 text-[var(--text-muted)] hover:text-blue-400 transition-colors"
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    setIsConfirmingClose(true);
+                                                }}
+                                                disabled={isCompleting}
+                                                title="Mark as Completed & Close"
+                                            >
+                                                <CheckCircle size={14} />
+                                            </button>
+                                        )}
                                         <button
                                             className="p-1.5 text-[var(--text-muted)] hover:text-red-400 transition-colors"
                                             onClick={(e) => { e.stopPropagation(); setIsDeleting(true); }}
@@ -1037,34 +1037,42 @@ export const TaskItem = forwardRef(({ task, onUpdate, showTags, showFolders, fol
                                         >
                                             <Trash2 size={14} />
                                         </button>
-                                        <button
-                                            className={`p-1.5 text-[var(--text-muted)] hover:text-blue-400 transition-colors ${isEditingTitle ? 'text-blue-400 bg-blue-400/10 rounded' : ''}`}
-                                            onMouseDown={(e) => e.preventDefault()}
-                                            onClick={(e) => {
-                                                e.stopPropagation();
-                                                if (isEditingTitle) {
-                                                    handleSaveTitle();
-                                                } else {
-                                                    setIsEditingTitle(true);
-                                                    setEditedTitle(task.title);
-                                                }
-                                            }}
-                                            title={isEditingTitle ? "Save Title" : "Edit Title"}
-                                        >
-                                            <Pencil size={14} />
-                                        </button>
+                                        <div className="relative">
+                                            <button
+                                                ref={agentTriggerRef}
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    setShowAgentPicker(!showAgentPicker);
+                                                }}
+                                                className="p-1.5 text-[var(--text-muted)] hover:text-[var(--text-main)] transition-colors"
+                                                title="Assign Agent"
+                                            >
+                                                <Bot size={14} />
+                                            </button>
+                                            <AnimatePresence>
+                                                {showAgentPicker && (
+                                                    <AgentPicker
+                                                        availableAgents={agents}
+                                                        selectedAgentIds={localAssignedAgentIds}
+                                                        triggerRef={agentTriggerRef}
+                                                        onToggle={async (agentId) => {
+                                                            const newIds = localAssignedAgentIds.includes(agentId)
+                                                                ? localAssignedAgentIds.filter(id => id !== agentId)
+                                                                : [...localAssignedAgentIds, agentId];
+                                                            setLocalAssignedAgentIds(newIds);
+                                                            await api.updateTask(task._id, { assigned_agent_ids: newIds });
+                                                            window.dispatchEvent(new CustomEvent('agent-updated'));
+                                                            onUpdate();
+                                                        }}
+                                                        onClose={() => setShowAgentPicker(false)}
+                                                    />
+                                                )}
+                                            </AnimatePresence>
+                                        </div>
                                     </div>
                                 )}
                                 <div className="flex items-center gap-2">
-                                    <button
-                                        className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium text-blue-400 hover:bg-blue-400/10 transition-colors"
-                                        onClick={handleComplete}
-                                        disabled={isCompleting}
-                                        title="Mark as Completed & Close"
-                                    >
-                                        <CheckCircle size={14} />
-                                        {isCompleting ? 'Completing...' : 'Complete'}
-                                    </button>
+
                                     <button
                                         className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium text-blue-400 hover:bg-blue-400/10 transition-colors"
                                         onClick={handleAnalyzeTask}
