@@ -633,23 +633,18 @@ export const TaskItem = forwardRef(({ task, onUpdate, showTags, showFolders, fol
                             </div>
                         )}
 
-                        <div
-                            className={`drag-handle-btn p-1 text-gray-600 hover:text-[var(--text-muted)] transition-colors ${expanded ? 'cursor-pointer' : 'cursor-grab active:cursor-grabbing'}`}
-                            onClick={(e) => {
-                                if (expanded || globalExpanded) {
+                        {(expanded || globalExpanded) && (
+                            <div
+                                className="drag-handle-btn p-1 text-gray-600 hover:text-[var(--text-muted)] transition-colors cursor-pointer"
+                                onClick={(e) => {
                                     e.stopPropagation();
-                                    if (globalExpanded) {
-                                        // If global is on, individual collapse toggle works on local state
-                                        // but UI might stay expanded.
-                                        // Actually, if global is on, we should probably just allow local toggle to change local state.
-                                    }
                                     setExpanded(false);
                                     if (onToggleExpand) onToggleExpand(task._id, false);
-                                }
-                            }}
-                        >
-                            {expanded || globalExpanded ? <ChevronUp size={16} /> : <GripVertical size={16} />}
-                        </div>
+                                }}
+                            >
+                                <ChevronUp size={16} />
+                            </div>
+                        )}
                     </div>
 
 
@@ -748,7 +743,7 @@ export const TaskItem = forwardRef(({ task, onUpdate, showTags, showFolders, fol
                             )}
 
                             {/* Labels Display */}
-                            {(showTags || (showFolders && task.folderId)) && (
+                            {(showTags || (expanded || globalExpanded) || (showFolders && task.folderId)) && (
                                 <div className="flex flex-wrap gap-1 ml-2 shrink-0 max-w-[60%]">
                                     {/* Folder Chip */}
                                     {showFolders && task.folderId && folders && (
@@ -765,7 +760,7 @@ export const TaskItem = forwardRef(({ task, onUpdate, showTags, showFolders, fol
                                         </div>
                                     )}
 
-                                    {showTags && (
+                                    {(showTags || (expanded || globalExpanded)) && (
                                         <DndContext
                                             sensors={sensors}
                                             collisionDetection={pointerWithinTaskItem}

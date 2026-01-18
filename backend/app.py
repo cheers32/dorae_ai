@@ -3,9 +3,10 @@ import json
 import os
 from pymongo import MongoClient
 from dotenv import load_dotenv
-from bson import ObjectId
-from datetime import datetime
 import uuid
+import threading
+from datetime import datetime
+from bson import ObjectId
 
 load_dotenv()
 
@@ -467,8 +468,6 @@ def update_task(task_id):
     try:
         data = request.json
         update_fields = {}
-        update_fields = {}
-        update_fields = {}
         allowed_fields = ['title', 'priority', 'category', 'status', 'importance', 'labels', 'folderId', 'attachments', 'assigned_agent_ids', 'star_color', 'description']
         
         for field in allowed_fields:
@@ -525,6 +524,9 @@ def update_task(task_id):
         if result.matched_count == 0:
             return jsonify({"error": "Task not found"}), 404
             
+        # Trigger importance analysis in background
+        trigger_importance_analysis(folder_id=update_fields.get('folderId') or current_task.get('folderId'))
+            
         return jsonify(update_fields), 200
     except Exception as e:
         return jsonify({"error": str(e)}), 500
@@ -547,8 +549,6 @@ def create_task():
             "category": "General", # Default
             "labels": data.get('labels', []), # Use provided labels or empty array
             "folderId": data.get('folderId'),
-            "folderId": data.get('folderId'),
-            "folderId": data.get('folderId'),
             "star_color": None, # Default
             "assigned_agent_ids": [], # [NEW]
             "user_email": data.get('user_email'), # Associate with user
@@ -564,6 +564,10 @@ def create_task():
         
         result = tasks_collection.insert_one(new_task)
         new_task['_id'] = result.inserted_id
+        
+        # Trigger importance analysis in background
+        trigger_importance_analysis(folder_id=new_task.get('folderId'))
+        
         return jsonify(serialize_doc(new_task)), 201
     except Exception as e:
         return jsonify({"error": str(e)}), 500
@@ -590,6 +594,11 @@ def add_task_update(task_id):
         
         if result.matched_count == 0:
             return jsonify({"error": "Task not found"}), 404
+            
+        # Trigger importance analysis in background
+        current_task = tasks_collection.find_one({"_id": ObjectId(task_id)})
+        if current_task:
+            trigger_importance_analysis(folder_id=current_task.get('folderId'))
             
         return jsonify(update_item), 200
     except Exception as e:
@@ -665,25 +674,19 @@ if os.environ.get('WERKZEUG_RUN_MAIN') == 'true' or not app.debug:
 timer_skill = TimerSkill(scheduler, ai_service, db)
 add_task_skill = AddTaskSkill(db)
 
-# ... existing endpoints
+# --- Importance Analysis Helpers ---
 
-
-@app.route('/api/folders/<folder_id>/analyze_importance', methods=['POST'])
-def analyze_folder_importance(folder_id):
+def perform_importance_analysis(folder_id=None):
     try:
-        # Verify folder exists
-        folder = folders_collection.find_one({"_id": ObjectId(folder_id)})
-        if not folder:
-            return jsonify({"error": "Folder not found"}), 404
-
-        # Fetch active tasks in folder
-        tasks = list(tasks_collection.find({
-            "folderId": folder_id,
-            "status": {"$nin": ["Deleted", "deleted", "Closed", "completed", "Archived", "archived"]}
-        }))
-
+        # Fetch active tasks
+        query = {"status": {"$nin": ["Deleted", "deleted", "Closed", "completed", "Archived", "archived"]}}
+        if folder_id:
+            query["folderId"] = folder_id
+        
+        # Use a list to hold the tasks for analysis
+        tasks = list(tasks_collection.find(query))
         if not tasks:
-            return jsonify({"message": "No active tasks in folder", "important_count": 0}), 200
+            return {"message": "No active tasks in scope", "important_count": 0}
 
         # Run AI Analysis
         analysis_result = ai_service.analyze_importance(tasks)
@@ -701,7 +704,7 @@ def analyze_folder_importance(folder_id):
             from pymongo import UpdateOne
             operations = []
             
-            # 1. Manage "Important" Label (Critical) - Gmail Yellow/Amber
+            # 1. Manage "Important" Label (Critical)
             important_label_color = "#f59e0b"
             existing_imp_label = labels_collection.find_one({"name": "Important"})
             if not existing_imp_label:
@@ -717,8 +720,8 @@ def analyze_folder_importance(folder_id):
                     {"$set": {"color": important_label_color}}
                 )
 
-            # 2. Manage "Notable" Label (Medium) - Light Yellow
-            notable_label_color = "#fcd34d" # Amber-300
+            # 2. Manage "Notable" Label (Medium)
+            notable_label_color = "#fcd34d"
             existing_notable_label = labels_collection.find_one({"name": "Notable"})
             if not existing_notable_label:
                 labels_collection.insert_one({
@@ -735,16 +738,13 @@ def analyze_folder_importance(folder_id):
 
             # Convert ID lists to set of strings for fast lookup and safety
             critical_set = set(str(uid) for uid in critical_ids)
-            # Remove any critical IDs from notable set to enforce priority
             notable_set = set(str(uid) for uid in notable_ids) - critical_set
             
-            # Iterate over ALL analyzed tasks to enforce state (Override previous markings)
+            # Iterate over ALL analyzed tasks to enforce state
             for task in tasks:
                 t_id_str = str(task['_id'])
                 
                 if t_id_str in critical_set:
-                    # Mark as Critical (Important), remove Notable
-                    # Split into two ops to avoid conflict on 'labels' path
                     operations.append(
                         UpdateOne({"_id": task['_id']}, {"$pull": {"labels": "Notable"}})
                     )
@@ -752,7 +752,6 @@ def analyze_folder_importance(folder_id):
                         UpdateOne({"_id": task['_id']}, {"$addToSet": {"labels": "Important"}})
                     )
                 elif t_id_str in notable_set:
-                    # Mark as Notable, remove Important
                     operations.append(
                         UpdateOne({"_id": task['_id']}, {"$pull": {"labels": "Important"}})
                     )
@@ -760,7 +759,6 @@ def analyze_folder_importance(folder_id):
                         UpdateOne({"_id": task['_id']}, {"$addToSet": {"labels": "Notable"}})
                     )
                 else:
-                     # Not recognized as Critical or Notable -> Clear both labels
                      operations.append(
                         UpdateOne(
                             {"_id": task['_id']},
@@ -772,12 +770,35 @@ def analyze_folder_importance(folder_id):
                 result = tasks_collection.bulk_write(operations)
                 updated_count = result.modified_count
 
-        return jsonify({
+        return {
             "message": "Analysis complete", 
             "important_count": len(critical_ids),
             "notable_count": len(notable_ids),
             "updated_count": updated_count
-        }), 200
+        }
+    except Exception as e:
+        print(f"Error in perform_importance_analysis: {e}")
+        return {"error": str(e)}
+
+def trigger_importance_analysis(folder_id=None):
+    """Trigger importance analysis in a background thread."""
+    threading.Thread(target=perform_importance_analysis, args=(folder_id,)).start()
+
+# ... existing endpoints
+
+
+@app.route('/api/folders/<folder_id>/analyze_importance', methods=['POST'])
+def analyze_folder_importance(folder_id):
+    try:
+        # Verify folder exists
+        folder = folders_collection.find_one({"_id": ObjectId(folder_id)})
+        if not folder:
+            return jsonify({"error": "Folder not found"}), 404
+
+        result = perform_importance_analysis(folder_id)
+        if "error" in result:
+             return jsonify(result), 500
+        return jsonify(result), 200
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
@@ -1078,104 +1099,10 @@ def analyze_all_active_duplicates():
 @app.route('/api/tasks/analyze_importance', methods=['POST'])
 def analyze_all_active_importance():
     try:
-        # Fetch ALL active tasks (excluding trash/closed/archived)
-        tasks = list(tasks_collection.find({
-            "status": {"$nin": ["Deleted", "deleted", "Closed", "completed", "Archived", "archived"]}
-        }))
-
-        if not tasks:
-            return jsonify({"message": "No active tasks found", "important_count": 0}), 200
-
-        # Run AI Analysis
-        analysis_result = ai_service.analyze_importance(tasks)
-        
-        if isinstance(analysis_result, list):
-            critical_ids = analysis_result
-            notable_ids = []
-        else:
-            critical_ids = analysis_result.get('critical_task_ids', [])
-            notable_ids = analysis_result.get('notable_task_ids', [])
-        
-        updated_count = 0
-        if critical_ids or notable_ids:
-            from pymongo import UpdateOne
-            operations = []
-            
-             # 1. Manage "Important" Label (Critical)
-            important_label_color = "#f59e0b"
-            existing_imp_label = labels_collection.find_one({"name": "Important"})
-            if not existing_imp_label:
-                labels_collection.insert_one({
-                    "name": "Important",
-                    "color": important_label_color,
-                    "created_at": datetime.utcnow().isoformat(),
-                    "order": 0
-                })
-            elif existing_imp_label.get('color') != important_label_color:
-                labels_collection.update_one(
-                    {"_id": existing_imp_label["_id"]},
-                    {"$set": {"color": important_label_color}}
-                )
-
-            # 2. Manage "Notable" Label (Medium)
-            notable_label_color = "#fcd34d"
-            existing_notable_label = labels_collection.find_one({"name": "Notable"})
-            if not existing_notable_label:
-                labels_collection.insert_one({
-                    "name": "Notable",
-                    "color": notable_label_color,
-                    "created_at": datetime.utcnow().isoformat(),
-                    "order": 1
-                })
-            elif existing_notable_label.get('color') != notable_label_color:
-                labels_collection.update_one(
-                    {"_id": existing_notable_label["_id"]},
-                    {"$set": {"color": notable_label_color}}
-                )
-
-            # Convert ID lists to set of strings for fast lookup and safety
-            critical_set = set(str(uid) for uid in critical_ids)
-            notable_set = set(str(uid) for uid in notable_ids) - critical_set
-            
-            # Iterate over ALL analyzed tasks to enforce state
-            for task in tasks:
-                t_id_str = str(task['_id'])
-                
-                if t_id_str in critical_set:
-                    # Mark as Critical
-                    operations.append(
-                        UpdateOne({"_id": task['_id']}, {"$pull": {"labels": "Notable"}})
-                    )
-                    operations.append(
-                        UpdateOne({"_id": task['_id']}, {"$addToSet": {"labels": "Important"}})
-                    )
-                elif t_id_str in notable_set:
-                    # Mark as Notable
-                    operations.append(
-                        UpdateOne({"_id": task['_id']}, {"$pull": {"labels": "Important"}})
-                    )
-                    operations.append(
-                        UpdateOne({"_id": task['_id']}, {"$addToSet": {"labels": "Notable"}})
-                    )
-                else:
-                    # Clear both logic
-                    operations.append(
-                        UpdateOne(
-                            {"_id": task['_id']},
-                            {"$pull": {"labels": {"$in": ["Important", "Notable"]}}}
-                        )
-                    )
-            
-            if operations:
-                result = tasks_collection.bulk_write(operations)
-                updated_count = result.modified_count
-
-        return jsonify({
-            "message": "Global analysis complete", 
-            "important_count": len(critical_ids),
-            "notable_count": len(notable_ids),
-            "updated_count": updated_count
-        }), 200
+        result = perform_importance_analysis()
+        if "error" in result:
+             return jsonify(result), 500
+        return jsonify(result), 200
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 

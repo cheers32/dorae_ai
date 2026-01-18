@@ -132,6 +132,28 @@ export const TaskManager = () => {
         return [];
     }); // [NEW] Workarea logic
     const [autoExpandTaskId, setAutoExpandTaskId] = useState(null); // ID of task to auto-expand after navigation
+    const [lastScanTrigger, setLastScanTrigger] = useState(0);
+
+    const triggerScanRefresh = () => {
+        setLastScanTrigger(Date.now());
+    };
+
+    // Polling for importance scan results
+    useEffect(() => {
+        if (!lastScanTrigger) return;
+
+        const now = Date.now();
+        if (now - lastScanTrigger > 45000) return; // Stop after 45s
+
+        const timers = [
+            setTimeout(() => { fetchTasks(false); fetchStats(); }, 5000),
+            setTimeout(() => { fetchTasks(false); fetchStats(); }, 15000),
+            setTimeout(() => { fetchTasks(false); fetchStats(); }, 30000),
+            setTimeout(() => { fetchTasks(false); fetchStats(); }, 45000),
+        ];
+
+        return () => timers.forEach(clearTimeout);
+    }, [lastScanTrigger]);
 
     // Filter out workarea tasks from main list and apply search
     // Filter out workarea tasks from main list
@@ -739,6 +761,7 @@ export const TaskManager = () => {
 
             fetchTasks(false);
             fetchStats();
+            triggerScanRefresh();
         } catch (err) {
             console.error(err);
         }
@@ -1832,6 +1855,7 @@ export const TaskManager = () => {
                                                             fetchTasks(false);
                                                             fetchStats();
                                                             refreshWorkareaTask(item._id);
+                                                            triggerScanRefresh();
                                                         }}
                                                         showTags={true}
                                                         showFolders={showFolders}
@@ -1925,6 +1949,7 @@ export const TaskManager = () => {
                                                                     onUpdate={() => {
                                                                         fetchTasks(false);
                                                                         fetchStats();
+                                                                        triggerScanRefresh();
                                                                     }}
                                                                     showTags={showTags}
                                                                     showFolders={showFolders}
