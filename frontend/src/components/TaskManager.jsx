@@ -648,7 +648,7 @@ export const TaskManager = () => {
             window.removeEventListener('keydown', handleKeyDown);
             window.removeEventListener('mousedown', handleClickOutside);
         };
-    }, [history, forwardHistory, handleBack, handleForward, activeTab, selectedLabel, expandedTaskIds, lastCollapsedTaskId, visibleTasks, selectedTaskIds]);
+    }, [history, forwardHistory, handleBack, handleForward, activeTab, selectedLabel, expandedTaskIds, lastCollapsedTaskId, visibleTasks, selectedTaskIds, currentPage, totalPages]);
 
     useEffect(() => {
         fetchTasks(true);

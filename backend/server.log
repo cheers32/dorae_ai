@@ -592,3 +592,67 @@ DEBUG: get_tasks params - status: Active, label: None, args: ImmutableMultiDict(
 127.0.0.1 - - [18/Jan/2026 00:29:37] "GET /api/stats?user_email=weiteng32@gmail.com HTTP/1.1" 200 -
 127.0.0.1 - - [18/Jan/2026 00:29:38] "GET /api/stats?user_email=weiteng32@gmail.com HTTP/1.1" 200 -
 127.0.0.1 - - [18/Jan/2026 00:29:39] "GET /api/stats?user_email=weiteng32@gmail.com HTTP/1.1" 200 -
+127.0.0.1 - - [18/Jan/2026 00:30:52] "POST /api/traffic HTTP/1.1" 200 -
+127.0.0.1 - - [18/Jan/2026 00:30:52] "POST /api/traffic HTTP/1.1" 200 -
+127.0.0.1 - - [18/Jan/2026 00:30:53] "POST /api/traffic HTTP/1.1" 200 -
+127.0.0.1 - - [18/Jan/2026 00:30:53] "GET /api/labels?user_email=weiteng32@gmail.com HTTP/1.1" 200 -
+127.0.0.1 - - [18/Jan/2026 00:30:53] "GET /api/folders?user_email=weiteng32@gmail.com HTTP/1.1" 200 -
+127.0.0.1 - - [18/Jan/2026 00:30:53] "GET /api/folders?user_email=weiteng32@gmail.com HTTP/1.1" 200 -
+127.0.0.1 - - [18/Jan/2026 00:30:53] "GET /api/labels?user_email=weiteng32@gmail.com HTTP/1.1" 200 -
+127.0.0.1 - - [18/Jan/2026 00:30:53] "GET /api/agents?user_email=weiteng32@gmail.com HTTP/1.1" 200 -
+127.0.0.1 - - [18/Jan/2026 00:30:53] "GET /api/tasks?user_email=weiteng32@gmail.com&status=Active&folderId=null&page=1&per_page=25 HTTP/1.1" 200 -
+127.0.0.1 - - [18/Jan/2026 00:30:53] "GET /api/tasks?user_email=weiteng32@gmail.com&status=Active&folderId=null&page=1&per_page=25 HTTP/1.1" 200 -
+127.0.0.1 - - [18/Jan/2026 00:30:53] "GET /api/agents?user_email=weiteng32@gmail.com HTTP/1.1" 200 -
+127.0.0.1 - - [18/Jan/2026 00:30:54] "GET /api/stats?user_email=weiteng32@gmail.com HTTP/1.1" 200 -
+127.0.0.1 - - [18/Jan/2026 00:30:55] "GET /api/stats?user_email=weiteng32@gmail.com HTTP/1.1" 200 -
+127.0.0.1 - - [18/Jan/2026 00:30:56] "GET /api/stats?user_email=weiteng32@gmail.com HTTP/1.1" 200 -
+127.0.0.1 - - [18/Jan/2026 00:30:56] "GET /api/stats?user_email=weiteng32@gmail.com HTTP/1.1" 200 -
+127.0.0.1 - - [18/Jan/2026 00:31:08] "GET /api/tasks?user_email=weiteng32@gmail.com&status=Active&folderId=null&page=2&per_page=25 HTTP/1.1" 200 -
+127.0.0.1 - - [18/Jan/2026 00:31:08] "GET /api/stats?user_email=weiteng32@gmail.com HTTP/1.1" 200 -
+127.0.0.1 - - [18/Jan/2026 00:31:09] "GET /api/tasks?user_email=weiteng32@gmail.com&status=Active&folderId=null&page=1&per_page=25 HTTP/1.1" 200 -
+127.0.0.1 - - [18/Jan/2026 00:31:10] "GET /api/stats?user_email=weiteng32@gmail.com HTTP/1.1" 200 -
+127.0.0.1 - - [18/Jan/2026 00:31:10] "GET /api/tasks?user_email=weiteng32@gmail.com&status=Active&folderId=null&page=2&per_page=25 HTTP/1.1" 200 -
+DEBUG: get_tasks params - status: Active, label: None, args: ImmutableMultiDict([('user_email', 'weiteng32@gmail.com'), ('status', 'Active'), ('folderId', 'null'), ('page', '1'), ('per_page', '25')])
+DEBUG: get_tasks params - status: Active, label: None, args: ImmutableMultiDict([('user_email', 'weiteng32@gmail.com'), ('status', 'Active'), ('folderId', 'null'), ('page', '1'), ('per_page', '25')])
+DEBUG: get_tasks params - status: Active, label: None, args: ImmutableMultiDict([('user_email', 'weiteng32@gmail.com'), ('status', 'Active'), ('folderId', 'null'), ('page', '1'), ('per_page', '25')])
+DEBUG: get_tasks params - status: Active, label: None, args: ImmutableMultiDict([('user_email', 'weiteng32@gmail.com'), ('status', 'Active'), ('folderId', 'null'), ('page', '1'), ('per_page', '25')])
+DEBUG: get_tasks params - status: Active, label: None, args: ImmutableMultiDict([('user_email', 'weiteng32@gmail.com'), ('status', 'Active'), ('folderId', 'null'), ('page', '1'), ('per_page', '25')])
+DEBUG: get_tasks params - status: Active, label: None, args: ImmutableMultiDict([('user_email', 'weiteng32@gmail.com'), ('status', 'Active'), ('folderId', 'null'), ('page', '1'), ('per_page', '25')])
+DEBUG: get_tasks params - status: Active, label: None, args: ImmutableMultiDict([('user_email', 'weiteng32@gmail.com'), ('status', 'Active'), ('folderId', 'null'), ('page', '1'), ('per_page', '25')])
+DEBUG: get_tasks params - status: Active, label: None, args: ImmutableMultiDict([('user_email', 'weiteng32@gmail.com'), ('status', 'Active'), ('folderId', 'null'), ('page', '1'), ('per_page', '25')])
+DEBUG: get_tasks params - status: Active, label: None, args: ImmutableMultiDict([('user_email', 'weiteng32@gmail.com'), ('status', 'Active'), ('folderId', 'null'), ('page', '1'), ('per_page', '25')])
+DEBUG: get_tasks params - status: Active, label: None, args: ImmutableMultiDict([('user_email', 'weiteng32@gmail.com'), ('status', 'Active'), ('folderId', 'null'), ('page', '1'), ('per_page', '25')])
+DEBUG: get_tasks params - status: Active, label: None, args: ImmutableMultiDict([('user_email', 'weiteng32@gmail.com'), ('status', 'Active'), ('folderId', 'null'), ('page', '1'), ('per_page', '25')])
+DEBUG: get_tasks params - status: Active, label: None, args: ImmutableMultiDict([('user_email', 'weiteng32@gmail.com'), ('status', 'Active'), ('folderId', 'null'), ('page', '1'), ('per_page', '25')])
+DEBUG: get_tasks params - status: Active, label: None, args: ImmutableMultiDict([('user_email', 'weiteng32@gmail.com'), ('status', 'Active'), ('folderId', 'null'), ('page', '1'), ('per_page', '25')])
+DEBUG: get_tasks params - status: Active, label: None, args: ImmutableMultiDict([('user_email', 'weiteng32@gmail.com'), ('status', 'Active'), ('folderId', 'null'), ('page', '1'), ('per_page', '25')])
+DEBUG: get_tasks params - status: Active, label: None, args: ImmutableMultiDict([('user_email', 'weiteng32@gmail.com'), ('status', 'Active'), ('folderId', 'null'), ('page', '1'), ('per_page', '25')])
+DEBUG: get_tasks params - status: Active, label: None, args: ImmutableMultiDict([('user_email', 'weiteng32@gmail.com'), ('status', 'Active'), ('folderId', 'null'), ('page', '1'), ('per_page', '25')])
+DEBUG: get_tasks params - status: Active, label: None, args: ImmutableMultiDict([('user_email', 'weiteng32@gmail.com'), ('status', 'Active'), ('folderId', 'null'), ('page', '1'), ('per_page', '25')])
+DEBUG: get_tasks params - status: Active, label: None, args: ImmutableMultiDict([('user_email', 'weiteng32@gmail.com'), ('status', 'Active'), ('folderId', 'null'), ('page', '1'), ('per_page', '25')])
+DEBUG: get_tasks params - status: Active, label: None, args: ImmutableMultiDict([('user_email', 'weiteng32@gmail.com'), ('status', 'Active'), ('folderId', 'null'), ('page', '1'), ('per_page', '25')])
+DEBUG: get_tasks params - status: Active, label: None, args: ImmutableMultiDict([('user_email', 'weiteng32@gmail.com'), ('status', 'Active'), ('folderId', 'null'), ('page', '1'), ('per_page', '25')])
+DEBUG: get_tasks params - status: Active, label: None, args: ImmutableMultiDict([('user_email', 'weiteng32@gmail.com'), ('status', 'Active'), ('folderId', 'null'), ('page', '1'), ('per_page', '25')])
+DEBUG: get_tasks params - status: Active, label: None, args: ImmutableMultiDict([('user_email', 'weiteng32@gmail.com'), ('status', 'Active'), ('folderId', 'null'), ('page', '1'), ('per_page', '25')])
+DEBUG: get_tasks params - status: Important, label: None, args: ImmutableMultiDict([('user_email', 'weiteng32@gmail.com'), ('status', 'Important'), ('page', '1'), ('per_page', '25')])
+DEBUG: get_tasks params - status: Active, label: None, args: ImmutableMultiDict([('user_email', 'weiteng32@gmail.com'), ('status', 'Active'), ('folderId', 'null'), ('page', '1'), ('per_page', '25')])
+DEBUG: get_tasks params - status: Active, label: None, args: ImmutableMultiDict([('user_email', 'weiteng32@gmail.com'), ('status', 'Active'), ('folderId', 'null'), ('page', '1'), ('per_page', '25')])
+DEBUG: get_tasks params - status: Active, label: None, args: ImmutableMultiDict([('user_email', 'weiteng32@gmail.com'), ('status', 'Active'), ('folderId', 'null'), ('page', '1'), ('per_page', '25')])
+DEBUG: get_tasks params - status: Active, label: None, args: ImmutableMultiDict([('user_email', 'weiteng32@gmail.com'), ('status', 'Active'), ('folderId', 'null'), ('page', '1'), ('per_page', '25')])
+DEBUG: get_tasks params - status: Active, label: None, args: ImmutableMultiDict([('user_email', 'weiteng32@gmail.com'), ('status', 'Active'), ('folderId', 'null'), ('page', '1'), ('per_page', '25')])
+DEBUG: get_tasks params - status: Active, label: None, args: ImmutableMultiDict([('user_email', 'weiteng32@gmail.com'), ('status', 'Active'), ('folderId', 'null'), ('page', '1'), ('per_page', '25')])
+DEBUG: get_tasks params - status: None, label: None, args: ImmutableMultiDict([('user_email', 'weiteng32@gmail.com'), ('page', '1'), ('per_page', '25')])
+DEBUG: get_tasks params - status: Active, label: None, args: ImmutableMultiDict([('user_email', 'weiteng32@gmail.com'), ('status', 'Active'), ('folderId', 'null'), ('page', '1'), ('per_page', '25')])
+DEBUG: get_tasks params - status: Active, label: None, args: ImmutableMultiDict([('user_email', 'weiteng32@gmail.com'), ('status', 'Active'), ('folderId', 'null'), ('page', '1'), ('per_page', '25')])
+DEBUG: get_tasks params - status: Active, label: None, args: ImmutableMultiDict([('user_email', 'weiteng32@gmail.com'), ('status', 'Active'), ('folderId', 'null'), ('page', '1'), ('per_page', '25')])
+DEBUG: get_tasks params - status: Active, label: None, args: ImmutableMultiDict([('user_email', 'weiteng32@gmail.com'), ('status', 'Active'), ('folderId', 'null'), ('page', '1'), ('per_page', '25')])
+DEBUG: get_tasks params - status: Active, label: None, args: ImmutableMultiDict([('user_email', 'weiteng32@gmail.com'), ('status', 'Active'), ('folderId', 'null'), ('page', '1'), ('per_page', '25')])
+DEBUG: get_tasks params - status: Active, label: None, args: ImmutableMultiDict([('user_email', 'weiteng32@gmail.com'), ('status', 'Active'), ('folderId', 'null'), ('page', '1'), ('per_page', '25')])
+DEBUG: get_tasks params - status: Active, label: None, args: ImmutableMultiDict([('user_email', 'weiteng32@gmail.com'), ('status', 'Active'), ('folderId', 'null'), ('page', '1'), ('per_page', '25')])
+DEBUG: get_tasks params - status: Active, label: None, args: ImmutableMultiDict([('user_email', 'weiteng32@gmail.com'), ('status', 'Active'), ('folderId', 'null'), ('page', '1'), ('per_page', '25')])
+DEBUG: get_tasks params - status: Active, label: None, args: ImmutableMultiDict([('user_email', 'weiteng32@gmail.com'), ('status', 'Active'), ('folderId', 'null'), ('page', '2'), ('per_page', '25')])
+DEBUG: get_tasks params - status: Active, label: None, args: ImmutableMultiDict([('user_email', 'weiteng32@gmail.com'), ('status', 'Active'), ('folderId', 'null'), ('page', '1'), ('per_page', '25')])
+DEBUG: get_tasks params - status: Active, label: None, args: ImmutableMultiDict([('user_email', 'weiteng32@gmail.com'), ('status', 'Active'), ('folderId', 'null'), ('page', '2'), ('per_page', '25')])
+127.0.0.1 - - [18/Jan/2026 00:31:11] "GET /api/tasks?user_email=weiteng32@gmail.com&status=Active&folderId=null&page=1&per_page=25 HTTP/1.1" 200 -
+127.0.0.1 - - [18/Jan/2026 00:31:11] "GET /api/stats?user_email=weiteng32@gmail.com HTTP/1.1" 200 -
+127.0.0.1 - - [18/Jan/2026 00:31:12] "GET /api/stats?user_email=weiteng32@gmail.com HTTP/1.1" 200 -
