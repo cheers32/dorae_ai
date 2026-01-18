@@ -434,6 +434,7 @@ export const TaskItem = forwardRef(({ task, onUpdate, showTags, showFolders, fol
 
     const confirmDelete = async (e) => {
         e.stopPropagation();
+        if (onToggleExpand) onToggleExpand(task._id, false);
         setIsSubmitting(true);
         try {
             await api.deleteTask(task._id);
@@ -448,6 +449,7 @@ export const TaskItem = forwardRef(({ task, onUpdate, showTags, showFolders, fol
 
     const handleComplete = async (e) => {
         if (e) e.stopPropagation();
+        if (onToggleExpand) onToggleExpand(task._id, false);
         setIsCompleting(true);
         try {
             if (task.status === 'Closed') {
@@ -877,6 +879,8 @@ export const TaskItem = forwardRef(({ task, onUpdate, showTags, showFolders, fol
                                 onClick={(e) => {
                                     e.stopPropagation();
                                     if (onRemoveFromWorkarea) onRemoveFromWorkarea();
+                                    if (onToggleExpand) onToggleExpand(task._id, false);
+                                    setExpanded(false);
                                 }}
                                 title="Remove from Focus"
                             >
@@ -887,7 +891,9 @@ export const TaskItem = forwardRef(({ task, onUpdate, showTags, showFolders, fol
                                 className="p-1 px-2 text-[10px] font-bold uppercase tracking-wider bg-blue-500/10 text-blue-400 hover:bg-blue-500/20 rounded border border-blue-500/20 transition-colors"
                                 onClick={(e) => {
                                     e.stopPropagation();
+                                    if (onToggleExpand) onToggleExpand(task._id, false);
                                     if (onSendToWorkarea) onSendToWorkarea();
+                                    setExpanded(false);
                                 }}
                                 title="Set as Current Focus"
                             >

@@ -244,7 +244,7 @@ export const TaskManager = () => {
                 // Remove existing agents from workarea
                 const withoutAgents = prev.filter(item => item.type !== 'agent');
                 // Add new agent to top
-                return [{ ...agent, type: 'agent', _forceExpanded: true }, ...withoutAgents];
+                return [{ ...agent, type: 'agent' }, ...withoutAgents];
             });
             setFocusedAgentId(agent._id);
         }
@@ -797,7 +797,7 @@ export const TaskManager = () => {
         setWorkareaTasks(prev => {
             // Keep agents, remove other tasks
             const agents = prev.filter(item => item.type === 'agent');
-            return [...agents, { ...task, _forceExpanded: true }];
+            return [...agents, { ...task }];
         });
     };
 
@@ -812,7 +812,7 @@ export const TaskManager = () => {
             const freshTask = await api.getTask(taskId);
             if (freshTask) {
                 setWorkareaTasks(prev => prev.map(t =>
-                    t._id === taskId ? { ...freshTask, _forceExpanded: true } : t
+                    t._id === taskId ? { ...freshTask } : t
                 ));
             }
         } catch (err) {
@@ -1131,7 +1131,7 @@ export const TaskManager = () => {
                             }
                         } else {
                             // Empty Focus: Standard pin logic
-                            setWorkareaTasks([{ ...task, _forceExpanded: true }]);
+                            setWorkareaTasks([{ ...task }]);
                         }
                     }
                 } else if (!activeIsWorkarea && !overIsWorkarea) {
