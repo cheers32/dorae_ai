@@ -16,7 +16,8 @@ import {
     Plus,
     ChevronsRight,
     ChevronRight,
-    Star
+    Star,
+    RotateCw
 } from 'lucide-react';
 import { api } from '../api';
 import { UpdatesTimeline } from './UpdatesTimeline';
@@ -449,19 +450,24 @@ export const TaskItem = forwardRef(({ task, onUpdate, showTags, showFolders, fol
         if (e) e.stopPropagation();
         setIsCompleting(true);
         try {
-            // Add "Completed" label if not present
-            if (!localLabels.includes('Completed')) {
-                const newLabels = [...localLabels, 'Completed'];
+            if (task.status === 'Closed') {
+                // Reopen the task
+                const newLabels = localLabels.filter(l => l !== 'Completed');
                 setLocalLabels(newLabels);
-                // Optimistically update UI provided we don't need color from backend immediately
-                await api.updateTask(task._id, { labels: newLabels });
+                await api.updateTask(task._id, { status: 'Active', labels: newLabels });
+            } else {
+                // Close the task
+                if (!localLabels.includes('Completed')) {
+                    const newLabels = [...localLabels, 'Completed'];
+                    setLocalLabels(newLabels);
+                    // Optimistically update UI
+                    await api.updateTask(task._id, { labels: newLabels });
+                }
+                await api.updateTask(task._id, { status: 'Closed' });
             }
-
-            // Close the task immediately (no delay)
-            await api.updateTask(task._id, { status: 'Closed' });
             onUpdate();
         } catch (err) {
-            console.error("Failed to complete task", err);
+            console.error("Failed to toggle task", err);
         } finally {
             setIsCompleting(false);
             setIsConfirmingClose(false);
@@ -1009,10 +1015,10 @@ export const TaskItem = forwardRef(({ task, onUpdate, showTags, showFolders, fol
                                                     <X size={14} />
                                                 </button>
                                                 <button
-                                                    className="p-1.5 text-blue-400 hover:text-blue-300 transition-colors bg-blue-400/10 rounded"
+                                                    className="p-1.5 text-green-400 hover:text-green-300 transition-colors bg-green-400/10 rounded"
                                                     onClick={handleComplete}
                                                     disabled={isCompleting}
-                                                    title="Confirm Close"
+                                                    title={task.status === 'Closed' ? "Confirm Reopen" : "Confirm Close"}
                                                 >
                                                     {isCompleting ? <span className="text-[10px]">...</span> : <Check size={14} />}
                                                 </button>
@@ -1025,9 +1031,9 @@ export const TaskItem = forwardRef(({ task, onUpdate, showTags, showFolders, fol
                                                     setIsConfirmingClose(true);
                                                 }}
                                                 disabled={isCompleting}
-                                                title="Mark as Completed & Close"
+                                                title={task.status === 'Closed' ? "Reopen Task" : "Mark as Completed & Close"}
                                             >
-                                                <CheckCircle size={14} />
+                                                {task.status === 'Closed' ? <RotateCw size={14} /> : <CheckCircle size={14} />}
                                             </button>
                                         )}
                                         <button
