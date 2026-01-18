@@ -374,6 +374,13 @@ export function Sidebar({ activeTab, onNavigate, labels = [], onLabelsChange, se
         }
     };
 
+    // Auto-expand sidebar list when navigating to hidden items
+    useEffect(() => {
+        if (highlightedIndex > 10 && !showAllFolders) {
+            setShowAllFolders(true);
+        }
+    }, [highlightedIndex, showAllFolders]);
+
     return (
         <div
             className={`sidebar shrink-0 h-screen border-r flex flex-col pt-8 transition-all duration-300 ease-in-out ${isCollapsed ? 'w-[80px]' : 'w-[280px]'} ${isOpen ? 'mobile-open' : ''} ${isFocused ? 'border-r-blue-500/50' : ''}`}
