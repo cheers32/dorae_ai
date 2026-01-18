@@ -689,27 +689,30 @@ export const TaskItem = forwardRef(({ task, onUpdate, showTags, showFolders, fol
                         />
                     ) : (
                         <div className="flex-1 min-w-0 flex items-center gap-2 group/title mobile-title-group">
-                            <h3
-                                className={`font-medium text-[var(--text-muted)] text-left select-text ${expanded || globalExpanded || showFullTitles ? 'break-words whitespace-pre-wrap cursor-text' : 'truncate'} ${(task.status === 'Deleted' || task.status === 'deleted') ? 'line-through opacity-50' : ''}`}
-                                style={{ fontSize: `${fontSize}px`, lineHeight: '1.4' }}
-                                onClick={(e) => {
-                                    if (expanded || globalExpanded || showFullTitles) {
-                                        e.stopPropagation();
-                                        // If in workarea and onTaskClick is provided, navigate to the task
-                                        if (isWorkarea && onTaskClick) {
-                                            onTaskClick();
+                            {/* Hide title in expanded mode because it's in the editor */}
+                            {!(expanded || globalExpanded) && (
+                                <h3
+                                    className={`font-medium text-[var(--text-muted)] text-left select-text ${expanded || globalExpanded || showFullTitles ? 'break-words whitespace-pre-wrap cursor-text' : 'truncate'} ${(task.status === 'Deleted' || task.status === 'deleted') ? 'line-through opacity-50' : ''}`}
+                                    style={{ fontSize: `${fontSize}px`, lineHeight: '1.4' }}
+                                    onClick={(e) => {
+                                        if (expanded || globalExpanded || showFullTitles) {
+                                            e.stopPropagation();
+                                            // If in workarea and onTaskClick is provided, navigate to the task
+                                            if (isWorkarea && onTaskClick) {
+                                                onTaskClick();
+                                            }
                                         }
-                                    }
-                                }}
-                            >
-                                {task.title}
-                                {showPreview && !(expanded || globalExpanded) && task.updates && task.updates.length > 0 && (
-                                    <span className="text-gray-600 font-normal ml-2" style={{ fontSize: `${Math.max(11, fontSize - 1)}px` }}>
-                                        <span className="text-gray-700 mr-1">-</span>
-                                        {task.updates[task.updates.length - 1].content}
-                                    </span>
-                                )}
-                            </h3>
+                                    }}
+                                >
+                                    {task.title}
+                                    {showPreview && !(expanded || globalExpanded) && task.updates && task.updates.length > 0 && (
+                                        <span className="text-gray-600 font-normal ml-2" style={{ fontSize: `${Math.max(11, fontSize - 1)}px` }}>
+                                            <span className="text-gray-700 mr-1">-</span>
+                                            {task.updates[task.updates.length - 1].content}
+                                        </span>
+                                    )}
+                                </h3>
+                            )}
 
                             {/* Labels Display */}
                             {(showTags || (showFolders && task.folderId)) && (
@@ -933,10 +936,20 @@ export const TaskItem = forwardRef(({ task, onUpdate, showTags, showFolders, fol
                                 {/* Task Description Editor */}
                                 <div className="px-4">
                                     <TaskDescriptionEditor
+                                        title={task.title}
                                         initialContent={task.description}
-                                        onSave={async (content) => {
-                                            await api.updateTask(task._id, { description: content });
-                                            // Optional: onUpdate(); if we want to refresh parent, but might cause editor reset if not careful
+                                        onSave={async ({ title, description }) => {
+                                            // Only update if changed
+                                            const updates = {};
+                                            if (title !== undefined && title !== task.title) updates.title = title;
+                                            if (description !== undefined && description !== task.description) updates.description = description;
+
+                                            if (Object.keys(updates).length > 0) {
+                                                await api.updateTask(task._id, updates);
+                                                // We might need to optimistically update local state here?
+                                                // onUpdate should handle it
+                                                onUpdate();
+                                            }
                                         }}
                                     />
                                 </div>
