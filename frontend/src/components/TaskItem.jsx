@@ -351,7 +351,8 @@ export const TaskItem = forwardRef(({ task, onUpdate, showTags, showFolders, fol
                     return;
                 }
 
-                // Create a synthetic cancellation effect
+                // Create a synthetic save and exit effect
+                editorRef.current?.save();
                 if (onToggleExpand) onToggleExpand(task._id, false);
                 setExpanded(false);
             }
@@ -1112,7 +1113,7 @@ export const TaskItem = forwardRef(({ task, onUpdate, showTags, showFolders, fol
                                         </div>
                                         <button
                                             className="p-1.5 text-[var(--text-muted)] hover:text-[var(--text-main)] transition-colors"
-                                            onClick={(e) => {
+                                            onMouseDown={(e) => {
                                                 e.stopPropagation();
                                                 editorRef.current?.cancel();
                                             }}

@@ -130,7 +130,6 @@ export const TaskDescriptionEditor = forwardRef(({ title, initialContent, onSave
             handleKeyDown: (view, event) => {
                 if (event.key === 'Escape') {
                     event.preventDefault(); // Prevent default browser behavior
-                    isCancellingRef.current = true;
                     if (onCancel) onCancel();
                     return true;
                 }
