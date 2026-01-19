@@ -234,7 +234,7 @@ export const AgentItem = ({ agent, onFocus, onDelete, isFocused, availableLabels
                 group transition-all duration-200 bg-transparent
                 ${expanded
                     ? 'mb-4 rounded-xl bg-blue-500/5 border-blue-500/30 border shadow-lg'
-                    : 'border-b border-[var(--border)] border-l border-l-transparent hover:bg-white/[0.03]'
+                    : 'border-b border-[var(--border)] border-l border-l-transparent hover:bg-white/[0.02] hover:shadow-[0_1px_3px_rgba(0,0,0,0.1),0_4px_12px_-4px_rgba(0,0,0,0.1)] hover:z-10 hover:relative'
                 }
                 ${isOver ? 'ring-2 ring-blue-400 bg-blue-500/20' : ''}
             `}

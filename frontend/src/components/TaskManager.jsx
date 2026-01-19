@@ -2075,6 +2075,14 @@ export const TaskManager = () => {
                                                                 previewRow: '#1f2937'
                                                             },
                                                             {
+                                                                name: 'Modern Glass',
+                                                                bg: 'rgba(224, 227, 230, 0.5)',
+                                                                row: 'rgba(255, 255, 255, 0.4)',
+                                                                text: '#111827',
+                                                                previewBg: '#111827',
+                                                                previewRow: '#e4e3e2'
+                                                            },
+                                                            {
                                                                 name: 'Deep Navy',
                                                                 bg: '#0f172a',
                                                                 row: '#1e293b',
@@ -2407,8 +2415,8 @@ export const TaskManager = () => {
 
                                                     {/* Pagination Controls */}
                                                     {totalTasks > 0 && (
-                                                        <div className="flex items-center justify-between px-4 py-4 border-t border-[var(--border)] mt-auto">
-                                                            <div className="flex items-center gap-2 text-xs text-[var(--text-muted)]">
+                                                        <div className="flex items-center justify-between px-4 py-4 border-t border-[var(--border)] mt-auto bg-black/10">
+                                                            <div className="flex items-center gap-2 text-xs text-[var(--text-main)]">
                                                                 <span>Rows per page:</span>
                                                                 <select
                                                                     value={pageSize}
@@ -2416,7 +2424,7 @@ export const TaskManager = () => {
                                                                         setPageSize(Number(e.target.value));
                                                                         setCurrentPage(1); // Reset to first page on size change
                                                                     }}
-                                                                    className="bg-gray-900 border border-gray-800 rounded px-2 py-1 text-gray-300 focus:outline-none focus:border-blue-500/50"
+                                                                    className="bg-gray-800 border border-gray-700 rounded px-2 py-1 text-white focus:outline-none focus:border-blue-500 transition-colors cursor-pointer"
                                                                 >
                                                                     <option value={10}>10</option>
                                                                     <option value={20}>20</option>
@@ -2433,17 +2441,17 @@ export const TaskManager = () => {
                                                                 <button
                                                                     onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
                                                                     disabled={currentPage === 1}
-                                                                    className="p-1 rounded hover:bg-white/10 text-[var(--text-muted)] disabled:opacity-30 disabled:hover:bg-transparent transition-colors"
+                                                                    className="p-1 rounded hover:bg-white/10 text-[var(--text-main)] disabled:opacity-20 disabled:hover:bg-transparent transition-colors"
                                                                 >
                                                                     <ChevronLeft size={16} />
                                                                 </button>
-                                                                <div className="text-xs font-medium text-[var(--text-muted)] px-2">
+                                                                <div className="text-xs font-bold text-[var(--text-main)] px-2">
                                                                     Page {currentPage} of {totalPages}
                                                                 </div>
                                                                 <button
                                                                     onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
                                                                     disabled={currentPage === totalPages}
-                                                                    className="p-1 rounded hover:bg-white/10 text-[var(--text-muted)] disabled:opacity-30 disabled:hover:bg-transparent transition-colors"
+                                                                    className="p-1 rounded hover:bg-white/10 text-[var(--text-main)] disabled:opacity-20 disabled:hover:bg-transparent transition-colors"
                                                                 >
                                                                     <ChevronRight size={16} />
                                                                 </button>

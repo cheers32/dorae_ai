@@ -300,6 +300,9 @@ export const TaskItem = forwardRef(({ task, onUpdate, showTags, showFolders, fol
     const textareaRef = useRef(null);
     const editorRef = useRef(null);
 
+    // [NEW] Heuristic for light mode
+    const isLightMode = textColor === '#1a1a1a' || textColor === '#111827';
+
     // [NEW] Apply row color if provided
     const itemStyle = {
         ...style,
@@ -592,7 +595,7 @@ export const TaskItem = forwardRef(({ task, onUpdate, showTags, showFolders, fol
             initial={isOverlay ? false : { opacity: 0 }}
             animate={isOverlay ? false : { opacity: baseStyle.opacity }}
             exit={isOverlay ? false : { opacity: 0 }}
-            className={`group hover:bg-white/[0.03] transition-all duration-200 bg-transparent ${expanded || globalExpanded ? `mb-4 rounded-xl bg-blue-500/5 border-blue-500/30 border shadow-lg ${showLabelPicker ? 'z-[100]' : 'z-10'}` : 'border-b border-[var(--border)] border-l border-l-transparent'}`}
+            className={`group ${isLightMode ? 'hover:bg-slate-100' : 'hover:bg-white/[0.03]'} transition-all duration-200 bg-transparent ${expanded || globalExpanded ? `mb-4 rounded-xl bg-blue-500/5 border-blue-500/30 border shadow-lg ${showLabelPicker ? 'z-[100]' : 'z-10'} overflow-hidden` : 'border-b border-[var(--border)] border-l border-l-transparent hover:shadow-[inset_1px_0_0_#3b82f6,0_1px_3px_rgba(0,0,0,0.1),0_4px_12px_-4px_rgba(0,0,0,0.1)] hover:z-10 hover:relative'}`}
         >
             <div
                 className="flex items-center gap-4 cursor-pointer pr-4 select-none"
@@ -895,7 +898,7 @@ export const TaskItem = forwardRef(({ task, onUpdate, showTags, showFolders, fol
                             {showCounts && !expanded && !globalExpanded && (
                                 <div className="flex items-center gap-3 ml-3 shrink-0">
                                     {task.updates && task.updates.length > 0 && (
-                                        <div className="flex items-center gap-1 text-[var(--text-muted)]" title={`${task.updates.length} updates`}>
+                                        <div className={`flex items-center gap-1 ${isLightMode ? 'text-gray-600' : 'text-[var(--text-muted)]'}`} title={`${task.updates.length} updates`}>
                                             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                                                 <circle cx="12" cy="12" r="10" />
                                                 <polyline points="12 6 12 12 16 14" />
@@ -904,13 +907,13 @@ export const TaskItem = forwardRef(({ task, onUpdate, showTags, showFolders, fol
                                         </div>
                                     )}
                                     {localAttachments && localAttachments.length > 0 && (
-                                        <div className="flex items-center gap-1 text-[var(--text-muted)]" title={`${localAttachments.length} attachments`}>
+                                        <div className={`flex items-center gap-1 ${isLightMode ? 'text-gray-600' : 'text-[var(--text-muted)]'}`} title={`${localAttachments.length} attachments`}>
                                             <Paperclip size={10} />
                                             <span className="text-[10px] font-medium">{localAttachments.length}</span>
                                         </div>
                                     )}
                                     {localAssignedAgentIds && localAssignedAgentIds.length > 0 && (
-                                        <div className="flex items-center gap-1 text-[var(--text-muted)]" title={`${localAssignedAgentIds.length} agents assigned`}>
+                                        <div className={`flex items-center gap-1 ${isLightMode ? 'text-purple-600' : 'text-[var(--text-muted)]'}`} title={`${localAssignedAgentIds.length} agents assigned`}>
                                             <Bot size={10} />
                                             <span className="text-[10px] font-medium">{localAssignedAgentIds.length}</span>
                                         </div>
@@ -934,7 +937,7 @@ export const TaskItem = forwardRef(({ task, onUpdate, showTags, showFolders, fol
                                 : parseUTCDate(task.created_at),
                             'MMM d, yyyy, h:mm a'
                         )}
-                        className="text-xs text-[var(--text-muted)] font-mono font-medium whitespace-nowrap"
+                        className={`text-xs font-mono font-medium whitespace-nowrap ${isLightMode ? 'text-gray-600' : 'text-[var(--text-muted)]'}`}
                     >
                         {(() => {
                             const lastUpdate = task.updates && task.updates.length > 0

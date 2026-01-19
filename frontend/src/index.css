@@ -12,7 +12,7 @@
   --bg-card: rgba(30, 41, 59, 0.4);
   --text-main: #f8fafc;
   --text-muted: #94a3b8;
-  --border: rgba(148, 163, 184, 0.08);
+  --border: rgba(148, 163, 184, 0.2);
   --glass: none;
   --glass-border: 1px solid rgba(255, 255, 255, 0.05);
   --card-hover: rgba(255, 255, 255, 0.02);
@@ -51,7 +51,7 @@
   --text-muted: #64748b;
 
   /* Borders: Slate 200 - definitive but subtle */
-  --border: #e2e8f0;
+  --border: #b1b9c5;
 
   /* Glass: Remove blur in light mode for cleaner, sharper UI */
   --glass: none;
