@@ -595,10 +595,13 @@ export const TaskItem = forwardRef(({ task, onUpdate, showTags, showFolders, fol
             initial={isOverlay ? false : { opacity: 0 }}
             animate={isOverlay ? false : { opacity: baseStyle.opacity }}
             exit={isOverlay ? false : { opacity: 0 }}
-            className={`group ${isLightMode ? 'hover:bg-slate-100' : 'hover:bg-white/[0.03]'} transition-all duration-200 bg-transparent ${expanded || globalExpanded ? `mb-4 rounded-xl bg-blue-500/5 border-blue-500/30 border shadow-lg ${showLabelPicker ? 'z-[100]' : 'z-10'} overflow-hidden` : 'border-b border-[var(--border)] border-l border-l-transparent hover:shadow-[inset_1px_0_0_#3b82f6,0_1px_3px_rgba(0,0,0,0.1),0_4px_12px_-4px_rgba(0,0,0,0.1)] hover:z-10 hover:relative'}`}
+            className={`group ${isLightMode ? 'hover:bg-slate-100' : 'hover:bg-white/[0.03]'} transition-all duration-200 bg-transparent ${expanded || globalExpanded ? `bg-blue-500/5 border-y border-blue-500/30 shadow-lg ${showLabelPicker ? 'z-[100]' : 'z-10'} overflow-hidden relative` : 'border-b border-[var(--border)] border-l border-l-transparent hover:shadow-[inset_1px_0_0_#3b82f6,0_1px_3px_rgba(0,0,0,0.1),0_4px_12px_-4px_rgba(0,0,0,0.1)] hover:z-10 hover:relative'}`}
         >
             <div
-                className="flex items-center gap-4 cursor-pointer pr-4 select-none"
+                className={`flex items-center gap-4 cursor-pointer pr-4 select-none transition-colors duration-200 ${(expanded || globalExpanded)
+                        ? (isLightMode ? 'bg-black/5 shadow-sm' : 'bg-black/40 shadow-sm')
+                        : ''
+                    }`}
                 onClick={() => {
                     const newState = !expanded;
                     setExpanded(newState);
@@ -994,8 +997,9 @@ export const TaskItem = forwardRef(({ task, onUpdate, showTags, showFolders, fol
                         animate={{ height: 'auto', opacity: 1 }}
                         exit={{ height: 0, opacity: 0 }}
                         transition={{ duration: 0.2 }}
+                        className="relative"
                     >
-                        <div className="px-4 pb-4 pt-0 border-t border-[var(--border)] bg-black/20">
+                        <div className="px-4 pb-4 pt-0 border-t border-[var(--border)]/30 bg-black/10">
                             <div className="py-4 space-y-4">
                                 {/* Task Description Editor */}
                                 <div className="px-4">
