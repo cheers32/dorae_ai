@@ -513,33 +513,41 @@ CREATING TASKS:
             return None
 
 
-    def analyze_memos(self, tasks):
+    def analyze_labels(self, tasks, available_labels):
         if not self.client:
             print("AI Service: Missing API Key")
-            return []
+            return {}
 
-        if not tasks:
-            return []
+        if not tasks or not available_labels:
+            return {}
 
         tasks_text = ""
         for t in tasks:
             tasks_text += f"- ID: {t['_id']}, Title: {t.get('title', 'Untitled')}\n"
+        
+        labels_text = ", ".join(available_labels)
 
         prompt = f"""
-        Analyze the following tasks and identify items that are MEMOS, REFERENCE MATERIAL, or NOTES (not actionable tasks).
+        Analyze the following tasks and assign them the most appropriate labels from the provided list.
         
-        Criteria for "Memo":
-        - Random thoughts or ideas (e.g., "Idea for app").
-        - Lists or reference data (e.g., "Grocery list", "Movie recommendations").
-        - Non-actionable items that are just information.
-        - Do NOT include valid tasks that just happen to be simple.
+        Available Labels: {labels_text}
+        
+        Instructions:
+        - You MUST ONLY use labels from the "Available Labels" list.
+        - You MUST assign AT MOST ONE label per task.
+        - If a task fits multiple labels, pick the BEST single match.
+        - If a task does not fit any label clearly, do NOT assign any.
+        - Be smart but conservative.
         
         Tasks:
         {tasks_text}
         
-        Return a JSON object with a list of IDs for the "Memo" items:
+        Return a JSON object mapping Task IDs to a list containing the SINGLE assigned label (or empty list):
         {{
-            "memo_task_ids": ["id1", "id3"]
+            "task_labels": {{
+                "task_id_1": ["Label A"],
+                "task_id_2": []
+            }}
         }}
         """
         
@@ -553,13 +561,13 @@ CREATING TASKS:
             )
             
             if hasattr(response, 'parsed') and response.parsed:
-                return response.parsed.get('memo_task_ids', [])
+                return response.parsed.get('task_labels', {})
             
             data = json.loads(response.text)
-            return data.get('memo_task_ids', [])
+            return data.get('task_labels', {})
         except Exception as e:
-            print(f"AI Memo Analysis Error: {e}")
-            return []
+            print(f"AI Label Analysis Error: {e}")
+            return {}
 
     def analyze_trash(self, tasks):
         if not self.client:

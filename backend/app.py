@@ -528,6 +528,8 @@ def update_task(task_id):
         folder_id = update_fields.get('folderId') or current_task.get('folderId')
         trigger_importance_analysis(folder_id=folder_id)
         trigger_duplication_analysis(folder_id=folder_id)
+        trigger_label_analysis(folder_id=folder_id)
+        trigger_trash_analysis(folder_id=folder_id)
             
         return jsonify(update_fields), 200
     except Exception as e:
@@ -570,6 +572,8 @@ def create_task():
         # Trigger analyses in background
         trigger_importance_analysis(folder_id=new_task.get('folderId'))
         trigger_duplication_analysis(folder_id=new_task.get('folderId'))
+        trigger_label_analysis(folder_id=new_task.get('folderId'))
+        trigger_trash_analysis(folder_id=new_task.get('folderId'))
         
         return jsonify(serialize_doc(new_task)), 201
     except Exception as e:
@@ -603,6 +607,8 @@ def add_task_update(task_id):
         if current_task:
             trigger_importance_analysis(folder_id=current_task.get('folderId'))
             trigger_duplication_analysis(folder_id=current_task.get('folderId'))
+            trigger_label_analysis(folder_id=current_task.get('folderId'))
+            trigger_trash_analysis(folder_id=current_task.get('folderId'))
             
         return jsonify(update_item), 200
     except Exception as e:
@@ -1058,12 +1064,9 @@ def analyze_all_active_importance():
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
-@app.route('/api/tasks/<task_id>/analyze', methods=['POST'])
-# ... (existing code handles this, but I need to make sure I don't break the file structure)
+# --- Label Analysis Helpers ---
 
-# --- Memo Analysis Helpers ---
-
-def perform_memo_analysis(folder_id=None):
+def perform_label_analysis(folder_id=None):
     try:
         # Fetch active tasks
         query = {"status": {"$nin": ["Deleted", "deleted", "Closed", "completed", "Archived", "archived"]}}
@@ -1072,34 +1075,32 @@ def perform_memo_analysis(folder_id=None):
         
         tasks = list(tasks_collection.find(query))
         if not tasks:
-            return {"message": "No active tasks in scope", "memo_count": 0}
+            return {"message": "No active tasks in scope", "labeled_count": 0}
+
+        # Fetch available labels
+        labels = list(labels_collection.find({}, {"name": 1}))
+        available_label_names = [l['name'] for l in labels]
+        
+        if not available_label_names:
+             return {"message": "No labels available for analysis", "labeled_count": 0}
 
         # Run AI Analysis
-        memo_ids = ai_service.analyze_memos(tasks)
+        # Returns dict: { task_id: ["Label"] }
+        task_labels_map = ai_service.analyze_labels(tasks, available_label_names)
         
         updated_count = 0
-        if memo_ids:
+        if task_labels_map:
             from pymongo import UpdateOne
             operations = []
             
-            # Ensure "Memo" Label exists (Neutral/Gray)
-            memo_label_color = "#94a3b8" # Slate-400
-            existing_label = labels_collection.find_one({"name": "Memo"})
-            if not existing_label:
-                labels_collection.insert_one({
-                    "name": "Memo",
-                    "color": memo_label_color,
-                    "created_at": datetime.utcnow().isoformat(),
-                    "order": 3
-                })
-            
-            memo_set = set(str(uid) for uid in memo_ids)
-            
-            for task in tasks:
-                t_id_str = str(task['_id'])
-                if t_id_str in memo_set:
+            for t_id_str, labels in task_labels_map.items():
+                if labels and len(labels) > 0:
+                    label_to_add = labels[0] # Take the first one (should be only one)
                     operations.append(
-                        UpdateOne({"_id": task['_id']}, {"$addToSet": {"labels": "Memo"}})
+                        UpdateOne(
+                            {"_id": ObjectId(t_id_str)}, 
+                            {"$addToSet": {"labels": label_to_add}}
+                        )
                     )
             
             if operations:
@@ -1107,12 +1108,12 @@ def perform_memo_analysis(folder_id=None):
                 updated_count = result.modified_count
 
         return {
-            "message": "Memo analysis complete", 
-            "memo_count": len(memo_ids) if memo_ids else 0,
+            "message": "Label analysis complete", 
+            "labeled_count": len(task_labels_map),
             "updated_count": updated_count
         }
     except Exception as e:
-        print(f"Error in perform_memo_analysis: {e}")
+        print(f"Error in perform_label_analysis: {e}")
         return {"error": str(e)}
 
 def perform_trash_analysis(folder_id=None):
@@ -1134,28 +1135,25 @@ def perform_trash_analysis(folder_id=None):
             from pymongo import UpdateOne
             operations = []
             
+            # Ensure "Trash" Label exists
+            trash_label_color = "#52525b" # Zinc-600
+            existing_label = labels_collection.find_one({"name": "Trash"})
+            if not existing_label:
+                labels_collection.insert_one({
+                    "name": "Trash",
+                    "color": trash_label_color,
+                    "created_at": datetime.utcnow().isoformat(),
+                    "order": 4
+                })
+            
             trash_set = set(str(uid) for uid in trash_ids)
             
             for task in tasks:
                 t_id_str = str(task['_id'])
                 if t_id_str in trash_set:
-                    # Move to Trash
+                    # Label as Trash
                     operations.append(
-                        UpdateOne(
-                            {"_id": task['_id']}, 
-                            {
-                                "$set": {
-                                    "status": "Deleted", 
-                                    "deleted_at": datetime.utcnow()
-                                },
-                                "$push": {"updates": {
-                                    "id": str(uuid.uuid4()),
-                                    "content": "Moved to trash by AI Scan",
-                                    "type": "deletion",
-                                    "timestamp": datetime.utcnow().isoformat()
-                                }}
-                            }
-                        )
+                        UpdateOne({"_id": task['_id']}, {"$addToSet": {"labels": "Trash"}})
                     )
             
             if operations:
@@ -1171,10 +1169,18 @@ def perform_trash_analysis(folder_id=None):
         print(f"Error in perform_trash_analysis: {e}")
         return {"error": str(e)}
 
+def trigger_label_analysis(folder_id=None):
+    """Trigger label analysis in a background thread."""
+    threading.Thread(target=perform_label_analysis, args=(folder_id,)).start()
+
+def trigger_trash_analysis(folder_id=None):
+    """Trigger trash analysis in a background thread."""
+    threading.Thread(target=perform_trash_analysis, args=(folder_id,)).start()
+
 @app.route('/api/tasks/analyze_memos', methods=['POST'])
-def analyze_all_active_memos():
+def analyze_all_active_labels():
     try:
-        result = perform_memo_analysis()
+        result = perform_label_analysis()
         if "error" in result:
              return jsonify(result), 500
         return jsonify(result), 200
@@ -1192,14 +1198,14 @@ def analyze_all_active_trash():
         return jsonify({"error": str(e)}), 500
 
 @app.route('/api/folders/<folder_id>/analyze_memos', methods=['POST'])
-def analyze_folder_memos(folder_id):
+def analyze_folder_labels(folder_id):
     try:
         # Verify folder exists
         folder = folders_collection.find_one({"_id": ObjectId(folder_id)})
         if not folder:
             return jsonify({"error": "Folder not found"}), 404
 
-        result = perform_memo_analysis(folder_id)
+        result = perform_label_analysis(folder_id)
         if "error" in result:
              return jsonify(result), 500
         return jsonify(result), 200
