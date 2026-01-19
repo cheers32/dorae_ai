@@ -6,6 +6,7 @@ import { ChatInterface } from './ChatInterface';
 import { AgentList } from './AgentList';
 import { AgentItem } from './AgentItem';
 import { GeminiPanel, GeminiIcon } from './GeminiPanel';
+import GeminiBridge from './GeminiBridge';
 import { Search, Plus, Home as HomeIcon, Tag as TagIcon, ArrowLeft, ArrowRight, Trash2, X, ChevronsUpDown, ChevronsDownUp, Type, MessageSquare, ZoomIn, ZoomOut, MoreVertical, SlidersHorizontal, Settings2, Bug, Calendar, ArrowDownAZ, GripVertical, Folder, Sparkles, Zap, Clock, Paperclip, Minus, Copy, Menu, Check, RotateCw, Palette } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
@@ -141,6 +142,7 @@ export const TaskManager = () => {
     }, [timelineLimit]);
 
     const [isGeminiOpen, setIsGeminiOpen] = useState(false);
+    const [isGeminiBridgeOpen, setIsGeminiBridgeOpen] = useState(false);
     const [sortBy, setSortBy] = useState('manual'); // 'manual', 'date', 'title'
     const searchInputRef = useRef(null);
     const [workareaTasks, setWorkareaTasks] = useState(() => {
@@ -1443,10 +1445,11 @@ export const TaskManager = () => {
                     onCloseMobile={() => setIsMobileSidebarOpen(false)}
                     searchQuery={searchQuery}
                     onSearchChange={setSearchQuery}
-                    onClearSearch={handleClearSearch}
+                    onClearSearch={() => setSearchQuery('')}
                     searchInputRef={searchInputRef}
                     isFocused={focusArea === 'sidebar'}
-                    highlightedIndex={focusArea === 'sidebar' ? highlightedSidebarIndex : -1}
+                    highlightedIndex={highlightedSidebarIndex}
+                    onOpenGeminiBridge={() => setIsGeminiBridgeOpen(true)}
                 />
 
 
@@ -2506,6 +2509,7 @@ export const TaskManager = () => {
                     document.body
                 )
             }
+            <GeminiBridge tasks={tasks} isOpen={isGeminiBridgeOpen} onClose={() => setIsGeminiBridgeOpen(false)} />
         </DndContext >
     );
 }

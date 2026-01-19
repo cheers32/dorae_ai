@@ -24,7 +24,8 @@ import {
     Moon,
     Sun,
     Star,
-    ChevronsRight
+    ChevronsRight,
+    Sparkles
 } from 'lucide-react';
 import { api } from '../api';
 import { useDroppable, useDraggable } from '@dnd-kit/core';
@@ -277,7 +278,7 @@ const DraggableSidebarLabel = ({ id, label, isActive, onClick, color, data, coun
     );
 };
 
-export function Sidebar({ activeTab, onNavigate, labels = [], onLabelsChange, selectedLabel, folders = [], onFoldersChange, selectedFolder, sidebarItems = [], stats = {}, isCollapsed, onToggle, density = 5, isOpen = false, onCloseMobile, searchQuery, onSearchChange, onClearSearch, searchInputRef, isFocused = false, highlightedIndex = -1 }) {
+export function Sidebar({ activeTab, onNavigate, labels = [], onLabelsChange, selectedLabel, folders = [], onFoldersChange, selectedFolder, sidebarItems = [], stats = {}, isCollapsed, onToggle, density = 5, isOpen = false, onCloseMobile, searchQuery, onSearchChange, onClearSearch, searchInputRef, isFocused = false, highlightedIndex = -1, onOpenGeminiBridge }) {
     const { theme, toggleTheme } = useTheme();
     const [isAddingLabel, setIsAddingLabel] = useState(false);
     const [newLabelName, setNewLabelName] = useState('');
@@ -686,6 +687,21 @@ export function Sidebar({ activeTab, onNavigate, labels = [], onLabelsChange, se
                 >
                     {theme === 'dark' ? <Sun size={18} /> : <Moon size={18} />}
                     {!isCollapsed && <span className="text-sm font-medium">{theme === 'dark' ? 'Light Mode' : 'Dark Mode'}</span>}
+                </button>
+
+                <button
+                    className={`nav-item w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all ${isCollapsed ? 'px-0 justify-center' : ''}`}
+                    onClick={onOpenGeminiBridge}
+                    title={isCollapsed ? 'Gemini Bridge' : ''}
+                    style={{ color: 'var(--text-muted)' }}
+                    onMouseEnter={(e) => { e.currentTarget.style.color = '#60a5fa'; e.currentTarget.style.background = 'var(--bg-dark)'; }}
+                    onMouseLeave={(e) => { e.currentTarget.style.color = 'var(--text-muted)'; e.currentTarget.style.background = 'transparent'; }}
+                >
+                    <div className="relative">
+                        <MessageSquare size={18} />
+                        <Sparkles size={10} className="absolute -top-1 -right-1 text-blue-400" />
+                    </div>
+                    {!isCollapsed && <span className="text-sm font-medium">Gemini Bridge</span>}
                 </button>
 
                 <button
