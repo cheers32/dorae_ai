@@ -772,6 +772,58 @@ body {
 }
 
 /* Utilities */
+/* [FIX] Validated List Styling for Task Editor - Global Scope */
+.ProseMirror ul,
+.task-editor-content ul {
+  list-style-type: disc !important;
+  list-style-position: inside !important;
+  padding-left: 1.5rem !important;
+  /* Increased padding */
+  margin-top: 0.25rem !important;
+  margin-bottom: 0.25rem !important;
+}
+
+.ProseMirror ol,
+.task-editor-content ol {
+  list-style-type: decimal !important;
+  list-style-position: inside !important;
+  padding-left: 1.5rem !important;
+  /* Increased padding */
+  margin-top: 0.25rem !important;
+  margin-bottom: 0.25rem !important;
+}
+
+.ProseMirror li,
+.task-editor-content li {
+  display: list-item !important;
+  margin-top: 0.125rem !important;
+  margin-bottom: 0.125rem !important;
+}
+
+.ProseMirror ul li,
+.task-editor-content ul li {
+  list-style-type: disc !important;
+  /* Force on LI */
+}
+
+.ProseMirror ol li,
+.task-editor-content ol li {
+  list-style-type: decimal !important;
+  /* Force on LI */
+}
+
+.ProseMirror li p,
+.task-editor-content li p {
+  display: inline !important;
+}
+
+/* Ensure markers are visible */
+.ProseMirror li::marker,
+.task-editor-content li::marker {
+  color: var(--text-main) !important;
+  font-weight: bold;
+}
+
 .mobile-only {
   display: none;
 }
@@ -798,10 +850,7 @@ body {
   }
 
   /* Force tags container to wrap and take full width below title */
-  .mobile-expanded-container .mobile-title-group>div {
-    margin-left: 0 !important;
-    max-width: 100% !important;
-  }
+
 
   .mobile-expanded-container .mobile-control-group,
   .mobile-expanded-container .mobile-dot-group {

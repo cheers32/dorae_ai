@@ -157,7 +157,7 @@ export const TaskDescriptionEditor = forwardRef(({ title, initialContent, onSave
         editorProps: {
             attributes: {
                 // [FIX] Add whitespace-pre-wrap to preserve leading spaces/multiple spaces
-                class: 'prose prose-sm prose-invert max-w-none focus:outline-none min-h-[150px] text-[var(--text-main)] [&>h1]:mt-0 [&>h1]:mb-4 whitespace-pre-wrap',
+                class: 'prose prose-sm prose-invert max-w-none focus:outline-none text-[var(--text-main)] [&>h1]:mt-0 [&>h1]:mb-4 whitespace-pre-wrap',
             },
             handleKeyDown: (view, event) => {
                 if (event.key === 'Escape' || ((event.metaKey || event.ctrlKey) && event.key === '[')) {
