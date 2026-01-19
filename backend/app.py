@@ -1060,11 +1060,168 @@ def analyze_all_active_importance():
 
 @app.route('/api/tasks/<task_id>/analyze', methods=['POST'])
 # ... (existing code handles this, but I need to make sure I don't break the file structure)
-# I will only touch the Skill Endpoints part in a separate ReplaceChunk if I could, but replace_file_content is single block.
-# Wait, the instruction says 500-ish for init and 864-ish for routes. I should use multi_replace.
+
+# --- Memo Analysis Helpers ---
+
+def perform_memo_analysis(folder_id=None):
+    try:
+        # Fetch active tasks
+        query = {"status": {"$nin": ["Deleted", "deleted", "Closed", "completed", "Archived", "archived"]}}
+        if folder_id:
+            query["folderId"] = folder_id
+        
+        tasks = list(tasks_collection.find(query))
+        if not tasks:
+            return {"message": "No active tasks in scope", "memo_count": 0}
+
+        # Run AI Analysis
+        memo_ids = ai_service.analyze_memos(tasks)
+        
+        updated_count = 0
+        if memo_ids:
+            from pymongo import UpdateOne
+            operations = []
+            
+            # Ensure "Memo" Label exists (Neutral/Gray)
+            memo_label_color = "#94a3b8" # Slate-400
+            existing_label = labels_collection.find_one({"name": "Memo"})
+            if not existing_label:
+                labels_collection.insert_one({
+                    "name": "Memo",
+                    "color": memo_label_color,
+                    "created_at": datetime.utcnow().isoformat(),
+                    "order": 3
+                })
+            
+            memo_set = set(str(uid) for uid in memo_ids)
+            
+            for task in tasks:
+                t_id_str = str(task['_id'])
+                if t_id_str in memo_set:
+                    operations.append(
+                        UpdateOne({"_id": task['_id']}, {"$addToSet": {"labels": "Memo"}})
+                    )
+            
+            if operations:
+                result = tasks_collection.bulk_write(operations)
+                updated_count = result.modified_count
+
+        return {
+            "message": "Memo analysis complete", 
+            "memo_count": len(memo_ids) if memo_ids else 0,
+            "updated_count": updated_count
+        }
+    except Exception as e:
+        print(f"Error in perform_memo_analysis: {e}")
+        return {"error": str(e)}
+
+def perform_trash_analysis(folder_id=None):
+    try:
+        # Fetch active tasks
+        query = {"status": {"$nin": ["Deleted", "deleted", "Closed", "completed", "Archived", "archived"]}}
+        if folder_id:
+            query["folderId"] = folder_id
+        
+        tasks = list(tasks_collection.find(query))
+        if not tasks:
+            return {"message": "No active tasks in scope", "trash_count": 0}
+
+        # Run AI Analysis
+        trash_ids = ai_service.analyze_trash(tasks)
+        
+        updated_count = 0
+        if trash_ids:
+            from pymongo import UpdateOne
+            operations = []
+            
+            trash_set = set(str(uid) for uid in trash_ids)
+            
+            for task in tasks:
+                t_id_str = str(task['_id'])
+                if t_id_str in trash_set:
+                    # Move to Trash
+                    operations.append(
+                        UpdateOne(
+                            {"_id": task['_id']}, 
+                            {
+                                "$set": {
+                                    "status": "Deleted", 
+                                    "deleted_at": datetime.utcnow()
+                                },
+                                "$push": {"updates": {
+                                    "id": str(uuid.uuid4()),
+                                    "content": "Moved to trash by AI Scan",
+                                    "type": "deletion",
+                                    "timestamp": datetime.utcnow().isoformat()
+                                }}
+                            }
+                        )
+                    )
+            
+            if operations:
+                result = tasks_collection.bulk_write(operations)
+                updated_count = result.modified_count
+
+        return {
+            "message": "Trash analysis complete", 
+            "trash_count": len(trash_ids) if trash_ids else 0,
+            "updated_count": updated_count
+        }
+    except Exception as e:
+        print(f"Error in perform_trash_analysis: {e}")
+        return {"error": str(e)}
+
+@app.route('/api/tasks/analyze_memos', methods=['POST'])
+def analyze_all_active_memos():
+    try:
+        result = perform_memo_analysis()
+        if "error" in result:
+             return jsonify(result), 500
+        return jsonify(result), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+@app.route('/api/tasks/analyze_trash', methods=['POST'])
+def analyze_all_active_trash():
+    try:
+        result = perform_trash_analysis()
+        if "error" in result:
+             return jsonify(result), 500
+        return jsonify(result), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+@app.route('/api/folders/<folder_id>/analyze_memos', methods=['POST'])
+def analyze_folder_memos(folder_id):
+    try:
+        # Verify folder exists
+        folder = folders_collection.find_one({"_id": ObjectId(folder_id)})
+        if not folder:
+            return jsonify({"error": "Folder not found"}), 404
+
+        result = perform_memo_analysis(folder_id)
+        if "error" in result:
+             return jsonify(result), 500
+        return jsonify(result), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+@app.route('/api/folders/<folder_id>/analyze_trash', methods=['POST'])
+def analyze_folder_trash(folder_id):
+    try:
+        # Verify folder exists
+        folder = folders_collection.find_one({"_id": ObjectId(folder_id)})
+        if not folder:
+            return jsonify({"error": "Folder not found"}), 404
+
+        result = perform_trash_analysis(folder_id)
+        if "error" in result:
+             return jsonify(result), 500
+        return jsonify(result), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
 
-# ... existing endpoints
 
 @app.route('/api/tasks/<task_id>/analyze', methods=['POST'])
 def analyze_task(task_id):

@@ -512,3 +512,99 @@ CREATING TASKS:
             print(f"Mindset Map Error: {e}")
             return None
 
+
+    def analyze_memos(self, tasks):
+        if not self.client:
+            print("AI Service: Missing API Key")
+            return []
+
+        if not tasks:
+            return []
+
+        tasks_text = ""
+        for t in tasks:
+            tasks_text += f"- ID: {t['_id']}, Title: {t.get('title', 'Untitled')}\n"
+
+        prompt = f"""
+        Analyze the following tasks and identify items that are MEMOS, REFERENCE MATERIAL, or NOTES (not actionable tasks).
+        
+        Criteria for "Memo":
+        - Random thoughts or ideas (e.g., "Idea for app").
+        - Lists or reference data (e.g., "Grocery list", "Movie recommendations").
+        - Non-actionable items that are just information.
+        - Do NOT include valid tasks that just happen to be simple.
+        
+        Tasks:
+        {tasks_text}
+        
+        Return a JSON object with a list of IDs for the "Memo" items:
+        {{
+            "memo_task_ids": ["id1", "id3"]
+        }}
+        """
+        
+        try:
+            response = self.client.models.generate_content(
+                model='gemini-2.0-flash-exp', 
+                contents=prompt,
+                config={
+                    'response_mime_type': 'application/json'
+                }
+            )
+            
+            if hasattr(response, 'parsed') and response.parsed:
+                return response.parsed.get('memo_task_ids', [])
+            
+            data = json.loads(response.text)
+            return data.get('memo_task_ids', [])
+        except Exception as e:
+            print(f"AI Memo Analysis Error: {e}")
+            return []
+
+    def analyze_trash(self, tasks):
+        if not self.client:
+            print("AI Service: Missing API Key")
+            return []
+
+        if not tasks:
+            return []
+
+        tasks_text = ""
+        for t in tasks:
+            tasks_text += f"- ID: {t['_id']}, Title: {t.get('title', 'Untitled')}\n"
+
+        prompt = f"""
+        Analyze the following tasks and identify TRASH / JUNK items.
+        
+        Criteria for "Trash":
+        - Gibberish (e.g., "asdf", "test").
+        - Empty or meaningless titles.
+        - Clearly accidental entries.
+        - Spam or test data.
+        
+        Tasks:
+        {tasks_text}
+        
+        Return a JSON object with a list of IDs for the "Trash" items:
+        {{
+            "trash_task_ids": ["id2"]
+        }}
+        """
+        
+        try:
+            response = self.client.models.generate_content(
+                model='gemini-2.0-flash-exp', 
+                contents=prompt,
+                config={
+                    'response_mime_type': 'application/json'
+                }
+            )
+            
+            if hasattr(response, 'parsed') and response.parsed:
+                return response.parsed.get('trash_task_ids', [])
+            
+            data = json.loads(response.text)
+            return data.get('trash_task_ids', [])
+        except Exception as e:
+            print(f"AI Trash Analysis Error: {e}")
+            return []

@@ -1884,6 +1884,48 @@ export const TaskManager = () => {
                                                             <Copy size={16} />
                                                             <span className="text-xs font-medium">Run Duplicate Check</span>
                                                         </button>
+
+                                                        <button
+                                                            onClick={async () => {
+                                                                setIsMenuOpen(false);
+                                                                try {
+                                                                    if (selectedFolder) {
+                                                                        await api.runFolderMemo(selectedFolder);
+                                                                    } else {
+                                                                        await api.runGlobalMemo();
+                                                                    }
+                                                                    fetchTasks(false);
+                                                                    fetchStats();
+                                                                } catch (err) {
+                                                                    console.error("Failed to run memo scan", err);
+                                                                }
+                                                            }}
+                                                            className="w-full px-4 py-2 text-left flex items-center gap-3 transition-colors hover:bg-[var(--input-bg)] text-[var(--text-muted)]"
+                                                        >
+                                                            <Paperclip size={16} />
+                                                            <span className="text-xs font-medium">Run Memo Scan</span>
+                                                        </button>
+
+                                                        <button
+                                                            onClick={async () => {
+                                                                setIsMenuOpen(false);
+                                                                try {
+                                                                    if (selectedFolder) {
+                                                                        await api.runFolderTrash(selectedFolder);
+                                                                    } else {
+                                                                        await api.runGlobalTrash();
+                                                                    }
+                                                                    fetchTasks(false);
+                                                                    fetchStats();
+                                                                } catch (err) {
+                                                                    console.error("Failed to run trash scan", err);
+                                                                }
+                                                            }}
+                                                            className="w-full px-4 py-2 text-left flex items-center gap-3 transition-colors hover:bg-[var(--input-bg)] text-red-800 hover:text-red-500"
+                                                        >
+                                                            <Trash2 size={16} />
+                                                            <span className="text-xs font-medium">Run Trash Scan</span>
+                                                        </button>
                                                     </>
                                                 )}
 
@@ -2207,6 +2249,8 @@ export const TaskManager = () => {
                                                         task={item}
                                                         onUpdate={() => {
                                                             refreshWorkareaTask(item._id);
+                                                            fetchTasks(false);
+                                                            fetchStats();
                                                         }}
                                                         showTags={true}
                                                         showFolders={showFolders}
@@ -2312,7 +2356,8 @@ export const TaskManager = () => {
                                                                     id={task._id}
                                                                     task={task}
                                                                     onUpdate={() => {
-                                                                        // Auto-refresh disabled - use manual refresh button
+                                                                        fetchTasks(false);
+                                                                        fetchStats();
                                                                     }}
                                                                     showTags={showTags}
                                                                     showFolders={showFolders}

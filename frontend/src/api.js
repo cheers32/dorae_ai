@@ -297,6 +297,38 @@ export const api = {
         return res.json();
     },
 
+    runGlobalMemo: async () => {
+        const res = await fetch(`${API_BASE}/tasks/analyze_memos`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' }
+        });
+        return res.json();
+    },
+
+    runGlobalTrash: async () => {
+        const res = await fetch(`${API_BASE}/tasks/analyze_trash`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' }
+        });
+        return res.json();
+    },
+
+    runFolderMemo: async (folderId) => {
+        const res = await fetch(`${API_BASE}/folders/${folderId}/analyze_memos`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' }
+        });
+        return res.json();
+    },
+
+    runFolderTrash: async (folderId) => {
+        const res = await fetch(`${API_BASE}/folders/${folderId}/analyze_trash`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' }
+        });
+        return res.json();
+    },
+
     chatWithAI: async (message, agentId = null) => {
         const body = { message, user_email: getUserEmail() };
         if (agentId) {
